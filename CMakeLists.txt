@@ -26,3 +26,7 @@ target_include_directories(clvm_cpp_test PRIVATE
     ${googletest_SOURCE_DIR}/googletest
     ${googletest_SOURCE_DIR}/googletest/include
     )
+
+enable_testing()
+add_test(NAME clvm_cpp_test COMMAND clvm_cpp_test)
+
