@@ -13,7 +13,13 @@ FetchContent_Declare(
   GIT_TAG        release-1.11.0
 )
 
-FetchContent_MakeAvailable(googletest)
+FetchContent_Declare(
+  bip3x
+  GIT_REPOSITORY https://github.com/edwardstock/bip3x
+  GIT_TAG        2.2.0
+)
+
+FetchContent_MakeAvailable(googletest bip3x)
 
 file(GLOB googletest_src
     ${googletest_SOURCE_DIR}/googletest/src/gtest-all.cc
