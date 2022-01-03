@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 
-project(clvm_cpp_test)
+project(clvm_cpp)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 include(FetchContent)
 
