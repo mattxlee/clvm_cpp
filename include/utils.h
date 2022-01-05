@@ -15,7 +15,7 @@ Bytes bytes_cast(std::array<uint8_t, LEN> const& rhs) {
 
 template <int LEN>
 std::array<uint8_t, LEN> bytes_cast(Bytes const& rhs) {
-  assert(rhs.size() == LEN);
+  assert(rhs.size() >= LEN);
 
   std::array<uint8_t, LEN> res;
   memcpy(res.data(), rhs.data(), LEN);
@@ -23,7 +23,6 @@ std::array<uint8_t, LEN> bytes_cast(Bytes const& rhs) {
 }
 
 }  // namespace utils
-
 }  // namespace chia
 
 #endif

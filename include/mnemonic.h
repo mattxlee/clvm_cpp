@@ -2,32 +2,27 @@
 #define CHIA_MNEMONIC_H
 
 #include <array>
-#include <vector>
-
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include "types.h"
 
 namespace chia {
-
 namespace wallet {
 
 class Mnemonic {
  public:
   using Words = std::vector<std::string>;
 
-  /// Create an empty mnemonic object
-  Mnemonic();
+  /// Generate a new mnemonic
+  static Mnemonic GenerateNew(std::string_view lang = "en");
 
-  /// Create a mnemonic object with words
-  explicit Mnemonic(Words words);
+  /// Create a mnemonic object by importing words
+  explicit Mnemonic(Words words, std::string_view lang = "en");
 
-  /// Generate a new set of mnemonic words
-  void GenerateNew();
-
-  /// Import mnemonic passphrase words
-  void Import(Words words, std::string_view lang = "en");
+  /// Create a new mnemonic object by importing words in string
+  explicit Mnemonic(std::string_view words, std::string_view lang = "en");
 
   /// Convert mnemonic to string
   std::string ToString() const;

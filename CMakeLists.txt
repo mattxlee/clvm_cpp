@@ -80,6 +80,7 @@ add_test(NAME clvm_cpp_test COMMAND clvm_cpp_test)
 set(clvm_cpp_src
   ${CMAKE_SOURCE_DIR}/src/mnemonic.cpp
   ${CMAKE_SOURCE_DIR}/src/key.cpp
+  ${CMAKE_SOURCE_DIR}/src/wallet.cpp
   )
 
 add_library(clvm_cpp ${clvm_cpp_src})

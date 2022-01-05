@@ -29,6 +29,24 @@ std::string WordsToString(Mnemonic::Words const& words) {
   return ss.str().substr(1);
 }
 
+Mnemonic::Words StringToWords(std::string_view str) {
+  int i{0}, last{0};
+  Mnemonic::Words res;
+  while (i < str.size()) {
+    if (str[i] == ' ') {
+      if (i - last - 1 > 0) {
+        res.push_back(str.substr(last + 1, i - last - 1).data());
+      }
+      last = i;
+    }
+    ++i;
+  }
+  if (i - last - 1 > 0) {
+    res.push_back(str.substr(last + 1, i - last - 1).data());
+  }
+  return res;
+}
+
 bip3x::Bip39Mnemonic::MnemonicResult WordsToMnemonicResult(
     Mnemonic::Words const& words, std::string_view lang) {
   std::string str = utils::WordsToString(words);
@@ -45,22 +63,21 @@ std::string NormalizeString(std::string_view str) {
 
 }  // namespace utils
 
-Mnemonic::Mnemonic() {}
-
-Mnemonic::Mnemonic(Words words) : words_(std::move(words)) {}
-
-void Mnemonic::GenerateNew() {
-  bip3x::Bip39Mnemonic::MnemonicResult res = bip3x::Bip39Mnemonic::generate();
-  words_ = std::move(res.words);
-  bytes_ = utils::CopyMnemonicResultToBytes(res);
+Mnemonic Mnemonic::GenerateNew(std::string_view lang) {
+  bip3x::Bip39Mnemonic::MnemonicResult res =
+      bip3x::Bip39Mnemonic::generate(lang.data());
+  return Mnemonic(res.words, lang);
 }
 
-void Mnemonic::Import(Words words, std::string_view lang) {
-  words_ = std::move(words);
+Mnemonic::Mnemonic(Words words, std::string_view lang)
+    : words_(std::move(words)) {
   bip3x::Bip39Mnemonic::MnemonicResult res =
       utils::WordsToMnemonicResult(words_, lang);
   bytes_ = utils::CopyMnemonicResultToBytes(res);
 }
+
+Mnemonic::Mnemonic(std::string_view words, std::string_view lang)
+    : Mnemonic(utils::StringToWords(words), lang) {}
 
 std::string Mnemonic::ToString() const { return utils::WordsToString(words_); }
 
