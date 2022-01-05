@@ -66,18 +66,26 @@ std::string Mnemonic::ToString() const { return utils::WordsToString(words_); }
 
 Mnemonic::Words Mnemonic::GetWords() const { return words_; }
 
+/**
+ * Generating seed method is copied from chia-network:
+ *
+ * def mnemonic_to_seed(mnemonic: str, passphrase: str) -> bytes:
+ *   """
+ *   Uses BIP39 standard to derive a seed from entropy bytes.
+ *   """
+ *   salt_str: str = "mnemonic" + passphrase
+ *   salt = unicodedata.normalize("NFKD", salt_str).encode("utf-8")
+ *   mnemonic_normalized = unicodedata.normalize("NFKD",
+ *       mnemonic).encode("utf-8")
+ *   seed = pbkdf2_hmac("sha512", mnemonic_normalized, salt, 2048)
+
+ *   assert len(seed) == 64
+ *   return seed
+ */
 Bytes64 Mnemonic::GetSeed(std::string_view passphrase) const {
-  // """
-  // Uses BIP39 standard to derive a seed from entropy bytes.
-  // """
-  // salt_str: str = "mnemonic" + passphrase
-  // salt = unicodedata.normalize("NFKD", salt_str).encode("utf-8")
   std::string salt =
       utils::NormalizeString(std::string("mnemonic") + passphrase.data());
-  // mnemonic_normalized = unicodedata.normalize("NFKD",
-  // mnemonic).encode("utf-8")
   std::string mnemonic = utils::NormalizeString(utils::WordsToString(words_));
-  // seed = pbkdf2_hmac("sha512", mnemonic_normalized, salt, 2048)
   Bytes64 digest;
   int len =
       PKCS5_PBKDF2_HMAC(mnemonic.data(), mnemonic.size(),
@@ -86,6 +94,8 @@ Bytes64 Mnemonic::GetSeed(std::string_view passphrase) const {
   assert(len == 64);
   return digest;
 }
+
+bool Mnemonic::IsEmpty() const { return words_.empty(); }
 
 }  // namespace wallet
 }  // namespace chia
