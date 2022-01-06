@@ -2,6 +2,7 @@
 
 #include <schemes.hpp>
 
+#include "mnemonic.h"
 #include "utils.h"
 
 namespace chia {
@@ -16,6 +17,12 @@ bool Key::VerifySig(PublicKey const& pub_key, Bytes const& msg,
 Key::Key() {}
 
 Key::Key(PrivateKey priv_key) : priv_key_(std::move(priv_key)) {}
+
+Key::Key(Mnemonic const& mnemonic, std::string_view passphrase) {
+  Bytes64 seed = mnemonic.GetSeed(passphrase);
+  priv_key_ = utils::bytes_cast<PRIV_KEY_LEN>(
+      bls::AugSchemeMPL().KeyGen(utils::bytes_cast<64>(seed)).Serialize());
+}
 
 bool Key::IsEmpty() const { return priv_key_.empty(); }
 
@@ -39,6 +46,16 @@ Signature Key::Sign(Bytes const& msg) {
       bls::Bytes(utils::bytes_cast<PRIV_KEY_LEN>(priv_key_)));
   Bytes sig_bytes = bls::AugSchemeMPL().Sign(bls_priv_key, msg).Serialize();
   return utils::bytes_cast<SIG_LEN>(sig_bytes);
+}
+
+Key Key::DerivePath(std::vector<uint32_t> const& paths) const {
+  bls::PrivateKey bls_priv_key = bls::PrivateKey::FromBytes(
+      bls::Bytes(utils::bytes_cast<PRIV_KEY_LEN>(priv_key_)));
+  auto sk{bls_priv_key};
+  for (uint32_t path : paths) {
+    sk = bls::AugSchemeMPL().DeriveChildSk(sk, path);
+  }
+  return Key(utils::bytes_cast<PRIV_KEY_LEN>(sk.Serialize()));
 }
 
 }  // namespace wallet

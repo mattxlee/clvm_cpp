@@ -1,10 +1,14 @@
 #ifndef CHIA_KEY_H
 #define CHIA_KEY_H
 
+#include <string_view>
+
 #include "types.h"
 
 namespace chia {
 namespace wallet {
+
+class Mnemonic;
 
 class Key {
  public:
@@ -21,6 +25,9 @@ class Key {
   /// Create a object by importing the private key
   explicit Key(PrivateKey priv_key);
 
+  /// Create a new key will be generated from the mnemonic
+  Key(Mnemonic const& mnemonic, std::string_view passphrase);
+
   /// Return `true` when the key is empty
   bool IsEmpty() const;
 
@@ -35,6 +42,9 @@ class Key {
 
   /// Make a signature
   Signature Sign(Bytes const& msg);
+
+  /// Derive key
+  Key DerivePath(std::vector<uint32_t> const& paths) const;
 
  private:
   PrivateKey priv_key_;

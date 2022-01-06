@@ -1,6 +1,7 @@
 #ifndef CHIA_WALLET_H
 #define CHIA_WALLET_H
 
+#include <string>
 #include <string_view>
 
 #include "key.h"
@@ -13,13 +14,13 @@ namespace wallet {
 class Wallet {
  public:
   /// Create a new empty wallet object
-  Wallet();
+  explicit Wallet(std::string_view passphrase);
 
   /// Create a wallet object by importing a mnemonic
-  explicit Wallet(Mnemonic mnemonic);
+  Wallet(Mnemonic mnemonic, std::string_view passphrase);
 
   /// Create a wallet object from a passphrase words
-  explicit Wallet(std::string_view words);
+  Wallet(std::string_view words, std::string_view passphrase);
 
   /// Get mnemonic object
   Mnemonic const& GetMnemonic() const { return mnemonic_; }
@@ -28,10 +29,11 @@ class Wallet {
   Address GetAddress(int index) const;
 
   /// Get `Key` object that is according the index
-  Key GetKey(int index) const;
+  Key GetKey(uint32_t index) const;
 
  private:
   Mnemonic mnemonic_;
+  std::string passphrase_;
 };
 
 }  // namespace wallet
