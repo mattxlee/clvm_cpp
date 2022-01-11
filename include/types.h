@@ -2,6 +2,7 @@
 #define CHIA_TYPES_H
 
 #include <array>
+#include <string>
 #include <vector>
 
 namespace chia {
@@ -15,7 +16,7 @@ using Bytes96 = std::array<uint8_t, 96>;
 using PrivateKey = Bytes32;
 using PublicKey = Bytes48;
 using Signature = Bytes96;
-using Address = Bytes32;
+using Address = std::string;
 
 }  // namespace chia
 
