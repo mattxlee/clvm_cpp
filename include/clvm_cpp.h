@@ -48,14 +48,12 @@ static const Cost AGG_SIG_COST = 1200000;
 
 extern "C" {
 
-int32_t hello();
-
 uint64_t run_chia_program(const uint8_t *_prog,
-                          uintptr_t _prog_len,
+                          uint32_t _prog_len,
                           const uint8_t *_args,
-                          uintptr_t _args_len,
+                          uint32_t _args_len,
                           uint8_t *_res,
-                          uintptr_t *_res_len,
+                          uint32_t *_res_len,
                           uint64_t _max_cost,
                           uint32_t _flags);
 
