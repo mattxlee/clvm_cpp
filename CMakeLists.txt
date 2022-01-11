@@ -54,10 +54,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest bip3x utf8proc toolbox bls_signature
   Sodium relic)
 
-include_directories(/usr/local/include)
-
 find_package(OpenSSL REQUIRED)
 find_library(gmp gmp)
+
+include_directories(
+  /usr/local/include
+  ${OPENSSL_INCLUDE_DIR}
+  )
 
 file(GLOB googletest_src
   ${googletest_SOURCE_DIR}/googletest/src/gtest-all.cc
@@ -81,6 +84,10 @@ set(clvm_cpp_src
   ${CMAKE_SOURCE_DIR}/src/mnemonic.cpp
   ${CMAKE_SOURCE_DIR}/src/key.cpp
   ${CMAKE_SOURCE_DIR}/src/wallet.cpp
+  ${CMAKE_SOURCE_DIR}/src/utils.cpp
+  ${CMAKE_SOURCE_DIR}/src/crypto_utils.cpp
+  ${CMAKE_SOURCE_DIR}/src/bech32.cpp
+  ${CMAKE_SOURCE_DIR}/src/program.cpp
   )
 
 add_library(clvm_cpp ${clvm_cpp_src})
@@ -93,7 +100,6 @@ target_include_directories(clvm_cpp PRIVATE
   ${bls_signature_SOURCE_DIR}/src
   ${relic_SOURCE_DIR}/include
   ${relic_BINARY_DIR}/include
-  ${OPENSSL_INCLUDE_DIR}
   ${CMAKE_SOURCE_DIR}/include
   )
 
