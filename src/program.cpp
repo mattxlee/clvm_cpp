@@ -1,5 +1,8 @@
 #include "program.h"
 
+#include <memory>
+
+#include "crypto_utils.h"
 #include "utils.h"
 
 namespace chia {
@@ -56,7 +59,8 @@ CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
     return ToSExp(Bytes());
   }
   if (b <= MAX_SINGLE_BYTE) {
-    Bytes bytes{b};
+    Bytes bytes(1);
+    bytes[0] = b;
     return ToSExp(std::move(bytes));
   }
   int bit_count{0};
@@ -118,6 +122,82 @@ CLVMObjectPtr SExpFromStream(ReadStreamFunc f) {
   return val_stack.Pop();
 }
 
+namespace tree_hash {
+
+class OpStack;
+using Op = std::function<void(Stack<CLVMObjectPtr>&, OpStack&)>;
+
+class OpStack : public Stack<Op> {};
+
+Bytes32 SHA256TreeHash(
+    CLVMObjectPtr sexp,
+    std::vector<Bytes32> const& precalculated = std::vector<Bytes32>()) {
+  Op handle_pair = [](ValStack& sexp_stack, OpStack& op_stack) {
+    auto p0 = sexp_stack.Pop();
+    auto p1 = sexp_stack.Pop();
+    Bytes prefix(1);
+    sexp_stack.Push(ToSExp(utils::bytes_cast<32>(
+        crypto_utils::MakeSHA256(utils::ConnectBuffers(prefix, p0, p1)))));
+  };
+
+  Op roll = [](ValStack& sexp_stack, OpStack& op_stack) {
+    auto p0 = sexp_stack.Pop();
+    auto p1 = sexp_stack.Pop();
+    sexp_stack.Push(p0);
+    sexp_stack.Push(p1);
+  };
+
+  Op handle_sexp = [&handle_sexp, &handle_pair, &roll, &precalculated](
+                       ValStack& sexp_stack, OpStack& op_stack) {
+    auto sexp = sexp_stack.Pop();
+    if (sexp->GetNodeType() == NodeType::Pair) {
+      auto sexp_pair = std::dynamic_pointer_cast<CLVMObject_Pair>(sexp);
+      auto p0 = sexp_pair->GetFirstNode();
+      auto p1 = sexp_pair->GetSecondNode();
+      sexp_stack.Push(p0);
+      sexp_stack.Push(p1);
+      op_stack.Push(handle_pair);
+      op_stack.Push(handle_sexp);
+      op_stack.Push(roll);
+      op_stack.Push(handle_sexp);
+    } else {
+      auto sexp_atom = std::dynamic_pointer_cast<CLVMObject_Atom>(sexp);
+      auto i = std::find(std::begin(precalculated), std::end(precalculated),
+                         sexp_atom->GetBytes());
+      Bytes r;
+      if (i != std::end(precalculated)) {
+        r = sexp_atom->GetBytes();
+      } else {
+        Bytes prefix(1);
+        prefix[0] = '\1';
+        r = utils::bytes_cast<32>(crypto_utils::MakeSHA256(
+            utils::ConnectBuffers(prefix, sexp_atom->GetBytes())));
+      }
+      sexp_stack.Push(ToSExp(r));
+    }
+  };
+
+  ValStack sexp_stack;
+  sexp_stack.Push(sexp);
+  OpStack op_stack;
+  op_stack.Push(handle_sexp);
+
+  while (!op_stack.IsEmpty()) {
+    auto op = op_stack.Pop();
+    op(sexp_stack, op_stack);
+  }
+
+  assert(!sexp_stack.IsEmpty());
+  auto res = sexp_stack.Pop();
+  assert(sexp_stack.IsEmpty());
+  assert(res->GetNodeType() == NodeType::Atom);
+
+  auto sexp_atom = std::dynamic_pointer_cast<CLVMObject_Atom>(sexp);
+  return utils::bytes_cast<32>(sexp_atom->GetBytes());
+}
+
+}  // namespace tree_hash
+
 /**
  * =============================================================================
  * Program
@@ -128,6 +208,6 @@ Program Program::ImportFromBytes(Bytes const& bytes) { return Program(); }
 
 Program Program::LoadFromFile(std::string_view file_path) { return Program(); }
 
-Bytes32 Program::GetTreeHash() { return Bytes32(); }
+Bytes32 Program::GetTreeHash() { return tree_hash::SHA256TreeHash(sexp_); }
 
 }  // namespace chia

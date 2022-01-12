@@ -82,6 +82,23 @@ Bytes BytesFromHex(std::string_view hex, int* consumed = nullptr);
  */
 std::string ArgsToStr(std::vector<Bytes> const& args);
 
+class BufferConnector {
+ public:
+  void Append(Bytes const& rhs);
+
+  Bytes const& GetResult() const;
+
+ private:
+  Bytes result_;
+};
+
+template <typename... T>
+Bytes ConnectBuffers(T&&... bufs) {
+  BufferConnector conn;
+  (conn.Append(std::forward<T>(bufs)), ...);
+  return conn.GetResult();
+}
+
 }  // namespace utils
 }  // namespace chia
 

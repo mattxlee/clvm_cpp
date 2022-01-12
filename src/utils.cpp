@@ -89,5 +89,13 @@ std::string ArgsToStr(std::vector<Bytes> const& args) {
   return ss.str();
 }
 
+void BufferConnector::Append(Bytes const& rhs) {
+  std::size_t p = result_.size();
+  result_.resize(result_.size() + rhs.size());
+  memcpy(result_.data() + p, rhs.data(), rhs.size());
+}
+
+Bytes const& BufferConnector::GetResult() const { return result_; }
+
 }  // namespace utils
 }  // namespace chia

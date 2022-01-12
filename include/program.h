@@ -66,6 +66,15 @@ class Stack {
 
   bool IsEmpty() const { return stack_.empty(); }
 
+  bool Exists(T const& op) {
+    for (auto const& op_in_stack : stack_) {
+      if (op == op_in_stack) {
+        return true;
+      }
+    }
+    return false;
+  }
+
  private:
   std::stack<T> stack_;
 };
@@ -99,6 +108,9 @@ class Program {
 
  private:
   Program() {}
+
+ private:
+  CLVMObjectPtr sexp_;
 };
 
 }  // namespace chia
