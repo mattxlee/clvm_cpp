@@ -15,11 +15,6 @@ class SHA256 {
 
   void Add(Bytes const& bytes);
 
-  template <int LEN>
-  void Add(std::array<uint8_t, LEN> const& bytes) {
-    Add(utils::bytes_cast<LEN>(bytes));
-  }
-
   Bytes32 Finish();
 
  private:
