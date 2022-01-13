@@ -5,6 +5,10 @@ project(clvm_cpp)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+
+find_package(OpenSSL REQUIRED)
+
 include(FetchContent)
 
 FetchContent_Declare(
@@ -54,12 +58,20 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest bip3x utf8proc toolbox bls_signature
   Sodium relic)
 
-find_package(OpenSSL REQUIRED)
-find_library(gmp gmp)
-
 include_directories(
   /usr/local/include
   ${OPENSSL_INCLUDE_DIR}
+  )
+
+file(GLOB clvm_cpp_src
+  ${CMAKE_SOURCE_DIR}/src/bech32.cpp
+  ${CMAKE_SOURCE_DIR}/src/clvm.cpp
+  ${CMAKE_SOURCE_DIR}/src/crypto_utils.cpp
+  ${CMAKE_SOURCE_DIR}/src/key.cpp
+  ${CMAKE_SOURCE_DIR}/src/mnemonic.cpp
+  ${CMAKE_SOURCE_DIR}/src/program.cpp
+  ${CMAKE_SOURCE_DIR}/src/utils.cpp
+  ${CMAKE_SOURCE_DIR}/src/wallet.cpp
   )
 
 file(GLOB googletest_src
@@ -67,31 +79,15 @@ file(GLOB googletest_src
   ${googletest_SOURCE_DIR}/googletest/src/gtest_main.cc
   )
 
-set(clvm_cpp_test_src ./src/clvm_test.cpp)
+set(test_sha256_treehash_src ${CMAKE_SOURCE_DIR}/tests/test_sha256_treehash.cpp)
 
-add_executable(clvm_cpp_test ${clvm_cpp_test_src} ${googletest_src})
-target_include_directories(clvm_cpp_test PRIVATE
-  ${googletest_SOURCE_DIR}/googletest
-  ${googletest_SOURCE_DIR}/googletest/include
-  ${utf8proc_SOURCE_DIR}
-  ${CMAKE_SOURCE_DIR}/include
+add_executable(test_sha256_treehash
+  ${test_sha256_treehash_src}
+  ${clvm_cpp_src}
+  ${bls_src}
+  ${googletest_src}
   )
-
-enable_testing()
-add_test(NAME clvm_cpp_test COMMAND clvm_cpp_test)
-
-set(clvm_cpp_src
-  ${CMAKE_SOURCE_DIR}/src/mnemonic.cpp
-  ${CMAKE_SOURCE_DIR}/src/key.cpp
-  ${CMAKE_SOURCE_DIR}/src/wallet.cpp
-  ${CMAKE_SOURCE_DIR}/src/utils.cpp
-  ${CMAKE_SOURCE_DIR}/src/crypto_utils.cpp
-  ${CMAKE_SOURCE_DIR}/src/bech32.cpp
-  ${CMAKE_SOURCE_DIR}/src/program.cpp
-  )
-
-add_library(clvm_cpp ${clvm_cpp_src})
-target_include_directories(clvm_cpp PRIVATE
+target_include_directories(test_sha256_treehash PRIVATE
   ${googletest_SOURCE_DIR}/googletest
   ${googletest_SOURCE_DIR}/googletest/include
   ${bip3x_SOURCE_DIR}/include
@@ -103,3 +99,17 @@ target_include_directories(clvm_cpp PRIVATE
   ${CMAKE_SOURCE_DIR}/include
   )
 
+target_link_options(test_sha256_treehash PRIVATE
+  "-L${CMAKE_SOURCE_DIR}/../target/${CMAKE_BUILD_TYPE}")
+
+target_link_libraries(test_sha256_treehash
+  clvm_rs
+  bip39
+  bls
+  utf8proc
+  OpenSSL::SSL
+  OpenSSL::Crypto
+  )
+
+enable_testing()
+add_test(NAME test_sha256_treehash COMMAND test_sha256_treehash)
