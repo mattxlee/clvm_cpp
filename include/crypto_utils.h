@@ -27,7 +27,7 @@ class SHA256 {
 };
 
 template <typename... T>
-Bytes32 MakeSHA256(T const&... args) {
+Bytes32 MakeSHA256(T&&... args) {
   SHA256 sha;
   (sha.Add(std::forward<T>(args)), ...);
   return sha.Finish();

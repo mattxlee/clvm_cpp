@@ -51,6 +51,10 @@ class CLVMObject_Pair : public CLVMObject {
   CLVMObjectPtr second_;
 };
 
+Bytes Atom(CLVMObjectPtr obj);
+
+std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj);
+
 using StreamReadFunc = std::function<Bytes(int size)>;
 
 template <typename T>

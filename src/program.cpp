@@ -24,6 +24,22 @@ CLVMObject_Atom::CLVMObject_Atom(Bytes bytes)
 CLVMObject_Pair::CLVMObject_Pair(CLVMObjectPtr first, CLVMObjectPtr second)
     : CLVMObject(NodeType::Pair), first_(first), second_(second) {}
 
+Bytes Atom(CLVMObjectPtr obj) {
+  if (obj->GetNodeType() != NodeType::Atom) {
+    throw std::runtime_error("it's not an ATOM");
+  }
+  auto atom = std::dynamic_pointer_cast<CLVMObject_Atom>(obj);
+  return atom->GetBytes();
+}
+
+std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj) {
+  if (obj->GetNodeType() != NodeType::Pair) {
+    throw std::runtime_error("it's not a PAIR");
+  }
+  auto atom = std::dynamic_pointer_cast<CLVMObject_Pair>(obj);
+  return std::make_tuple(atom->GetFirstNode(), atom->GetSecondNode());
+}
+
 /**
  * =============================================================================
  * Op: SExp
@@ -131,13 +147,13 @@ class OpStack : public Stack<Op> {};
 
 Bytes32 SHA256TreeHash(
     CLVMObjectPtr sexp,
-    std::vector<Bytes32> const& precalculated = std::vector<Bytes32>()) {
+    std::vector<Bytes> const& precalculated = std::vector<Bytes>()) {
   Op handle_pair = [](ValStack& sexp_stack, OpStack& op_stack) {
     auto p0 = sexp_stack.Pop();
     auto p1 = sexp_stack.Pop();
     Bytes prefix(1);
-    sexp_stack.Push(ToSExp(utils::bytes_cast<32>(
-        crypto_utils::MakeSHA256(utils::ConnectBuffers(prefix, p0, p1)))));
+    sexp_stack.Push(ToSExp(utils::bytes_cast<32>(crypto_utils::MakeSHA256(
+        utils::ConnectBuffers(prefix, Atom(p0), Atom(p1))))));
   };
 
   Op roll = [](ValStack& sexp_stack, OpStack& op_stack) {
@@ -151,9 +167,7 @@ Bytes32 SHA256TreeHash(
                        ValStack& sexp_stack, OpStack& op_stack) {
     auto sexp = sexp_stack.Pop();
     if (sexp->GetNodeType() == NodeType::Pair) {
-      auto sexp_pair = std::dynamic_pointer_cast<CLVMObject_Pair>(sexp);
-      auto p0 = sexp_pair->GetFirstNode();
-      auto p1 = sexp_pair->GetSecondNode();
+      auto [p0, p1] = Pair(sexp);
       sexp_stack.Push(p0);
       sexp_stack.Push(p1);
       op_stack.Push(handle_pair);
@@ -161,17 +175,17 @@ Bytes32 SHA256TreeHash(
       op_stack.Push(roll);
       op_stack.Push(handle_sexp);
     } else {
-      auto sexp_atom = std::dynamic_pointer_cast<CLVMObject_Atom>(sexp);
-      auto i = std::find(std::begin(precalculated), std::end(precalculated),
-                         sexp_atom->GetBytes());
+      Bytes atom = Atom(sexp);
+      auto i =
+          std::find(std::begin(precalculated), std::end(precalculated), atom);
       Bytes r;
       if (i != std::end(precalculated)) {
-        r = sexp_atom->GetBytes();
+        r = atom;
       } else {
         Bytes prefix(1);
         prefix[0] = '\1';
-        r = utils::bytes_cast<32>(crypto_utils::MakeSHA256(
-            utils::ConnectBuffers(prefix, sexp_atom->GetBytes())));
+        r = utils::bytes_cast<32>(
+            crypto_utils::MakeSHA256(utils::ConnectBuffers(prefix, atom)));
       }
       sexp_stack.Push(ToSExp(r));
     }
@@ -192,8 +206,7 @@ Bytes32 SHA256TreeHash(
   assert(sexp_stack.IsEmpty());
   assert(res->GetNodeType() == NodeType::Atom);
 
-  auto sexp_atom = std::dynamic_pointer_cast<CLVMObject_Atom>(sexp);
-  return utils::bytes_cast<32>(sexp_atom->GetBytes());
+  return utils::bytes_cast<32>(Atom(sexp));
 }
 
 }  // namespace tree_hash
