@@ -91,11 +91,6 @@ target_include_directories(test_sha256_treehash PRIVATE
   ${googletest_SOURCE_DIR}/googletest
   ${googletest_SOURCE_DIR}/googletest/include
   ${bip3x_SOURCE_DIR}/include
-  ${utf8proc_SOURCE_DIR}
-  ${toolbox_SOURCE_DIR}/include
-  ${bls_signature_SOURCE_DIR}/src
-  ${relic_SOURCE_DIR}/include
-  ${relic_BINARY_DIR}/include
   ${CMAKE_SOURCE_DIR}/include
   )
 
