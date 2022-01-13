@@ -21,8 +21,14 @@ CLVMObject::CLVMObject(NodeType type) {}
 CLVMObject_Atom::CLVMObject_Atom(Bytes bytes)
     : CLVMObject(NodeType::Atom), bytes_(std::move(bytes)) {}
 
+Bytes CLVMObject_Atom::GetBytes() const { return bytes_; }
+
 CLVMObject_Pair::CLVMObject_Pair(CLVMObjectPtr first, CLVMObjectPtr second)
     : CLVMObject(NodeType::Pair), first_(first), second_(second) {}
+
+CLVMObjectPtr CLVMObject_Pair::GetFirstNode() const { return first_; }
+
+CLVMObjectPtr CLVMObject_Pair::GetSecondNode() const { return second_; }
 
 Bytes Atom(CLVMObjectPtr obj) {
   if (obj->GetNodeType() != NodeType::Atom) {
@@ -53,6 +59,26 @@ CLVMObjectPtr ToSExp(Bytes bytes) {
 CLVMObjectPtr ToSExp(CLVMObjectPtr first, CLVMObjectPtr second) {
   return CLVMObjectPtr(new CLVMObject_Pair(first, second));
 }
+
+class StreamReader {
+ public:
+  explicit StreamReader(Bytes const& bytes) : bytes_(bytes) {}
+
+  Bytes operator()(int size) const {
+    Bytes res;
+    int read_size = std::min<std::size_t>(size, bytes_.size() - pos_);
+    if (read_size == 0) {
+      return res;
+    }
+    res.resize(read_size);
+    memcpy(res.data(), bytes_.data() + pos_, read_size);
+    return res;
+  }
+
+ private:
+  Bytes const& bytes_;
+  int pos_{0};
+};
 
 template <typename T>
 T IntFromBytesBE(Bytes const& bytes) {
@@ -217,9 +243,17 @@ Bytes32 SHA256TreeHash(
  * =============================================================================
  */
 
-Program Program::ImportFromBytes(Bytes const& bytes) { return Program(); }
+Program Program::ImportFromBytes(Bytes const& bytes) {
+  Program prog;
+  prog.sexp_ = SExpFromStream(StreamReader(bytes));
+  return prog;
+}
 
-Program Program::LoadFromFile(std::string_view file_path) { return Program(); }
+Program Program::LoadFromFile(std::string_view file_path) {
+  std::string prog_hex = utils::LoadHexFromFile(file_path);
+  Bytes prog_bytes = utils::BytesFromHex(prog_hex);
+  return ImportFromBytes(prog_bytes);
+}
 
 Bytes32 Program::GetTreeHash() { return tree_hash::SHA256TreeHash(sexp_); }
 

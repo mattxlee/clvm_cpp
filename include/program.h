@@ -93,7 +93,7 @@ class OpStack : public Stack<Op> {};
 
 using ReadStreamFunc = std::function<Bytes(int size)>;
 
-CLVMObjectPtr SExpFromStream(ReadStreamFunc&& f);
+CLVMObjectPtr SExpFromStream(ReadStreamFunc f);
 
 class Result {
  public:
@@ -108,7 +108,7 @@ class Program {
   Bytes32 GetTreeHash();
 
   template <typename... P>
-  Result Run(P const&&... p) {}
+  Result Run(P&&... p) {}
 
  private:
   Program() {}

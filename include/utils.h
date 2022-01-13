@@ -65,12 +65,10 @@ std::string BytesToHex(Bytes const& bytes, std::string_view prefix = "0x");
  * Convert a hex string into a byte array
  *
  * @param hex The hex string contains hex bytes
- * @param consumed A pointer to int which indicates how many characters are
- * consumed by this convertion
  *
  * @return The converted byte array
  */
-Bytes BytesFromHex(std::string_view hex, int* consumed = nullptr);
+Bytes BytesFromHex(std::string_view hex);
 
 /**
  * Convert byte array list to the string represents the arguments to a chialisp
@@ -81,6 +79,15 @@ Bytes BytesFromHex(std::string_view hex, int* consumed = nullptr);
  * @return A string represents the arguments to chialisp
  */
 std::string ArgsToStr(std::vector<Bytes> const& args);
+
+/**
+ * Load hex string from a file
+ *
+ * @param file_path The file path of the hex file
+ *
+ * @return Hex string
+ */
+std::string LoadHexFromFile(std::string_view file_path);
 
 class BufferConnector {
  public:

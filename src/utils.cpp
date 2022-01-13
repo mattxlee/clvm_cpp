@@ -1,5 +1,6 @@
 #include "utils.h"
 
+#include <fstream>
 #include <sstream>
 
 namespace chia {
@@ -86,6 +87,20 @@ std::string ArgsToStr(std::vector<Bytes> const& args) {
     ++i;
   }
   ss << ")";
+  return ss.str();
+}
+
+std::string LoadHexFromFile(std::string_view file_path) {
+  std::ifstream in(file_path);
+  if (!in.is_open()) {
+    throw std::runtime_error("cannot open file to read");
+  }
+  std::stringstream ss;
+  std::string line;
+  while (!in.eof()) {
+    std::getline(in, line);
+    ss << line;
+  }
   return ss.str();
 }
 
