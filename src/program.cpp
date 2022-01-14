@@ -131,13 +131,13 @@ CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
   return ToSExp(blob);
 }
 
-void OpCons(OpStack& op_stack, ValStack& val_stack, StreamReadFunc f) {
+void OpCons(OpStack& op_stack, ValStack& val_stack, StreamReadFunc& f) {
   auto right = val_stack.Pop();
   auto left = val_stack.Pop();
   val_stack.Push(ToSExp(left, right));
 }
 
-void OpReadSExp(OpStack& op_stack, ValStack& val_stack, StreamReadFunc f) {
+void OpReadSExp(OpStack& op_stack, ValStack& val_stack, StreamReadFunc& f) {
   Bytes blob = f(1);
   if (blob.empty()) {
     throw std::runtime_error("bad encoding");

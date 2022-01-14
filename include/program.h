@@ -90,7 +90,7 @@ using ValStack = Stack<CLVMObjectPtr>;
 
 class OpStack;
 
-using Op = std::function<void(OpStack&, ValStack&, StreamReadFunc)>;
+using Op = std::function<void(OpStack&, ValStack&, StreamReadFunc&)>;
 
 class OpStack : public Stack<Op> {};
 
