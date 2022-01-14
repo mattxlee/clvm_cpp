@@ -89,6 +89,15 @@ std::string ArgsToStr(std::vector<Bytes> const& args);
  */
 std::string LoadHexFromFile(std::string_view file_path);
 
+/**
+ * Convert a byte to an byte vector which contains 1 byte
+ *
+ * @param b The byte will be converted
+ *
+ * @return Bytes
+ */
+Bytes ByteToBytes(uint8_t b);
+
 class BufferConnector {
  public:
   void Append(Bytes const& rhs);

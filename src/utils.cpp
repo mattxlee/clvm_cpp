@@ -104,6 +104,12 @@ std::string LoadHexFromFile(std::string_view file_path) {
   return ss.str();
 }
 
+Bytes ByteToBytes(uint8_t b) {
+  Bytes res(1);
+  res[0] = b;
+  return res;
+}
+
 void BufferConnector::Append(Bytes const& rhs) {
   std::size_t p = result_.size();
   result_.resize(result_.size() + rhs.size());
