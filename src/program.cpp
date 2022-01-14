@@ -34,7 +34,7 @@ Bytes Atom(CLVMObjectPtr obj) {
   if (obj->GetNodeType() != NodeType::Atom) {
     throw std::runtime_error("it's not an ATOM");
   }
-  auto atom = std::dynamic_pointer_cast<CLVMObject_Atom>(obj);
+  auto atom = static_cast<CLVMObject_Atom*>(obj.get());
   return atom->GetBytes();
 }
 
@@ -42,8 +42,8 @@ std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj) {
   if (obj->GetNodeType() != NodeType::Pair) {
     throw std::runtime_error("it's not a PAIR");
   }
-  auto atom = std::dynamic_pointer_cast<CLVMObject_Pair>(obj);
-  return std::make_tuple(atom->GetFirstNode(), atom->GetSecondNode());
+  auto pair = static_cast<CLVMObject_Pair*>(obj.get());
+  return std::make_tuple(pair->GetFirstNode(), pair->GetSecondNode());
 }
 
 /**
