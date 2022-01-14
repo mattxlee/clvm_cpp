@@ -102,9 +102,7 @@ CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
     return ToSExp(Bytes());
   }
   if (b <= MAX_SINGLE_BYTE) {
-    Bytes bytes(1);
-    bytes[0] = b;
-    return ToSExp(std::move(bytes));
+    return ToSExp(utils::ByteToBytes(b));
   }
   int bit_count{0};
   int bit_mask{0x80};
@@ -113,7 +111,7 @@ CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
     b &= 0xff ^ bit_mask;
     bit_mask >>= 1;
   }
-  Bytes size_blob{b};
+  Bytes size_blob = utils::ByteToBytes(b);
   if (bit_count > 1) {
     Bytes b = f(bit_count - 1);
     if (b.size() != bit_count - 1) {
@@ -178,7 +176,7 @@ Bytes32 SHA256TreeHash(
   Op handle_pair = [](ValStack& sexp_stack, OpStack& op_stack) {
     auto p0 = sexp_stack.Pop();
     auto p1 = sexp_stack.Pop();
-    Bytes prefix(1);
+    Bytes prefix = utils::ByteToBytes('\2');
     sexp_stack.Push(ToSExp(utils::bytes_cast<32>(crypto_utils::MakeSHA256(
         utils::ConnectBuffers(prefix, Atom(p0), Atom(p1))))));
   };
@@ -209,8 +207,7 @@ Bytes32 SHA256TreeHash(
       if (i != std::end(precalculated)) {
         r = atom;
       } else {
-        Bytes prefix(1);
-        prefix[0] = '\1';
+        Bytes prefix = utils::ByteToBytes('\1');
         r = utils::bytes_cast<32>(
             crypto_utils::MakeSHA256(utils::ConnectBuffers(prefix, atom)));
       }
