@@ -16,7 +16,7 @@ uint8_t const CONS_BOX_MARKER = 0xFF;
  * =============================================================================
  */
 
-CLVMObject::CLVMObject(NodeType type) {}
+CLVMObject::CLVMObject(NodeType type) : type_(type) {}
 
 CLVMObject_Atom::CLVMObject_Atom(Bytes bytes)
     : CLVMObject(NodeType::Atom), bytes_(std::move(bytes)) {}
