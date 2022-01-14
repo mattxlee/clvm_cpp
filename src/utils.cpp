@@ -51,9 +51,8 @@ uint8_t ByteFromHex(std::string_view hex, int* consumed) {
   return byte;
 }
 
-std::string BytesToHex(Bytes const& bytes, std::string_view prefix) {
+std::string BytesToHex(Bytes const& bytes) {
   std::stringstream ss;
-  ss << prefix;
   for (uint8_t byte : bytes) {
     ss << ByteToHex(byte);
   }

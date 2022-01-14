@@ -55,11 +55,10 @@ uint8_t HexCharToByte4b(char ch);
  * Convert a byte array into hex string with the specified hex
  *
  * @param bytes The byte array
- * @param prefix The prefix string, default is '0x'
  *
  * @return Hex string with prefix
  */
-std::string BytesToHex(Bytes const& bytes, std::string_view prefix = "0x");
+std::string BytesToHex(Bytes const& bytes);
 
 /**
  * Convert a hex string into a byte array
