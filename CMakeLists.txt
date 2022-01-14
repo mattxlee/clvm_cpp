@@ -5,7 +5,7 @@ project(clvm_cpp)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG=1")
 
 find_package(OpenSSL REQUIRED)
 
@@ -15,6 +15,8 @@ string(TOLOWER ${CMAKE_BUILD_TYPE} BuildType)
 
 if ("${BuildType}" EQUAL "")
   set(BuildType "release")
+else()
+  set(BuildType "debug")
 endif()
 
 FetchContent_Declare(
@@ -48,21 +50,7 @@ FetchContent_Declare(
   GIT_TAG        main
   )
 
-FetchContent_Declare(Sodium
-  GIT_REPOSITORY https://github.com/AmineKhaldi/libsodium-cmake.git
-  # Latest commit at the moment this was added here
-  # Anchored to libsodium v1.0.18
-  GIT_TAG f73a3fe1afdc4e37ac5fe0ddd401bf521f6bba65
-)
-
-FetchContent_Declare(
-  relic
-  GIT_REPOSITORY https://github.com/Chia-Network/relic.git
-  GIT_TAG  "1d98e5abf3ca5b14fd729bd5bcced88ea70ecfd7"
-)
-
-FetchContent_MakeAvailable(googletest bip3x utf8proc toolbox bls_signature
-  Sodium relic)
+FetchContent_MakeAvailable(googletest bip3x utf8proc toolbox bls_signature)
 
 include_directories(
   /usr/local/include
