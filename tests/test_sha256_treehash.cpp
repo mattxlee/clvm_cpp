@@ -34,6 +34,12 @@ TEST(Utilities, Bytes) {
             chia::utils::BytesFromHex("abef"));
 }
 
+TEST(Utilities, IntBigEndianConvertion) {
+  EXPECT_EQ(chia::utils::IntFromBytesBE<uint32_t>(
+                chia::utils::SerializeBytes(0x01, 0x02)),
+            0x0102);
+}
+
 std::string_view const s0 = "../clvm/calculate_synthetic_public_key.clvm.hex";
 std::string_view const s0_treehash =
     "../clvm/calculate_synthetic_public_key.clvm.hex.sha256tree";
