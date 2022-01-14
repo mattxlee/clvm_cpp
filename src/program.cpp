@@ -81,22 +81,6 @@ class StreamReader {
   mutable int pos_{0};
 };
 
-template <typename T>
-T IntFromBytesBE(Bytes const& bytes) {
-  Bytes be;
-  std::copy(std::rbegin(bytes), std::rend(bytes), std::back_inserter(be));
-  int padding_bytes{0};
-  if (bytes.size() < sizeof(T)) {
-    padding_bytes = sizeof(T) - bytes.size();
-  }
-  for (int i = 0; i < padding_bytes; ++i) {
-    be.push_back(0);
-  }
-  T res;
-  memcpy(&res, be.data(), sizeof(T));
-  return res;
-}
-
 CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
   if (b == 0x80) {
     return ToSExp(Bytes());
@@ -119,7 +103,7 @@ CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
     }
     size_blob = utils::ConnectBuffers(size_blob, b);
   }
-  auto size = IntFromBytesBE<uint64_t>(size_blob);
+  auto size = utils::IntFromBytesBE<uint64_t>(size_blob);
   if (size >= 0x400000000) {
     throw std::runtime_error("blob too large");
   }

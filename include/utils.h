@@ -114,6 +114,29 @@ Bytes ConnectBuffers(T&&... bufs) {
   return conn.GetResult();
 }
 
+template <typename T>
+T IntFromBytesBE(Bytes const& bytes) {
+  Bytes be;
+  std::copy(std::rbegin(bytes), std::rend(bytes), std::back_inserter(be));
+  int padding_bytes{0};
+  if (bytes.size() < sizeof(T)) {
+    padding_bytes = sizeof(T) - bytes.size();
+  }
+  for (int i = 0; i < padding_bytes; ++i) {
+    be.push_back(0);
+  }
+  T res;
+  memcpy(&res, be.data(), sizeof(T));
+  return res;
+}
+
+template <typename... T>
+Bytes SerializeBytes(T&&... vals) {
+  Bytes res;
+  (res.push_back(std::forward<T>(vals)), ...);
+  return res;
+}
+
 }  // namespace utils
 }  // namespace chia
 
