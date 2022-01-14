@@ -72,12 +72,13 @@ class StreamReader {
     }
     res.resize(read_size);
     memcpy(res.data(), bytes_.data() + pos_, read_size);
+    pos_ += read_size;
     return res;
   }
 
  private:
   Bytes const& bytes_;
-  int pos_{0};
+  mutable int pos_{0};
 };
 
 template <typename T>
