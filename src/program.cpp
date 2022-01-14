@@ -214,7 +214,7 @@ Bytes32 SHA256TreeHash(
   assert(sexp_stack.IsEmpty());
   assert(res->GetNodeType() == NodeType::Atom);
 
-  return utils::bytes_cast<32>(Atom(sexp));
+  return utils::bytes_cast<32>(Atom(res));
 }
 
 }  // namespace tree_hash
