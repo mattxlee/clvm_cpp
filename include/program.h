@@ -63,6 +63,9 @@ class Stack {
   void Push(T op) { stack_.push(std::move(op)); }
 
   T Pop() {
+    if (stack_.empty()) {
+      throw std::runtime_error("stack is empty");
+    }
     T res = stack_.top();
     stack_.pop();
     return res;
