@@ -11,6 +11,12 @@ find_package(OpenSSL REQUIRED)
 
 include(FetchContent)
 
+string(TOLOWER ${CMAKE_BUILD_TYPE} BuildType)
+
+if ("${BuildType}" EQUAL "")
+  set(BuildType "release")
+endif()
+
 FetchContent_Declare(
   googletest
   GIT_REPOSITORY https://github.com/google/googletest.git
@@ -95,7 +101,7 @@ target_include_directories(test_sha256_treehash PRIVATE
   )
 
 target_link_options(test_sha256_treehash PRIVATE
-  "-L${CMAKE_SOURCE_DIR}/../target/${CMAKE_BUILD_TYPE}")
+  "-L${CMAKE_SOURCE_DIR}/../target/${BuildType}")
 
 target_link_libraries(test_sha256_treehash
   clvm_rs
