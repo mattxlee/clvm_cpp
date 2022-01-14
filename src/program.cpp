@@ -117,7 +117,7 @@ CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
     if (b.size() != bit_count - 1) {
       throw std::runtime_error("bad encoding");
     }
-    size_blob = utils::ConnectContainers(size_blob, b);
+    size_blob = utils::ConnectBuffers(size_blob, b);
   }
   auto size = IntFromBytesBE<uint64_t>(size_blob);
   if (size >= 0x400000000) {
