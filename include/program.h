@@ -3,12 +3,14 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <stack>
 
 #include "types.h"
 
 namespace chia {
 
+using Cost = uint64_t;
 static std::string_view DEFAULT_HIDDEN_PUZZLE = "ff0980";
 
 enum class NodeType : int { Atom, Pair };
@@ -71,6 +73,13 @@ class Stack {
     return res;
   }
 
+  T GetLast() const {
+    if (stack_.empty()) {
+      throw std::runtime_error("no last item");
+    }
+    return stack_.top();
+  }
+
   bool IsEmpty() const { return stack_.empty(); }
 
   bool Exists(T const& op) {
@@ -88,18 +97,17 @@ class Stack {
 
 using ValStack = Stack<CLVMObjectPtr>;
 
-class OpStack;
-
-using Op = std::function<void(OpStack&, ValStack&, StreamReadFunc&)>;
-
-class OpStack : public Stack<Op> {};
-
 using ReadStreamFunc = std::function<Bytes(int size)>;
 
 CLVMObjectPtr SExpFromStream(ReadStreamFunc f);
 
-class Result {
+class OperatorLookup {
  public:
+  Bytes QUOTE_ATOM;
+  Bytes APPLY_ATOM;
+
+  std::tuple<int, CLVMObjectPtr> operator()(Bytes const& op,
+                                            CLVMObjectPtr operand_list) const;
 };
 
 class Program {
@@ -110,8 +118,9 @@ class Program {
 
   Bytes32 GetTreeHash();
 
-  template <typename... P>
-  Result Run(P&&... p) {}
+  std::tuple<int, CLVMObjectPtr> Run(CLVMObjectPtr args,
+                                     OperatorLookup const& operator_lookup,
+                                     Cost max_cost);
 
  private:
   Program() {}
