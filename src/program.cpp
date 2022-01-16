@@ -103,6 +103,29 @@ CLVMObjectPtr ToFalse() { return ToSExp(Bytes()); }
 
 bool ListP(CLVMObjectPtr obj) { return obj->GetNodeType() == NodeType::Pair; }
 
+int ArgsLen(CLVMObjectPtr obj) {
+  int len{0};
+  while (obj->GetNodeType() == NodeType::Pair) {
+    auto [a, r] = Pair(obj);
+    if (a->GetNodeType() != NodeType::Atom) {
+      throw std::runtime_error("requires in args");
+    }
+    // Next
+    len += Atom(a).size();
+    obj = r;
+  }
+  return len;
+}
+
+std::tuple<bool, Bytes, CLVMObjectPtr> ArgsNext(CLVMObjectPtr obj) {
+  if (obj->GetNodeType() != NodeType::Pair) {
+    return std::make_tuple(false, Bytes(), CLVMObjectPtr());
+  }
+  auto [b, next] = Pair(obj);
+  Bytes bytes = Atom(b);
+  return std::make_tuple(true, bytes, next);
+}
+
 /**
  * =============================================================================
  * SExp Stream

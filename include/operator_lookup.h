@@ -37,10 +37,14 @@ class OperatorLookup {
   OperatorLookup();
 
   std::tuple<int, CLVMObjectPtr> operator()(Bytes const& op,
-                                            CLVMObjectPtr operand_list) const;
+                                            CLVMObjectPtr args) const;
+
+ private:
+  void InitKeywords();
 
  private:
   std::map<uint8_t, std::string> atom_to_keyword_;
+  std::map<std::string, uint8_t> keyword_to_atom_;
 };
 
 }  // namespace chia

@@ -77,6 +77,10 @@ CLVMObjectPtr ToFalse();
 
 bool ListP(CLVMObjectPtr obj);
 
+int ArgsLen(CLVMObjectPtr obj);
+
+std::tuple<bool, Bytes, CLVMObjectPtr> ArgsNext(CLVMObjectPtr obj);
+
 using StreamReadFunc = std::function<Bytes(int size)>;
 
 template <typename T>

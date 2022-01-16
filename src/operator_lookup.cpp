@@ -1,6 +1,9 @@
 #include "operator_lookup.h"
 
 #include "core_opts.h"
+#include "costs.h"
+#include "program.h"
+#include "utils.h"
 
 namespace chia {
 
@@ -33,6 +36,62 @@ std::map<std::string, std::string> OP_REWRITE = {
     {">s", "gr_bytes"},
 };
 
+std::tuple<int, CLVMObjectPtr> default_unknown_op(Bytes const& op,
+                                                  CLVMObjectPtr args) {
+  if (op.empty() || (op.size() > 2 && op[0] == 0xff && op[1] == 0xff)) {
+    throw std::runtime_error("reserved operator");
+  }
+
+  Cost cost_function = (*op.rbegin() & 0b11000000) >> 6;
+
+  if (op.size() > 5) {
+    throw std::runtime_error("invalid operator");
+  }
+
+  Cost cost_multiplier =
+      utils::IntFromBytesBE<uint32_t>(utils::ByteToBytes(*op.rbegin())) + 1;
+
+  Cost cost{0};
+  if (cost_function == 0) {
+    cost = 1;
+  } else if (cost_function == 1) {
+    cost = ARITH_BASE_COST;
+    int arg_size = ArgsLen(args);
+    int num_args = ListLen(args);
+    cost += arg_size * ARITH_COST_PER_BYTE + num_args * ARITH_COST_PER_ARG;
+  } else if (cost_function == 2) {
+    cost = MUL_BASE_COST;
+    try {
+      auto [ok, b, next] = ArgsNext(args);
+      int vs = b.size();
+      while (ok) {
+        auto [ok, b, n] = ArgsNext(next);
+        if (ok) {
+          int rs = b.size();
+          cost += MUL_COST_PER_OP;
+          cost += (rs + vs) * MUL_LINEAR_COST_PER_BYTE;
+          cost += (rs * vs) / MUL_SQUARE_COST_PER_BYTE_DIVIDER;
+          vs += rs;
+          next = n;
+        }
+      }
+    } catch (std::exception const& e) {
+      // TODO ignored exception should be caught
+    }
+  } else if (cost_function == 3) {
+    cost = CONCAT_BASE_COST;
+    int length = ArgsLen(args);
+    cost += CONCAT_COST_PER_BYTE * length + ListLen(args) * CONCAT_COST_PER_ARG;
+  }
+
+  cost *= cost_multiplier;
+  if (cost >= (1L << 32)) {
+    throw std::runtime_error("invalid operator");
+  }
+
+  return std::make_tuple(cost, CLVMObjectPtr());
+}
+
 Ops& Ops::GetInstance() {
   static Ops instance;
   return instance;
@@ -61,6 +120,24 @@ Ops::Ops() {
 }
 
 OperatorLookup::OperatorLookup() {
+  InitKeywords();
+  QUOTE_ATOM = utils::ByteToBytes(keyword_to_atom_["q"]);
+  APPLY_ATOM = utils::ByteToBytes(keyword_to_atom_["a"]);
+}
+
+std::tuple<int, CLVMObjectPtr> OperatorLookup::operator()(
+    Bytes const& op, CLVMObjectPtr args) const {
+  auto i = atom_to_keyword_.find(op[0]);
+  if (i != std::end(atom_to_keyword_)) {
+    auto op_f = Ops::GetInstance().Query(i->second);
+    if (op_f) {
+      return op_f(args);
+    }
+  }
+  return default_unknown_op(op, args);
+}
+
+void OperatorLookup::InitKeywords() {
   std::string::size_type start{0};
   uint8_t byte{0};
   auto next = KEYWORDS.find(" ", start);
@@ -72,22 +149,12 @@ OperatorLookup::OperatorLookup() {
       // Override the keyword
       keyword = i->second;
     }
-    atom_to_keyword_[byte++] = keyword;
+    atom_to_keyword_[byte] = keyword;
+    keyword_to_atom_[keyword] = byte;
+    // Ready for next
+    ++byte;
     start = next + 1;
   }
-}
-
-std::tuple<int, CLVMObjectPtr> OperatorLookup::operator()(
-    Bytes const& op, CLVMObjectPtr operand_list) const {
-  auto i = atom_to_keyword_.find(op[0]);
-  if (i == std::end(atom_to_keyword_)) {
-    // TODO the op cannot be found
-  }
-  auto op_f = Ops::GetInstance().Query(i->second);
-  if (!op_f) {
-    // TODO the op cannot be found
-  }
-  return op_f(operand_list);
 }
 
 }  // namespace chia
