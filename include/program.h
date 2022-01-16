@@ -10,6 +10,8 @@
 
 namespace chia {
 
+class OperatorLookup;
+
 using Cost = uint64_t;
 static std::string_view DEFAULT_HIDDEN_PUZZLE = "ff0980";
 
@@ -100,15 +102,6 @@ using ValStack = Stack<CLVMObjectPtr>;
 using ReadStreamFunc = std::function<Bytes(int size)>;
 
 CLVMObjectPtr SExpFromStream(ReadStreamFunc f);
-
-class OperatorLookup {
- public:
-  Bytes QUOTE_ATOM;
-  Bytes APPLY_ATOM;
-
-  std::tuple<int, CLVMObjectPtr> operator()(Bytes const& op,
-                                            CLVMObjectPtr operand_list) const;
-};
 
 class Program {
  public:

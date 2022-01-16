@@ -20,14 +20,15 @@ static std::string_view p2_delegated_puzzle_or_hidden_puzzle_sha256_treehash =
     "e9aaa49f45bad5c889b86ee3341550c155cfdd10c3a6757de618d20612fffd52";
 
 Bytes Run(Bytes const& prog, std::vector<Bytes> const& args) {
-  uint32_t res_len{MAX_RESULT_BYTES};
-  Bytes res(res_len);
-  std::string args_str = utils::ArgsToStr(args);
-  run_chia_program(prog.data(), prog.size(),
-                   reinterpret_cast<uint8_t const*>(args_str.data()),
-                   args_str.size(), res.data(), &res_len, INFINITE_COST, 0);
-  res.resize(res_len);
-  return res;
+  // uint32_t res_len{MAX_RESULT_BYTES};
+  // Bytes res(res_len);
+  // std::string args_str = utils::ArgsToStr(args);
+  // run_chia_program(prog.data(), prog.size(),
+  //                  reinterpret_cast<uint8_t const*>(args_str.data()),
+  //                  args_str.size(), res.data(), &res_len, INFINITE_COST, 0);
+  // res.resize(res_len);
+  // return res;
+  return Bytes();
 }
 
 Bytes LoadAndRun(std::string_view script_path, std::vector<Bytes> const& args) {

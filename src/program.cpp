@@ -5,6 +5,7 @@
 
 #include "costs.h"
 #include "crypto_utils.h"
+#include "operator_lookup.h"
 #include "utils.h"
 
 namespace chia {
@@ -260,17 +261,6 @@ Bytes32 SHA256TreeHash(
 }
 
 }  // namespace tree_hash
-
-/**
- * =============================================================================
- * OperatorLookup
- * =============================================================================
- */
-
-std::tuple<int, CLVMObjectPtr> OperatorLookup::operator()(Bytes const& op,
-                                          CLVMObjectPtr operand_list) const {
-
-}
 
 /**
  * =============================================================================
