@@ -3,7 +3,6 @@
 #include <fstream>
 #include <sstream>
 
-#include "clvm_cpp.h"
 #include "crypto_utils.h"
 #include "key.h"
 #include "utils.h"
