@@ -67,6 +67,7 @@ file(GLOB clvm_cpp_src
   ${CMAKE_SOURCE_DIR}/src/utils.cpp
   ${CMAKE_SOURCE_DIR}/src/wallet.cpp
   ${CMAKE_SOURCE_DIR}/src/operator_lookup.cpp
+  ${CMAKE_SOURCE_DIR}/src/core_opts.cpp
   )
 
 file(GLOB googletest_src

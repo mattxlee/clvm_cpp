@@ -59,6 +59,24 @@ Bytes Atom(CLVMObjectPtr obj);
 
 std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj);
 
+CLVMObjectPtr First(CLVMObjectPtr obj);
+
+CLVMObjectPtr Rest(CLVMObjectPtr obj);
+
+bool IsNull(CLVMObjectPtr obj);
+
+int ListLen(CLVMObjectPtr list);
+
+CLVMObjectPtr ToSExp(Bytes bytes);
+
+CLVMObjectPtr ToSExp(CLVMObjectPtr first, CLVMObjectPtr second);
+
+CLVMObjectPtr ToTrue();
+
+CLVMObjectPtr ToFalse();
+
+bool ListP(CLVMObjectPtr obj);
+
 using StreamReadFunc = std::function<Bytes(int size)>;
 
 template <typename T>

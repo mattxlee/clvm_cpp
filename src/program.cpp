@@ -49,6 +49,22 @@ std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj) {
   return std::make_tuple(pair->GetFirstNode(), pair->GetSecondNode());
 }
 
+CLVMObjectPtr First(CLVMObjectPtr obj) {
+  if (obj->GetNodeType() != NodeType::Pair) {
+    throw std::runtime_error("it's not a PAIR");
+  }
+  auto pair = static_cast<CLVMObject_Pair*>(obj.get());
+  return pair->GetFirstNode();
+}
+
+CLVMObjectPtr Rest(CLVMObjectPtr obj) {
+  if (obj->GetNodeType() != NodeType::Pair) {
+    throw std::runtime_error("it's not a PAIR");
+  }
+  auto pair = static_cast<CLVMObject_Pair*>(obj.get());
+  return pair->GetSecondNode();
+}
+
 bool IsNull(CLVMObjectPtr obj) {
   if (obj->GetNodeType() != NodeType::Atom) {
     return false;
@@ -80,6 +96,12 @@ CLVMObjectPtr ToSExp(Bytes bytes) {
 CLVMObjectPtr ToSExp(CLVMObjectPtr first, CLVMObjectPtr second) {
   return CLVMObjectPtr(new CLVMObject_Pair(first, second));
 }
+
+CLVMObjectPtr ToTrue() { return ToSExp(utils::ByteToBytes('\1')); }
+
+CLVMObjectPtr ToFalse() { return ToSExp(Bytes()); }
+
+bool ListP(CLVMObjectPtr obj) { return obj->GetNodeType() == NodeType::Pair; }
 
 /**
  * =============================================================================
