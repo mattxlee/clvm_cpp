@@ -126,6 +126,19 @@ std::tuple<bool, Bytes, CLVMObjectPtr> ArgsNext(CLVMObjectPtr obj) {
   return std::make_tuple(true, bytes, next);
 }
 
+std::tuple<Cost, CLVMObjectPtr> MallocCost(Cost cost, CLVMObjectPtr atom) {
+  return std::make_tuple(cost + Atom(atom).size() * MALLOC_COST_PER_BYTE, atom);
+}
+
+std::vector<Bytes> ListBytes(CLVMObjectPtr args) {
+  std::vector<Bytes> res;
+  ArgsIter iter(args);
+  while (!iter.IsEof()) {
+    res.push_back(iter.Next());
+  }
+  return res;
+}
+
 /**
  * =============================================================================
  * SExp Stream

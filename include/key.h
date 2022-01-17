@@ -10,6 +10,20 @@ namespace wallet {
 
 class Mnemonic;
 
+class PubKey {
+ public:
+  PubKey();
+
+  explicit PubKey(PublicKey pubkey);
+
+  PubKey operator+(PubKey const& rhs) const;
+
+  PublicKey ToPublicKey() const;
+
+ private:
+  PublicKey pubkey_;
+};
+
 class Key {
  public:
   static int const PRIV_KEY_LEN = 32;
@@ -18,6 +32,10 @@ class Key {
 
   static bool VerifySig(PublicKey const& pub_key, Bytes const& msg,
                         Signature const& sig);
+
+  static PublicKey CreatePublicKey();
+
+  static PublicKey AddTwoPubkey(PublicKey const& lhs, PublicKey const& rhs);
 
   /// Create an empty key object without key creation
   Key();

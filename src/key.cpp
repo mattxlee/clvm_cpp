@@ -14,6 +14,33 @@ bool Key::VerifySig(PublicKey const& pub_key, Bytes const& msg,
                                     msg, utils::bytes_cast<SIG_LEN>(sig));
 }
 
+PubKey::PubKey() {
+  pubkey_ = utils::bytes_cast<Key::PUB_KEY_LEN>(bls::G1Element().Serialize());
+}
+
+PubKey::PubKey(PublicKey pubkey) : pubkey_(std::move(pubkey)) {}
+
+PubKey PubKey::operator+(PubKey const& rhs) const {
+  auto res =
+      bls::G1Element::FromBytes(bls::Bytes(pubkey_.data(), pubkey_.size()));
+  return PubKey(utils::bytes_cast<Key::PUB_KEY_LEN>(res.Serialize()));
+}
+
+PublicKey PubKey::ToPublicKey() const { return pubkey_; }
+
+PublicKey Key::CreatePublicKey() {
+  return utils::bytes_cast<PUB_KEY_LEN>(bls::G1Element().Serialize());
+}
+
+PublicKey Key::AddTwoPubkey(PublicKey const& lhs, PublicKey const& rhs) {
+  bls::G1Element g1lhs =
+      bls::G1Element::FromBytes(bls::Bytes(lhs.data(), lhs.size()));
+  bls::G1Element g1rhs =
+      bls::G1Element::FromBytes(bls::Bytes(rhs.data(), rhs.size()));
+  auto res = g1lhs + g1rhs;
+  return utils::bytes_cast<PUB_KEY_LEN>(res.Serialize());
+}
+
 Key::Key() {}
 
 Key::Key(PrivateKey priv_key) : priv_key_(std::move(priv_key)) {}

@@ -7,6 +7,7 @@
 #include <stack>
 
 #include "types.h"
+#include "utils.h"
 
 namespace chia {
 
@@ -80,6 +81,47 @@ bool ListP(CLVMObjectPtr obj);
 int ArgsLen(CLVMObjectPtr obj);
 
 std::tuple<bool, Bytes, CLVMObjectPtr> ArgsNext(CLVMObjectPtr obj);
+
+std::tuple<Cost, CLVMObjectPtr> MallocCost(Cost cost, CLVMObjectPtr atom);
+
+class ArgsIter {
+ public:
+  explicit ArgsIter(CLVMObjectPtr args) : args_(args) {}
+
+  template <typename T>
+  T NextInt(int* num_bytes) {
+    Bytes b = Next();
+    if (num_bytes) {
+      *num_bytes = b.size();
+    }
+    return utils::IntFromBytesBE<T>(b);
+  }
+
+  Bytes Next() {
+    auto [a, n] = Pair(args_);
+    args_ = n;
+    return Atom(a);
+  }
+
+  bool IsEof() const { return args_->GetNodeType() != NodeType::Pair; }
+
+ private:
+  CLVMObjectPtr args_;
+};
+
+template <typename T>
+std::vector<std::tuple<T, int>> ListInts(CLVMObjectPtr args) {
+  ArgsIter iter(args);
+  std::vector<std::tuple<T, int>> res;
+  while (!iter.IsEof()) {
+    int l;
+    T r = iter.NextInt<T>(&l);
+    res.push_back(std::make_tuple(r, l));
+  }
+  return res;
+}
+
+std::vector<Bytes> ListBytes(CLVMObjectPtr args);
 
 using StreamReadFunc = std::function<Bytes(int size)>;
 

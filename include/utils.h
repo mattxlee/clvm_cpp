@@ -97,6 +97,17 @@ std::string LoadHexFromFile(std::string_view file_path);
  */
 Bytes ByteToBytes(uint8_t b);
 
+/**
+ * Get part of a bytes
+ *
+ * @param bytes The source of those bytes
+ * @param start From where the part is
+ * @param count How many bytes you want to crypto_utils
+ *
+ * @return The bytes you want
+ */
+Bytes SubBytes(Bytes const& bytes, int start, int count = 0);
+
 class BufferConnector {
  public:
   void Append(Bytes const& rhs);
@@ -127,6 +138,15 @@ T IntFromBytesBE(Bytes const& bytes) {
   }
   T res;
   memcpy(&res, be.data(), sizeof(T));
+  return res;
+}
+
+template <typename T>
+Bytes IntToBytesBE(T const& val) {
+  Bytes b(sizeof(T));
+  memcpy(b.data(), &val, sizeof(val));
+  Bytes res(sizeof(T));
+  std::copy(std::rbegin(b), std::rend(b), std::back_inserter(res));
   return res;
 }
 
