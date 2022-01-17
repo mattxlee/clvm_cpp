@@ -109,6 +109,16 @@ Bytes ByteToBytes(uint8_t b) {
   return res;
 }
 
+Bytes SubBytes(Bytes const& bytes, int start, int count) {
+  Bytes res;
+  int i{0};
+  for (auto beg = std::begin(bytes) + start;
+       beg != std::end(bytes) && i < count; ++beg, ++i) {
+    res.push_back(*beg);
+  }
+  return res;
+}
+
 void BufferConnector::Append(Bytes const& rhs) {
   std::size_t p = result_.size();
   result_.resize(result_.size() + rhs.size());

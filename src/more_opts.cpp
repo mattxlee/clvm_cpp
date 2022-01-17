@@ -245,20 +245,109 @@ OpResult op_lsh(CLVMObjectPtr args) {
   return MallocCost(cost, ToSExp(utils::IntToBytesBE(r)));
 }
 
-OpResult op_logand(CLVMObjectPtr args) {}
+using BinOpFunc = std::function<int(int, int)>;
 
-OpResult op_logior(CLVMObjectPtr args) {}
+OpResult binop_reduction(std::string_view op_name, int initial_value,
+                         CLVMObjectPtr args, BinOpFunc op_f) {
+  int total{initial_value};
+  int arg_size{0};
+  Cost cost{LOG_BASE_COST};
+  ArgsIter iter(args);
+  while (!iter.IsEof()) {
+    int l;
+    int r = iter.NextInt<int>(&l);
+    total = op_f(total, r);
+    arg_size += l;
+    cost += LOG_COST_PER_ARG;
+  }
+  cost += arg_size * LOG_COST_PER_BYTE;
+  return MallocCost(cost, ToSExp(utils::IntToBytesBE(total)));
+}
 
-OpResult op_logxor(CLVMObjectPtr args) {}
+OpResult op_logand(CLVMObjectPtr args) {
+  auto binop = [](int a, int b) -> int {
+    a &= b;
+    return a;
+  };
+  return binop_reduction("logand", -1, args, binop);
+}
 
-OpResult op_lognot(CLVMObjectPtr args) {}
+OpResult op_logior(CLVMObjectPtr args) {
+  auto binop = [](int a, int b) -> int {
+    a |= b;
+    return a;
+  };
+  return binop_reduction("logior", 0, args, binop);
+}
 
-OpResult op_not(CLVMObjectPtr args) {}
+OpResult op_logxor(CLVMObjectPtr args) {
+  auto binop = [](int a, int b) -> int {
+    a ^= b;
+    return a;
+  };
+  return binop_reduction("logxor", 0, args, binop);
+}
 
-OpResult op_any(CLVMObjectPtr args) {}
+OpResult op_lognot(CLVMObjectPtr args) {
+  if (ListLen(args) != 1) {
+    throw std::runtime_error("op_not takes exactly 1 argument");
+  }
+  auto b0 = Atom(First(args));
+  auto i0 = utils::IntFromBytesBE<int>(b0);
+  int l0 = b0.size();
+  Cost cost = LOGNOT_BASE_COST + l0 * LOGNOT_COST_PER_BYTE;
+  return MallocCost(cost, ToSExp(utils::IntToBytesBE(~i0)));
+}
 
-OpResult op_all(CLVMObjectPtr args) {}
+OpResult op_not(CLVMObjectPtr args) {
+  if (ListLen(args) != 1) {
+    throw std::runtime_error("not takes exactly 1 argument");
+  }
+  Cost cost = BOOL_BASE_COST;
+  return std::make_tuple(cost, IsNull(First(args)) ? ToTrue() : ToFalse());
+}
 
-OpResult op_softfork(CLVMObjectPtr args) {}
+OpResult op_any(CLVMObjectPtr args) {
+  int num_items = ListLen(args);
+  Cost cost = BOOL_BASE_COST + num_items * BOOL_COST_PER_ARG;
+  auto r = ToFalse();
+  ArgsIter iter(args);
+  while (!iter.IsEof()) {
+    auto b = iter.Next();
+    if (!b.empty()) {
+      r = ToTrue();
+      break;
+    }
+  }
+  return std::make_tuple(cost, r);
+}
+
+OpResult op_all(CLVMObjectPtr args) {
+  int num_items = ListLen(args);
+  Cost cost = BOOL_BASE_COST + num_items * BOOL_COST_PER_ARG;
+  auto r = ToTrue();
+  ArgsIter iter(args);
+  while (!iter.IsEof()) {
+    auto b = iter.Next();
+    if (b.empty()) {
+      r = ToFalse();
+      break;
+    }
+  }
+  return std::make_tuple(cost, r);
+}
+
+OpResult op_softfork(CLVMObjectPtr args) {
+  int num_items = ListLen(args);
+  if (num_items < 1) {
+    throw std::runtime_error("softfork takes at least 1 argument");
+  }
+  auto a = Atom(First(args));
+  Cost cost = utils::IntFromBytesBE<int>(a);
+  if (cost < 1) {
+    throw std::runtime_error("cost must be > 0");
+  }
+  return std::make_tuple(cost, ToFalse());
+}
 
 }  // namespace chia

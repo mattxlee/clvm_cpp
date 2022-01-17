@@ -1,6 +1,8 @@
 #include "operator_lookup.h"
 
 #include "core_opts.h"
+#include "more_opts.h"
+
 #include "costs.h"
 #include "program.h"
 #include "utils.h"
@@ -110,6 +112,7 @@ OpFunc Ops::Query(std::string_view op_name) {
 }
 
 Ops::Ops() {
+  // Core operators
   Assign("op_if", op_if);
   Assign("op_cons", op_cons);
   Assign("op_first", op_first);
@@ -117,6 +120,30 @@ Ops::Ops() {
   Assign("op_listp", op_listp);
   Assign("op_raise", op_raise);
   Assign("op_eq", op_eq);
+  // More operators
+  Assign("op_sha256", op_sha256);
+  Assign("op_add", op_add);
+  Assign("op_subtract", op_subtract);
+  Assign("op_multiply", op_multiply);
+  Assign("op_divmod", op_divmod);
+  Assign("op_div", op_div);
+  Assign("op_gr", op_gr);
+  Assign("op_gr_bytes", op_gr_bytes);
+  Assign("op_pubkey_for_exp", op_pubkey_for_exp);
+  Assign("op_point_add", op_point_add);
+  Assign("op_strlen", op_strlen);
+  Assign("op_substr", op_substr);
+  Assign("op_concat", op_concat);
+  Assign("op_ash", op_ash);
+  Assign("op_lsh", op_lsh);
+  Assign("op_logand", op_logand);
+  Assign("op_logior", op_logior);
+  Assign("op_logxor", op_logxor);
+  Assign("op_lognot", op_lognot);
+  Assign("op_not", op_not);
+  Assign("op_any", op_any);
+  Assign("op_all", op_all);
+  Assign("op_softfork", op_softfork);
 }
 
 OperatorLookup::OperatorLookup() {
