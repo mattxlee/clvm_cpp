@@ -50,7 +50,12 @@ FetchContent_Declare(
   GIT_TAG        main
   )
 
-FetchContent_MakeAvailable(googletest bip3x utf8proc toolbox bls_signature)
+FetchContent_Declare(
+  gmp
+  URL https://gmplib.org/download/gmp/gmp-6.2.1.tar.lz
+  )
+
+FetchContent_MakeAvailable(googletest bip3x utf8proc toolbox bls_signature gmp)
 
 include_directories(
   /usr/local/include
@@ -69,6 +74,7 @@ file(GLOB clvm_cpp_src
   ${CMAKE_SOURCE_DIR}/src/operator_lookup.cpp
   ${CMAKE_SOURCE_DIR}/src/core_opts.cpp
   ${CMAKE_SOURCE_DIR}/src/more_opts.cpp
+  ${CMAKE_SOURCE_DIR}/src/int.cpp
   )
 
 file(GLOB googletest_src
