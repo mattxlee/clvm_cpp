@@ -23,63 +23,63 @@ OpResult op_sha256(CLVMObjectPtr args) {
 }
 
 OpResult op_add(CLVMObjectPtr args) {
-  int total{0};
+  Int total{0};
   Cost cost{ARITH_BASE_COST};
   int arg_size{0};
   int len;
   ArgsIter iter(args);
   while (!iter.IsEof()) {
-    total += iter.NextInt<int>(&len);
+    total += iter.NextInt(&len);
     arg_size += len;
     cost += ARITH_COST_PER_ARG;
   }
   cost += arg_size * ARITH_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(utils::IntToBytesBE(total)));
+  return MallocCost(cost, ToSExp(total.ToBytes()));
 }
 
 OpResult op_subtract(CLVMObjectPtr args) {
   Cost cost{ARITH_BASE_COST};
   ArgsIter iter(args);
   if (iter.IsEof()) {
-    return MallocCost(cost, ToSExp(utils::IntToBytesBE(0)));
+    return MallocCost(cost, ToSExp(Int(0).ToBytes()));
   }
-  int sign{1}, total{0}, arg_size{0};
+  int sign{1}, arg_size{0};
+  Int total{0};
   while (!iter.IsEof()) {
     int l;
-    int r = iter.NextInt<int>(&l);
-    total += sign * r;
+    Int r = iter.NextInt(&l);
+    total += r * Int(sign);
     sign = -1;
     arg_size += l;
     cost += ARITH_COST_PER_ARG;
   }
   cost += arg_size * ARITH_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(utils::IntToBytesBE(total)));
+  return MallocCost(cost, ToSExp(total.ToBytes()));
 }
 
 OpResult op_multiply(CLVMObjectPtr args) {
   Cost cost{MUL_BASE_COST};
   ArgsIter iter(args);
   if (iter.IsEof()) {
-    return MallocCost(cost, ToSExp(utils::IntToBytesBE(1)));
+    return MallocCost(cost, ToSExp(Int(1).ToBytes()));
   }
   int vs;
-  int v = iter.NextInt<int>(&vs);
+  Int v = iter.NextInt(&vs);
   while (!iter.IsEof()) {
     int rs;
-    int r = iter.NextInt<int>(&rs);
+    Int r = iter.NextInt(&rs);
     cost += MUL_COST_PER_OP;
     cost += (rs + vs) * MUL_LINEAR_COST_PER_BYTE;
     cost += (rs * vs) / MUL_SQUARE_COST_PER_BYTE_DIVIDER;
     v *= r;
-    vs = 4;  // TODO fix the length of the integer, it might be larger than 4
-             // bytes
+    vs = v.NumBytes();
   }
-  return MallocCost(cost, ToSExp(utils::IntToBytesBE(v)));
+  return MallocCost(cost, ToSExp(v.ToBytes()));
 }
 
 OpResult op_divmod(CLVMObjectPtr args) {
   Cost cost{DIVMOD_BASE_COST};
-  auto ints = ListInts<int>(args);
+  auto ints = ListInts(args);
   if (ints.size() != 2) {
     throw std::runtime_error("invalid length of args");
   }
@@ -88,34 +88,34 @@ OpResult op_divmod(CLVMObjectPtr args) {
   cost += (l0 + l1) * DIVMOD_COST_PER_BYTE;
   auto q = i0 / i1;
   auto r = i0 % i1;
-  auto q1 = ToSExp(utils::IntToBytesBE(q));
-  auto r1 = ToSExp(utils::IntToBytesBE(r));
+  auto q1 = ToSExp(q.ToBytes());
+  auto r1 = ToSExp(r.ToBytes());
   cost += (Atom(q1).size() + Atom(r1).size()) * MALLOC_COST_PER_BYTE;
   return std::make_tuple(cost, ToSExp(q1, r1));
 }
 
 OpResult op_div(CLVMObjectPtr args) {
   Cost cost{DIV_BASE_COST};
-  auto ints = ListInts<int>(args);
+  auto ints = ListInts(args);
   if (ints.size() != 2) {
     throw std::runtime_error("the number of arguments must equals to 2");
   }
   auto [i0, l0] = ints[0];
   auto [i1, l1] = ints[1];
-  if (i1 == 0) {
+  if (i1 == Int(0)) {
     throw std::runtime_error("div with 0");
   }
   cost += (l0 + l1) * DIV_COST_PER_BYTE;
   auto q = i0 / i1;
   auto r = i0 % i1;
-  if (q == -1 && r != 0) {
-    q += 1;
+  if (q == Int(-1) && r != Int(0)) {
+    q += Int(1);
   }
-  return MallocCost(cost, ToSExp(utils::IntToBytesBE(q)));
+  return MallocCost(cost, ToSExp(q.ToBytes()));
 }
 
 OpResult op_gr(CLVMObjectPtr args) {
-  auto ints = ListInts<int>(args);
+  auto ints = ListInts(args);
   auto [i0, l0] = ints[0];
   auto [i1, l1] = ints[1];
   if (ints.size() != 2) {
@@ -135,13 +135,12 @@ OpResult op_gr_bytes(CLVMObjectPtr args) {
   auto b1 = bytes_list[1];
   Cost cost{GRS_BASE_COST};
   cost += (b0.size() + b1.size()) * GRS_COST_PER_BYTE;
-  return std::make_tuple(
-      cost, utils::IntFromBytesBE<int>(b0) > utils::IntFromBytesBE<int>(b1)
-                ? ToTrue()
-                : ToFalse());
+  return std::make_tuple(cost, Int(b0) > Int(b1) ? ToTrue() : ToFalse());
 }
 
-OpResult op_pubkey_for_exp(CLVMObjectPtr args) {}
+OpResult op_pubkey_for_exp(CLVMObjectPtr args) {
+  // TODO implements
+}
 
 OpResult op_point_add(CLVMObjectPtr args) {
   Cost cost{POINT_ADD_BASE_COST};
@@ -162,9 +161,9 @@ OpResult op_strlen(CLVMObjectPtr args) {
     throw std::runtime_error("strlen takes exactly 1 argument");
   }
   auto a0 = Atom(First(args));
-  int size = a0.size();
-  Cost cost = STRLEN_BASE_COST + size * STRLEN_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(utils::IntToBytesBE(size)));
+  Int size(a0.size());
+  Cost cost = a0.size() * STRLEN_COST_PER_BYTE + STRLEN_BASE_COST;
+  return MallocCost(cost, ToSExp(size.ToBytes()));
 }
 
 OpResult op_substr(CLVMObjectPtr args) {
@@ -174,12 +173,12 @@ OpResult op_substr(CLVMObjectPtr args) {
     throw std::runtime_error("substr takes exactly 2 or 3 arguments");
   }
   auto s0 = arg_list[0];
-  int i1 = utils::IntFromBytesBE<int>(arg_list[1]);
+  int i1 = Int(arg_list[1]).ToInt();
   int i2{0};
   if (arg_count == 2) {
     i2 = s0.size();
   } else {
-    i2 = utils::IntFromBytesBE<int>(arg_list[2]);
+    i2 = Int(arg_list[2]).ToInt();
   }
   if (i2 > s0.size() || i2 < i1 || i2 < 0 || i1 < 0) {
     throw std::runtime_error("invalid indices for substr");
@@ -203,12 +202,14 @@ OpResult op_concat(CLVMObjectPtr args) {
 }
 
 OpResult op_ash(CLVMObjectPtr args) {
-  auto arg_list = ListInts<int>(args);
-  auto [i0, l0] = arg_list[0];
-  auto [i1, l1] = arg_list[1];
+  auto arg_list = ListInts(args);
+  auto [bi0, l0] = arg_list[0];
+  auto [bi1, l1] = arg_list[1];
   if (l1 > 4) {
     throw std::runtime_error("ash requires int32 args (with no leading zeros)");
   }
+  auto i0 = bi0.ToInt();
+  auto i1 = bi1.ToInt();
   if (abs(i1) > 65535) {
     throw std::runtime_error("shift too large");
   }
@@ -220,21 +221,21 @@ OpResult op_ash(CLVMObjectPtr args) {
   }
   Cost cost{ASHIFT_BASE_COST};
   cost += (l0 + sizeof(int)) * ASHIFT_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(utils::IntToBytesBE(r)));
+  return MallocCost(cost, ToSExp(Int(r).ToBytes()));
 }
 
 OpResult op_lsh(CLVMObjectPtr args) {
-  auto arg_list = ListInts<int>(args);
-  // auto [i0, l0] = arg_list[0];
-  auto [i1, l1] = arg_list[1];
+  auto arg_list = ListInts(args);
+  auto [bi1, l1] = arg_list[1];
+  auto i1 = bi1.ToInt();
   if (l1 > 4) {
     throw std::runtime_error("ash requires int32 args (with no leading zeros)");
   }
   if (abs(i1) > 65535) {
     throw std::runtime_error("shift too large");
   }
-  uint32_t i0 = utils::IntFromBytesBE<uint32_t>(Atom(First(args)));
-  uint32_t r;
+  int i0 = Int(Atom(First(args))).ToInt();
+  int r;
   if (i1 >= 0) {
     r = i0 << i1;
   } else {
@@ -242,7 +243,7 @@ OpResult op_lsh(CLVMObjectPtr args) {
   }
   Cost cost{LSHIFT_BASE_COST};
   cost += (sizeof(i0) + sizeof(r)) * LSHIFT_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(utils::IntToBytesBE(r)));
+  return MallocCost(cost, ToSExp(Int(r).ToBytes()));
 }
 
 using BinOpFunc = std::function<int(int, int)>;
@@ -255,13 +256,13 @@ OpResult binop_reduction(std::string_view op_name, int initial_value,
   ArgsIter iter(args);
   while (!iter.IsEof()) {
     int l;
-    int r = iter.NextInt<int>(&l);
+    int r = iter.NextInt(&l).ToInt();
     total = op_f(total, r);
     arg_size += l;
     cost += LOG_COST_PER_ARG;
   }
   cost += arg_size * LOG_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(utils::IntToBytesBE(total)));
+  return MallocCost(cost, ToSExp(Int(total).ToBytes()));
 }
 
 OpResult op_logand(CLVMObjectPtr args) {
@@ -293,10 +294,10 @@ OpResult op_lognot(CLVMObjectPtr args) {
     throw std::runtime_error("op_not takes exactly 1 argument");
   }
   auto b0 = Atom(First(args));
-  auto i0 = utils::IntFromBytesBE<int>(b0);
+  auto i0 = Int(b0).ToInt();
   int l0 = b0.size();
   Cost cost = LOGNOT_BASE_COST + l0 * LOGNOT_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(utils::IntToBytesBE(~i0)));
+  return MallocCost(cost, ToSExp(Int(~i0).ToBytes()));
 }
 
 OpResult op_not(CLVMObjectPtr args) {
@@ -343,7 +344,7 @@ OpResult op_softfork(CLVMObjectPtr args) {
     throw std::runtime_error("softfork takes at least 1 argument");
   }
   auto a = Atom(First(args));
-  Cost cost = utils::IntFromBytesBE<int>(a);
+  Cost cost = Int(a).ToInt();
   if (cost < 1) {
     throw std::runtime_error("cost must be > 0");
   }

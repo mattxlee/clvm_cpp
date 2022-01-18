@@ -1,9 +1,8 @@
 #include "operator_lookup.h"
 
 #include "core_opts.h"
-#include "more_opts.h"
-
 #include "costs.h"
+#include "more_opts.h"
 #include "program.h"
 #include "utils.h"
 
@@ -50,8 +49,7 @@ std::tuple<int, CLVMObjectPtr> default_unknown_op(Bytes const& op,
     throw std::runtime_error("invalid operator");
   }
 
-  Cost cost_multiplier =
-      utils::IntFromBytesBE<uint32_t>(utils::ByteToBytes(*op.rbegin())) + 1;
+  Cost cost_multiplier = Int(utils::ByteToBytes(*op.rbegin())).ToInt() + 1;
 
   Cost cost{0};
   if (cost_function == 0) {

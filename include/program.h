@@ -6,6 +6,7 @@
 #include <optional>
 #include <stack>
 
+#include "int.h"
 #include "types.h"
 #include "utils.h"
 
@@ -88,13 +89,12 @@ class ArgsIter {
  public:
   explicit ArgsIter(CLVMObjectPtr args) : args_(args) {}
 
-  template <typename T>
-  T NextInt(int* num_bytes) {
+  Int NextInt(int* num_bytes) {
     Bytes b = Next();
     if (num_bytes) {
       *num_bytes = b.size();
     }
-    return utils::IntFromBytesBE<T>(b);
+    return Int(b);
   }
 
   Bytes Next() {
@@ -109,17 +109,7 @@ class ArgsIter {
   CLVMObjectPtr args_;
 };
 
-template <typename T>
-std::vector<std::tuple<T, int>> ListInts(CLVMObjectPtr args) {
-  ArgsIter iter(args);
-  std::vector<std::tuple<T, int>> res;
-  while (!iter.IsEof()) {
-    int l;
-    T r = iter.NextInt<T>(&l);
-    res.push_back(std::make_tuple(r, l));
-  }
-  return res;
-}
+std::vector<std::tuple<Int, int>> ListInts(CLVMObjectPtr args);
 
 std::vector<Bytes> ListBytes(CLVMObjectPtr args);
 

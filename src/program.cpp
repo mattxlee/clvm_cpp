@@ -130,6 +130,17 @@ std::tuple<Cost, CLVMObjectPtr> MallocCost(Cost cost, CLVMObjectPtr atom) {
   return std::make_tuple(cost + Atom(atom).size() * MALLOC_COST_PER_BYTE, atom);
 }
 
+std::vector<std::tuple<Int, int>> ListInts(CLVMObjectPtr args) {
+  ArgsIter iter(args);
+  std::vector<std::tuple<Int, int>> res;
+  while (!iter.IsEof()) {
+    int l;
+    Int r = iter.NextInt(&l);
+    res.push_back(std::make_tuple(r, l));
+  }
+  return res;
+}
+
 std::vector<Bytes> ListBytes(CLVMObjectPtr args) {
   std::vector<Bytes> res;
   ArgsIter iter(args);
@@ -196,7 +207,7 @@ CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
     }
     size_blob = utils::ConnectBuffers(size_blob, b);
   }
-  auto size = utils::IntFromBytesBE<uint64_t>(size_blob);
+  uint64_t size = Int(size_blob).ToUInt();  // TODO The size might overflow
   if (size >= 0x400000000) {
     throw std::runtime_error("blob too large");
   }

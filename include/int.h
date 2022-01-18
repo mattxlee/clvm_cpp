@@ -12,30 +12,55 @@ struct Impl;
 
 class Int {
  public:
+  static Int Create(Impl* impl);
+
+  Int(Int const& rhs);
+
+  ~Int();
+
   explicit Int(Bytes const& s);
 
-  explicit Int(Impl* impl);
-
   explicit Int(long val);
-  explicit Int(unsigned long val);
 
   Bytes ToBytes() const;
 
+  int NumBytes() const;
+
+  long ToInt() const;
+
+  unsigned long ToUInt() const;
+
+  Int Abs() const;
+
   Int& operator=(Int const& rhs);
 
-  Int operator-(Int const& rhs);
-  Int operator+(Int const& rhs);
-  Int operator*(Int const& rhs);
-  Int operator/(Int const& rhs);
+  Int operator-(Int const& rhs) const;
+  Int operator+(Int const& rhs) const;
+  Int operator*(Int const& rhs) const;
+  Int operator/(Int const& rhs) const;
+  Int operator%(Int const& rhs) const;
+
+  Int& operator+=(Int const& rhs);
+  Int& operator-=(Int const& rhs);
+  Int& operator*=(Int const& rhs);
+  Int& operator/=(Int const& rhs);
+  Int& operator%=(Int const& rhs);
+
+  Int operator++(int);
+  Int& operator++();
+
+  Int operator--(int);
+  Int& operator--();
 
   friend bool operator==(Int const& lhs, Int const& rhs);
+  friend bool operator!=(Int const& lhs, Int const& rhs);
   friend bool operator<(Int const& lhs, Int const& rhs);
   friend bool operator<=(Int const& lhs, Int const& rhs);
   friend bool operator>(Int const& lhs, Int const& rhs);
   friend bool operator>=(Int const& lhs, Int const& rhs);
 
  private:
-  std::unique_ptr<Impl> impl_;
+  Impl* impl_{nullptr};
 };
 
 bool operator==(Int const& lhs, Int const& rhs);

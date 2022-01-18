@@ -5,6 +5,7 @@
 #include "program.h"
 #include "types.h"
 #include "utils.h"
+#include "int.h"
 
 TEST(Utilities, ByteToBytes) {
   auto bytes = chia::utils::ByteToBytes('\1');
@@ -35,9 +36,7 @@ TEST(Utilities, Bytes) {
 }
 
 TEST(Utilities, IntBigEndianConvertion) {
-  EXPECT_EQ(chia::utils::IntFromBytesBE<uint32_t>(
-                chia::utils::SerializeBytes(0x01, 0x02)),
-            0x0102);
+  EXPECT_EQ(chia::Int(chia::utils::SerializeBytes(0x01, 0x02)).ToInt(), 0x0102);
 }
 
 std::string_view const s0 = "../clvm/calculate_synthetic_public_key.clvm.hex";
