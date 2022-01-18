@@ -1,9 +1,12 @@
 #include "more_opts.h"
 
+#include <stdexcept>
+
 #include "costs.h"
 #include "crypto_utils.h"
 #include "key.h"
 #include "program.h"
+#include "utils.h"
 
 namespace chia {
 
@@ -139,7 +142,23 @@ OpResult op_gr_bytes(CLVMObjectPtr args) {
 }
 
 OpResult op_pubkey_for_exp(CLVMObjectPtr args) {
-  // TODO implements
+  if (ListLen(args) != 1) {
+    throw std::runtime_error("pubkey for exp takes exactly 1 parameter");
+  }
+  auto b0 = Atom(First(args));
+  int l0 = b0.size();
+  auto i0 = Int(b0);
+  auto mb = utils::BytesFromHex(
+      "73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001");
+  auto m = Int(mb);
+  i0 %= m;
+  PrivateKey pk = utils::bytes_cast<wallet::Key::PRIV_KEY_LEN>(
+      utils::SubBytes(i0.ToBytes(), 0, wallet::Key::PRIV_KEY_LEN));
+  wallet::Key exponent(pk);
+  auto r = utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(exponent.GetPublicKey());
+  Cost cost{PUBKEY_BASE_COST};
+  cost += l0 * PUBKEY_COST_PER_BYTE;
+  return MallocCost(cost, ToSExp(r));
 }
 
 OpResult op_point_add(CLVMObjectPtr args) {
