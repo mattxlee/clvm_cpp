@@ -101,7 +101,6 @@ target_link_options(test_sha256_treehash PRIVATE
   "-L${CMAKE_SOURCE_DIR}/../target/${BuildType}")
 
 target_link_libraries(test_sha256_treehash
-  clvm_rs
   bip39
   bls
   utf8proc
