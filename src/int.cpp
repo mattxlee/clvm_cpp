@@ -81,6 +81,11 @@ Int Int::operator%(Int const& rhs) const {
   return Create(new Impl{mpz});
 }
 
+Int Int::operator^(Int const& rhs) const {
+  mpz_class mpz = impl_->mpz ^ rhs.impl_->mpz;
+  return Create(new Impl{mpz});
+}
+
 Int& Int::operator+=(Int const& rhs) {
   *this = *this + rhs;
   return *this;
@@ -103,6 +108,11 @@ Int& Int::operator/=(Int const& rhs) {
 
 Int& Int::operator%=(Int const& rhs) {
   *this = *this % rhs;
+  return *this;
+}
+
+Int& Int::operator^=(Int const& rhs) {
+  *this = *this ^ rhs;
   return *this;
 }
 

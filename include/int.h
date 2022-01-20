@@ -39,12 +39,14 @@ class Int {
   Int operator*(Int const& rhs) const;
   Int operator/(Int const& rhs) const;
   Int operator%(Int const& rhs) const;
+  Int operator^(Int const& rhs) const;
 
   Int& operator+=(Int const& rhs);
   Int& operator-=(Int const& rhs);
   Int& operator*=(Int const& rhs);
   Int& operator/=(Int const& rhs);
   Int& operator%=(Int const& rhs);
+  Int& operator^=(Int const& rhs);
 
   Int operator++(int);
   Int& operator++();
