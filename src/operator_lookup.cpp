@@ -162,6 +162,22 @@ std::tuple<int, CLVMObjectPtr> OperatorLookup::operator()(
   return default_unknown_op(op, args);
 }
 
+std::string OperatorLookup::AtomToKeyword(uint8_t a) const {
+  auto i = atom_to_keyword_.find(a);
+  if (i != std::end(atom_to_keyword_)) {
+    return i->second;
+  }
+  throw std::runtime_error("keyword cannot be found by the atom");
+}
+
+uint8_t OperatorLookup::KeywordToAtom(std::string_view keyword) const {
+  auto i = keyword_to_atom_.find(keyword.data());
+  if (i != std::end(keyword_to_atom_)) {
+    return i->second;
+  }
+  throw std::runtime_error("atom cannot be found by the keyword");
+}
+
 void OperatorLookup::InitKeywords() {
   std::string::size_type start{0};
   uint8_t byte{0};

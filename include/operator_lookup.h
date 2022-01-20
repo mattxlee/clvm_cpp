@@ -39,6 +39,10 @@ class OperatorLookup {
   std::tuple<int, CLVMObjectPtr> operator()(Bytes const& op,
                                             CLVMObjectPtr args) const;
 
+  std::string AtomToKeyword(uint8_t a) const;
+
+  uint8_t KeywordToAtom(std::string_view keyword) const;
+
  private:
   void InitKeywords();
 
