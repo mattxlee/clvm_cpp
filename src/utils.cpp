@@ -127,5 +127,11 @@ void BufferConnector::Append(Bytes const& rhs) {
 
 Bytes const& BufferConnector::GetResult() const { return result_; }
 
+Bytes RevertBytes(Bytes const& in) {
+  Bytes b;
+  std::copy(std::rbegin(in), std::rend(in), std::back_inserter(b));
+  return b;
+}
+
 }  // namespace utils
 }  // namespace chia

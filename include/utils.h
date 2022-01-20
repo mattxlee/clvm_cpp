@@ -132,6 +132,16 @@ Bytes SerializeBytes(T&&... vals) {
   return res;
 }
 
+Bytes RevertBytes(Bytes const& in);
+
+template <typename T>
+Bytes IntToBEBytes(T const& val) {
+  Bytes b(sizeof(val));
+  memcpy(b.data(), &val, sizeof(val));
+  b = RevertBytes(b);
+  return b;
+}
+
 }  // namespace utils
 }  // namespace chia
 
