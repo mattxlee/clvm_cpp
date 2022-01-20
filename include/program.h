@@ -176,6 +176,8 @@ class Program {
   CLVMObjectPtr sexp_;
 };
 
+uint8_t MSBMask(uint8_t byte);
+
 }  // namespace chia
 
 #endif

@@ -2,10 +2,10 @@
 #include <string_view>
 
 #include "gtest/gtest.h"
+#include "int.h"
 #include "program.h"
 #include "types.h"
 #include "utils.h"
-#include "int.h"
 
 TEST(Utilities, ByteToBytes) {
   auto bytes = chia::utils::ByteToBytes('\1');
@@ -60,4 +60,55 @@ TEST(CLVM_SHA256_treehash, LoadAndVerify_s1) {
   auto treehash_bytes =
       chia::utils::BytesFromHex(chia::utils::LoadHexFromFile(s1_treehash));
   EXPECT_EQ(chia::utils::bytes_cast<32>(prog.GetTreeHash()), treehash_bytes);
+}
+
+TEST(CLVM_BigInt, Initial100) {
+  chia::Int i(100);
+  EXPECT_EQ(i.ToInt(), 100);
+}
+
+TEST(CLVM_BigInt, InitialN100) {
+  chia::Int i(-100);
+  EXPECT_EQ(i.ToInt(), -100);
+}
+
+TEST(CLVM_BigInt, Initial100FromBytes) {
+  chia::Int i(chia::utils::IntToBEBytes(100));
+  EXPECT_EQ(i.ToInt(), 100);
+}
+
+TEST(CLVM_BigInt, Add) {
+  long a = 0x1234567812345678;
+  long b = 0x1234567812345678;
+
+  chia::Int aa(chia::utils::IntToBEBytes(a));
+  chia::Int bb(chia::utils::IntToBEBytes(b));
+
+  EXPECT_EQ((aa + bb).ToInt(), a + b);
+}
+
+TEST(CLVM_BigInt, Sub) {
+  long a = 0x1234567812345678;
+  long b = 0x1234567812345600;
+
+  chia::Int aa(chia::utils::IntToBEBytes(a));
+  chia::Int bb(chia::utils::IntToBEBytes(b));
+
+  EXPECT_EQ((aa - bb).ToInt(), a - b);
+}
+
+TEST(CLVM, MsbMask) {
+  EXPECT_EQ(chia::MSBMask(0x0), 0x0);
+  EXPECT_EQ(chia::MSBMask(0x01), 0x01);
+  EXPECT_EQ(chia::MSBMask(0x02), 0x02);
+  EXPECT_EQ(chia::MSBMask(0x04), 0x04);
+  EXPECT_EQ(chia::MSBMask(0x08), 0x08);
+  EXPECT_EQ(chia::MSBMask(0x10), 0x10);
+  EXPECT_EQ(chia::MSBMask(0x20), 0x20);
+  EXPECT_EQ(chia::MSBMask(0x40), 0x40);
+  EXPECT_EQ(chia::MSBMask(0x80), 0x80);
+  EXPECT_EQ(chia::MSBMask(0x44), 0x40);
+  EXPECT_EQ(chia::MSBMask(0x2a), 0x20);
+  EXPECT_EQ(chia::MSBMask(0xff), 0x80);
+  EXPECT_EQ(chia::MSBMask(0x0f), 0x08);
 }

@@ -82,25 +82,22 @@ file(GLOB googletest_src
   ${googletest_SOURCE_DIR}/googletest/src/gtest_main.cc
   )
 
-set(test_sha256_treehash_src ${CMAKE_SOURCE_DIR}/tests/test_sha256_treehash.cpp)
+set(test_clvm_src ${CMAKE_SOURCE_DIR}/tests/test_clvm.cpp)
 
-add_executable(test_sha256_treehash
-  ${test_sha256_treehash_src}
+add_executable(test_clvm
+  ${test_clvm_src}
   ${clvm_cpp_src}
   ${bls_src}
   ${googletest_src}
   )
-target_include_directories(test_sha256_treehash PRIVATE
+target_include_directories(test_clvm PRIVATE
   ${googletest_SOURCE_DIR}/googletest
   ${googletest_SOURCE_DIR}/googletest/include
   ${bip3x_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/include
   )
 
-target_link_options(test_sha256_treehash PRIVATE
-  "-L${CMAKE_SOURCE_DIR}/../target/${BuildType}")
-
-target_link_libraries(test_sha256_treehash
+target_link_libraries(test_clvm
   bip39
   bls
   utf8proc
@@ -109,4 +106,4 @@ target_link_libraries(test_sha256_treehash
   )
 
 enable_testing()
-add_test(NAME test_sha256_treehash COMMAND test_sha256_treehash)
+add_test(NAME test_clvm COMMAND test_clvm)
