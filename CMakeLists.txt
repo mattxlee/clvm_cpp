@@ -75,6 +75,7 @@ file(GLOB clvm_cpp_src
   ${CMAKE_SOURCE_DIR}/src/core_opts.cpp
   ${CMAKE_SOURCE_DIR}/src/more_opts.cpp
   ${CMAKE_SOURCE_DIR}/src/int.cpp
+  ${CMAKE_SOURCE_DIR}/src/assemble.cpp
   )
 
 file(GLOB googletest_src
