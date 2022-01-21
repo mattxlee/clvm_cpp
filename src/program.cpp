@@ -244,7 +244,7 @@ CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
 void OpCons(OpStack& op_stack, ValStack& val_stack, StreamReadFunc& f) {
   auto right = val_stack.Pop();
   auto left = val_stack.Pop();
-  val_stack.Push(ToSExp(left, right));
+  val_stack.Push(ToSExpPair(left, right));
 }
 
 void OpReadSExp(OpStack& op_stack, ValStack& val_stack, StreamReadFunc& f) {
@@ -445,7 +445,7 @@ std::tuple<int, CLVMObjectPtr> RunProgram(CLVMObjectPtr program,
   cons_op = [](OpStack& op_stack, ValStack& val_stack) -> int {
     auto v1 = val_stack.Pop();
     auto v2 = val_stack.Pop();
-    val_stack.Push(ToSExp(v1, v2));
+    val_stack.Push(ToSExpPair(v1, v2));
     return 0;
   };
 
@@ -482,7 +482,7 @@ std::tuple<int, CLVMObjectPtr> RunProgram(CLVMObjectPtr program,
     val_stack.Push(opt);
     while (!IsNull(operand_list)) {
       auto [_, r] = Pair(operand_list);
-      val_stack.Push(ToSExp(_, args));
+      val_stack.Push(ToSExpPair(_, args));
       op_stack.Push(cons_op);
       op_stack.Push(eval_op);
       op_stack.Push(swap_op);
@@ -509,7 +509,7 @@ std::tuple<int, CLVMObjectPtr> RunProgram(CLVMObjectPtr program,
       auto [new_program, r] = Pair(operand_list);
       CLVMObjectPtr new_args;
       std::tie(new_args, std::ignore) = Pair(r);
-      val_stack.Push(ToSExp(new_program, new_args));
+      val_stack.Push(ToSExpPair(new_program, new_args));
       op_stack.Push(eval_op);
       return APPLY_COST;
     }
@@ -523,7 +523,7 @@ std::tuple<int, CLVMObjectPtr> RunProgram(CLVMObjectPtr program,
   op_stack.Push(eval_op);
 
   ValStack val_stack;
-  val_stack.Push(ToSExp(program, args));
+  val_stack.Push(ToSExpPair(program, args));
   Cost cost{0};
 
   while (!op_stack.IsEmpty()) {

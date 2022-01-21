@@ -120,14 +120,14 @@ class ListBuilder {
 };
 
 template <typename... T>
-CLVMObjectPtr ToSExp(T&&... vals) {
+CLVMObjectPtr ToSExpList(T&&... vals) {
   ListBuilder build;
   (build.Add(ToSExp(std::forward<T>(vals))), ...);
   return build.GetRoot();
 }
 
 template <typename T1, typename T2>
-CLVMObjectPtr ToSExp(T1&& val1, T2&& val2) {
+CLVMObjectPtr ToSExpPair(T1&& val1, T2&& val2) {
   return std::make_shared<CLVMObject_Pair>(ToSExp(val1), ToSExp(val2),
                                            NodeType::Tuple);
 }

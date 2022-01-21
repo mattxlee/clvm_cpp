@@ -20,7 +20,7 @@ OpResult op_cons(CLVMObjectPtr args) {
   if (ListLen(args) != 2) {
     throw std::runtime_error("c takes exactly 2 arguments");
   }
-  return std::make_tuple(CONS_COST, ToSExp(First(args), First(Rest(args))));
+  return std::make_tuple(CONS_COST, ToSExpPair(First(args), First(Rest(args))));
 }
 
 OpResult op_first(CLVMObjectPtr args) {

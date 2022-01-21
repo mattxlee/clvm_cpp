@@ -94,7 +94,7 @@ OpResult op_divmod(CLVMObjectPtr args) {
   auto q1 = ToSExp(q.ToBytes());
   auto r1 = ToSExp(r.ToBytes());
   cost += (Atom(q1).size() + Atom(r1).size()) * MALLOC_COST_PER_BYTE;
-  return std::make_tuple(cost, ToSExp(q1, r1));
+  return std::make_tuple(cost, ToSExpPair(q1, r1));
 }
 
 OpResult op_div(CLVMObjectPtr args) {
