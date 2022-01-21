@@ -1,6 +1,7 @@
 #include "core_opts.h"
 
 #include "costs.h"
+#include "program.h"
 
 namespace chia {
 
@@ -53,8 +54,7 @@ OpResult op_eq(CLVMObjectPtr args) {
   }
   auto a0 = First(args);
   auto a1 = First(Rest(args));
-  if (a0->GetNodeType() == NodeType::Pair ||
-      a0->GetNodeType() == NodeType::Pair) {
+  if (IsPair(a0) || IsPair(a1)) {
     throw std::runtime_error("= on list");
   }
   auto b0 = Atom(a0);

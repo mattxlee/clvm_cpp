@@ -17,14 +17,22 @@ class OperatorLookup;
 using Cost = uint64_t;
 static std::string_view DEFAULT_HIDDEN_PUZZLE = "ff0980";
 
-enum class NodeType : int { Atom, Pair };
+enum class NodeType : int {
+  None,
+  Atom_Bytes,
+  Atom_Str,
+  Atom_Int,
+  Atom_G1Element,
+  List,
+  Tuple
+};
 
 class CLVMObject;
 using CLVMObjectPtr = std::shared_ptr<CLVMObject>;
 
 class CLVMObject {
  public:
-  explicit CLVMObject(NodeType type);
+  explicit CLVMObject(NodeType type = NodeType::None);
 
   virtual ~CLVMObject() {}
 
@@ -38,6 +46,12 @@ class CLVMObject_Atom : public CLVMObject {
  public:
   explicit CLVMObject_Atom(Bytes bytes);
 
+  explicit CLVMObject_Atom(std::string_view str);
+
+  explicit CLVMObject_Atom(Int const& i);
+
+  explicit CLVMObject_Atom(PublicKey const& g1_element);
+
   Bytes GetBytes() const;
 
  private:
@@ -46,16 +60,22 @@ class CLVMObject_Atom : public CLVMObject {
 
 class CLVMObject_Pair : public CLVMObject {
  public:
-  CLVMObject_Pair(CLVMObjectPtr first, CLVMObjectPtr second);
+  CLVMObject_Pair(CLVMObjectPtr first, CLVMObjectPtr second, NodeType type);
 
   CLVMObjectPtr GetFirstNode() const;
 
   CLVMObjectPtr GetSecondNode() const;
 
+  void SetSecondNode(CLVMObjectPtr rest);
+
  private:
   CLVMObjectPtr first_;
   CLVMObjectPtr second_;
 };
+
+bool IsAtom(CLVMObjectPtr obj);
+
+bool IsPair(CLVMObjectPtr obj);
 
 Bytes Atom(CLVMObjectPtr obj);
 
@@ -65,13 +85,52 @@ CLVMObjectPtr First(CLVMObjectPtr obj);
 
 CLVMObjectPtr Rest(CLVMObjectPtr obj);
 
+CLVMObjectPtr MakeNull();
+
 bool IsNull(CLVMObjectPtr obj);
 
 int ListLen(CLVMObjectPtr list);
 
-CLVMObjectPtr ToSExp(Bytes bytes);
+CLVMObjectPtr ToSExp(CLVMObjectPtr obj);
 
-CLVMObjectPtr ToSExp(CLVMObjectPtr first, CLVMObjectPtr second);
+template <typename T>
+CLVMObjectPtr ToSExp(T&& val) {
+  return std::make_shared<CLVMObject_Atom>(std::forward<T>(val));
+}
+
+class ListBuilder {
+ public:
+  void Add(CLVMObjectPtr obj) {
+    if (!next_) {
+      // Prepare root_
+      root_ = next_ =
+          std::make_shared<CLVMObject_Pair>(obj, MakeNull(), NodeType::List);
+      return;
+    }
+    auto next_pair = std::static_pointer_cast<CLVMObject_Pair>(next_);
+    next_pair->SetSecondNode(
+        std::make_shared<CLVMObject_Pair>(obj, MakeNull(), NodeType::List));
+  }
+
+  CLVMObjectPtr GetRoot() const { return root_; }
+
+ private:
+  CLVMObjectPtr root_;
+  CLVMObjectPtr next_;
+};
+
+template <typename... T>
+CLVMObjectPtr ToSExp(T&&... vals) {
+  ListBuilder build;
+  (build.Add(ToSExp(std::forward<T>(vals))), ...);
+  return build.GetRoot();
+}
+
+template <typename T1, typename T2>
+CLVMObjectPtr ToSExp(T1&& val1, T2&& val2) {
+  return std::make_shared<CLVMObject_Pair>(ToSExp(val1), ToSExp(val2),
+                                           NodeType::Tuple);
+}
 
 CLVMObjectPtr ToTrue();
 
@@ -103,7 +162,7 @@ class ArgsIter {
     return Atom(a);
   }
 
-  bool IsEof() const { return args_->GetNodeType() != NodeType::Pair; }
+  bool IsEof() const { return args_->GetNodeType() != NodeType::None; }
 
  private:
   CLVMObjectPtr args_;

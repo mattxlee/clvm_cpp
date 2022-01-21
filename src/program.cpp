@@ -5,8 +5,11 @@
 
 #include "costs.h"
 #include "crypto_utils.h"
+#include "key.h"
 #include "operator_lookup.h"
+#include "types.h"
 #include "utils.h"
+#include "wallet.h"
 
 namespace chia {
 
@@ -22,19 +25,50 @@ uint8_t const CONS_BOX_MARKER = 0xFF;
 CLVMObject::CLVMObject(NodeType type) : type_(type) {}
 
 CLVMObject_Atom::CLVMObject_Atom(Bytes bytes)
-    : CLVMObject(NodeType::Atom), bytes_(std::move(bytes)) {}
+    : CLVMObject(NodeType::Atom_Bytes), bytes_(std::move(bytes)) {}
+
+CLVMObject_Atom::CLVMObject_Atom(std::string_view str)
+    : CLVMObject(NodeType::Atom_Str) {
+  bytes_.resize(str.size());
+  memcpy(bytes_.data(), str.data(), str.size());
+}
+
+CLVMObject_Atom::CLVMObject_Atom(Int const& i)
+    : CLVMObject(NodeType::Atom_Int) {
+  bytes_ = i.ToBytes();
+}
+
+CLVMObject_Atom::CLVMObject_Atom(PublicKey const& g1_element)
+    : CLVMObject(NodeType::Atom_G1Element) {
+  bytes_ = utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(g1_element);
+}
 
 Bytes CLVMObject_Atom::GetBytes() const { return bytes_; }
 
-CLVMObject_Pair::CLVMObject_Pair(CLVMObjectPtr first, CLVMObjectPtr second)
-    : CLVMObject(NodeType::Pair), first_(first), second_(second) {}
+CLVMObject_Pair::CLVMObject_Pair(CLVMObjectPtr first, CLVMObjectPtr second,
+                                 NodeType type)
+    : CLVMObject(type), first_(first), second_(second) {}
 
 CLVMObjectPtr CLVMObject_Pair::GetFirstNode() const { return first_; }
 
 CLVMObjectPtr CLVMObject_Pair::GetSecondNode() const { return second_; }
 
+void CLVMObject_Pair::SetSecondNode(CLVMObjectPtr rest) { second_ = rest; }
+
+bool IsAtom(CLVMObjectPtr obj) {
+  return obj->GetNodeType() == NodeType::Atom_Bytes ||
+         obj->GetNodeType() == NodeType::Atom_G1Element ||
+         obj->GetNodeType() == NodeType::Atom_Int ||
+         obj->GetNodeType() == NodeType::Atom_Str;
+}
+
+bool IsPair(CLVMObjectPtr obj) {
+  return obj->GetNodeType() == NodeType::List ||
+         obj->GetNodeType() == NodeType::Tuple;
+}
+
 Bytes Atom(CLVMObjectPtr obj) {
-  if (obj->GetNodeType() != NodeType::Atom) {
+  if (!IsAtom(obj)) {
     throw std::runtime_error("it's not an ATOM");
   }
   auto atom = static_cast<CLVMObject_Atom*>(obj.get());
@@ -42,7 +76,7 @@ Bytes Atom(CLVMObjectPtr obj) {
 }
 
 std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj) {
-  if (obj->GetNodeType() != NodeType::Pair) {
+  if (!IsPair(obj)) {
     throw std::runtime_error("it's not a PAIR");
   }
   auto pair = static_cast<CLVMObject_Pair*>(obj.get());
@@ -50,7 +84,7 @@ std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj) {
 }
 
 CLVMObjectPtr First(CLVMObjectPtr obj) {
-  if (obj->GetNodeType() != NodeType::Pair) {
+  if (!IsPair(obj)) {
     throw std::runtime_error("it's not a PAIR");
   }
   auto pair = static_cast<CLVMObject_Pair*>(obj.get());
@@ -58,30 +92,27 @@ CLVMObjectPtr First(CLVMObjectPtr obj) {
 }
 
 CLVMObjectPtr Rest(CLVMObjectPtr obj) {
-  if (obj->GetNodeType() != NodeType::Pair) {
+  if (!IsPair(obj)) {
     throw std::runtime_error("it's not a PAIR");
   }
   auto pair = static_cast<CLVMObject_Pair*>(obj.get());
   return pair->GetSecondNode();
 }
 
-bool IsNull(CLVMObjectPtr obj) {
-  if (obj->GetNodeType() != NodeType::Atom) {
-    return false;
-  }
-  CLVMObject_Atom* atom = static_cast<CLVMObject_Atom*>(obj.get());
-  Bytes bytes = atom->GetBytes();
-  return bytes.empty();
-}
+CLVMObjectPtr MakeNull() { return std::make_shared<CLVMObject>(); }
+
+bool IsNull(CLVMObjectPtr obj) { return obj->GetNodeType() == NodeType::None; }
 
 int ListLen(CLVMObjectPtr list) {
   int count{0};
-  while (list->GetNodeType() == NodeType::Pair) {
+  while (IsPair(list)) {
     ++count;
     std::tie(std::ignore, list) = Pair(list);
   }
   return count;
 }
+
+CLVMObjectPtr ToSExp(CLVMObjectPtr obj) { return obj; }
 
 /**
  * =============================================================================
@@ -89,25 +120,17 @@ int ListLen(CLVMObjectPtr list) {
  * =============================================================================
  */
 
-CLVMObjectPtr ToSExp(Bytes bytes) {
-  return CLVMObjectPtr(new CLVMObject_Atom(std::move(bytes)));
-}
-
-CLVMObjectPtr ToSExp(CLVMObjectPtr first, CLVMObjectPtr second) {
-  return CLVMObjectPtr(new CLVMObject_Pair(first, second));
-}
-
 CLVMObjectPtr ToTrue() { return ToSExp(utils::ByteToBytes('\1')); }
 
 CLVMObjectPtr ToFalse() { return ToSExp(Bytes()); }
 
-bool ListP(CLVMObjectPtr obj) { return obj->GetNodeType() == NodeType::Pair; }
+bool ListP(CLVMObjectPtr obj) { return obj->GetNodeType() == NodeType::List; }
 
 int ArgsLen(CLVMObjectPtr obj) {
   int len{0};
-  while (obj->GetNodeType() == NodeType::Pair) {
+  while (obj->GetNodeType() == NodeType::List) {
     auto [a, r] = Pair(obj);
-    if (a->GetNodeType() != NodeType::Atom) {
+    if (!IsAtom(a)) {
       throw std::runtime_error("requires in args");
     }
     // Next
@@ -118,7 +141,7 @@ int ArgsLen(CLVMObjectPtr obj) {
 }
 
 std::tuple<bool, Bytes, CLVMObjectPtr> ArgsNext(CLVMObjectPtr obj) {
-  if (obj->GetNodeType() != NodeType::Pair) {
+  if (obj->GetNodeType() != NodeType::List) {
     return std::make_tuple(false, Bytes(), CLVMObjectPtr());
   }
   auto [b, next] = Pair(obj);
@@ -287,7 +310,7 @@ Bytes32 SHA256TreeHash(
   Op handle_sexp = [&handle_sexp, &handle_pair, &roll, &precalculated](
                        ValStack& sexp_stack, OpStack& op_stack) {
     auto sexp = sexp_stack.Pop();
-    if (sexp->GetNodeType() == NodeType::Pair) {
+    if (IsPair(sexp)) {
       auto [p0, p1] = Pair(sexp);
       sexp_stack.Push(p0);
       sexp_stack.Push(p1);
@@ -324,7 +347,7 @@ Bytes32 SHA256TreeHash(
   assert(!sexp_stack.IsEmpty());
   auto res = sexp_stack.Pop();
   assert(sexp_stack.IsEmpty());
-  assert(res->GetNodeType() == NodeType::Atom);
+  assert(IsAtom(res));
 
   return utils::bytes_cast<32>(Atom(res));
 }
@@ -394,7 +417,7 @@ std::tuple<int, CLVMObjectPtr> RunProgram(CLVMObjectPtr program,
     int byte_cursor = b.size() - 1;
     int bitmask = 0x01;
     while (byte_cursor > end_byte_cursor || bitmask < end_bitmask) {
-      if (env->GetNodeType() != NodeType::Pair) {
+      if (!IsPair(env)) {
         throw std::runtime_error("path into atom {env}");
       }
       auto [first, rest] = Pair(env);
@@ -429,16 +452,16 @@ std::tuple<int, CLVMObjectPtr> RunProgram(CLVMObjectPtr program,
   eval_op = [traverse_path, &operator_lookup, &apply_op, &cons_op, &eval_op,
              &swap_op](OpStack& op_stack, ValStack& val_stack) -> int {
     auto [sexp, args] = Pair(val_stack.Pop());
-    if (sexp->GetNodeType() != NodeType::Pair) {
+    if (!IsPair(sexp)) {
       auto [cost, r] = traverse_path(sexp, args);
       val_stack.Push(r);
       return cost;
     }
 
     auto [opt, sexp_rest] = Pair(sexp);
-    if (opt->GetNodeType() == NodeType::Pair) {
+    if (IsPair(opt)) {
       auto [new_opt, must_be_nil] = Pair(opt);
-      if (new_opt->GetNodeType() == NodeType::Pair || !IsNull(must_be_nil)) {
+      if (IsPair(new_opt) || !IsNull(must_be_nil)) {
         throw std::runtime_error("syntax X must be lone atom");
       }
       auto new_operand_list = sexp_rest;
@@ -474,7 +497,7 @@ std::tuple<int, CLVMObjectPtr> RunProgram(CLVMObjectPtr program,
                                           ValStack& val_stack) -> int {
     auto operand_list = val_stack.Pop();
     auto opt = val_stack.Pop();
-    if (opt->GetNodeType() == NodeType::Pair) {
+    if (IsPair(opt)) {
       throw std::runtime_error("internal error");
     }
 
