@@ -32,6 +32,8 @@ Container ConnectContainers(Container const& lhs, Container const& rhs) {
   return res;
 }
 
+Bytes StrToBytes(std::string_view str);
+
 /**
  * Convert 4-bit byte to hex character
  *
@@ -141,6 +143,8 @@ Bytes IntToBEBytes(T const& val) {
   b = RevertBytes(b);
   return b;
 }
+
+std::string ToUpper(std::string_view str);
 
 }  // namespace utils
 }  // namespace chia

@@ -6,6 +6,13 @@
 namespace chia {
 namespace utils {
 
+Bytes StrToBytes(std::string_view str) {
+  Bytes b;
+  b.resize(str.size());
+  memcpy(b.data(), str.data(), str.size());
+  return b;
+}
+
 char const hex_chars[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
                             '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
@@ -131,6 +138,13 @@ Bytes RevertBytes(Bytes const& in) {
   Bytes b;
   std::copy(std::rbegin(in), std::rend(in), std::back_inserter(b));
   return b;
+}
+
+std::string ToUpper(std::string_view str) {
+  std::string res;
+  std::transform(std::begin(str), std::end(str), std::back_inserter(res),
+                 [](char ch) { return std::toupper(ch); });
+  return res;
 }
 
 }  // namespace utils

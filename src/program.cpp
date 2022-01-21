@@ -33,6 +33,8 @@ CLVMObject_Atom::CLVMObject_Atom(std::string_view str)
   memcpy(bytes_.data(), str.data(), str.size());
 }
 
+CLVMObject_Atom::CLVMObject_Atom(long i) : CLVMObject_Atom(Int(i)) {}
+
 CLVMObject_Atom::CLVMObject_Atom(Int const& i)
     : CLVMObject(NodeType::Atom_Int) {
   bytes_ = i.ToBytes();
@@ -44,6 +46,18 @@ CLVMObject_Atom::CLVMObject_Atom(PublicKey const& g1_element)
 }
 
 Bytes CLVMObject_Atom::GetBytes() const { return bytes_; }
+
+std::string CLVMObject_Atom::AsString() const {
+  return std::string(std::begin(bytes_), std::end(bytes_));
+}
+
+long CLVMObject_Atom::AsLong() const { return Int(bytes_).ToInt(); }
+
+Int CLVMObject_Atom::AsInt() const { return Int(bytes_); }
+
+PublicKey CLVMObject_Atom::AsG1Element() const {
+  return utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(bytes_);
+}
 
 CLVMObject_Pair::CLVMObject_Pair(CLVMObjectPtr first, CLVMObjectPtr second,
                                  NodeType type)

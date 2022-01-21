@@ -48,11 +48,21 @@ class CLVMObject_Atom : public CLVMObject {
 
   explicit CLVMObject_Atom(std::string_view str);
 
+  explicit CLVMObject_Atom(long i);
+
   explicit CLVMObject_Atom(Int const& i);
 
   explicit CLVMObject_Atom(PublicKey const& g1_element);
 
   Bytes GetBytes() const;
+
+  std::string AsString() const;
+
+  long AsLong() const;
+
+  Int AsInt() const;
+
+  PublicKey AsG1Element() const;
 
  private:
   Bytes bytes_;

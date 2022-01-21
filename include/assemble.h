@@ -10,6 +10,6 @@ namespace chia {
 
 CLVMObjectPtr AssembleFromIR(std::string_view ir_sexp);
 
-} // namespace chia
+}  // namespace chia
 
 #endif
