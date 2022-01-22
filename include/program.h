@@ -238,9 +238,10 @@ class Program {
 
   Bytes32 GetTreeHash();
 
-  std::tuple<int, CLVMObjectPtr> Run(CLVMObjectPtr args,
-                                     OperatorLookup const& operator_lookup,
-                                     Cost max_cost);
+  std::tuple<int, CLVMObjectPtr> Run(CLVMObjectPtr args);
+
+  std::tuple<int, CLVMObjectPtr> Curry(CLVMObjectPtr program,
+                                       CLVMObjectPtr args);
 
  private:
   Program() {}

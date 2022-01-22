@@ -4,6 +4,7 @@
 #include <string>
 #include <tuple>
 
+#include "operator_lookup.h"
 #include "program.h"
 #include "utils.h"
 
@@ -338,13 +339,55 @@ CLVMObjectPtr tokenize_sexp(std::string_view token, int offset,
   return {};
 }
 
-CLVMObjectPtr ReadIR(std::string_view str) {
+CLVMObjectPtr assemble_from_ir(CLVMObjectPtr ir_sexp) {
+  auto keyword_opt = ir_as_symbol(ir_sexp);
+  if (keyword_opt) {
+    std::string keyword = *keyword_opt;
+    if (keyword[0] == '#') {
+      keyword = keyword.substr(1);
+    }
+    OperatorLookup lookup;
+    try {
+      uint8_t atom = lookup.KeywordToAtom(keyword);
+      return ToSExp(utils::ByteToBytes(atom));
+    } catch (std::exception const& e) {
+      return ir_val(ir_sexp);
+    }
+  }
+
+  if (!ir_listp(ir_sexp)) {
+    return ir_val(ir_sexp);
+  }
+
+  if (ir_nullp(ir_sexp)) {
+    return {};
+  }
+
+  auto first = ir_first(ir_sexp);
+  keyword_opt = ir_as_symbol(first);
+  if (keyword_opt) {
+    if (auto keyword = *keyword_opt; keyword == "q") {
+      // TODO note that any symbol is legal after this point
+    }
+  }
+
+  auto sexp_1 = assemble_from_ir(first);
+  auto sexp_2 = assemble_from_ir(ir_rest(ir_sexp));
+  return ToSExpPair(sexp_1, sexp_2);
+}
+
+CLVMObjectPtr read_ir(std::string_view str) {
   stream::TokenStream s(str);
   auto [token, offset] = s.Next();
   while (!token.empty()) {
     return tokenize_sexp(token, offset, s);
   }
   throw std::runtime_error("unexpected end of stream");
+}
+
+CLVMObjectPtr Assemble(std::string_view str) {
+  auto symbols = read_ir(str);
+  return assemble_from_ir(symbols);
 }
 
 }  // namespace chia

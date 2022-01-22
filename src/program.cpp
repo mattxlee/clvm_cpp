@@ -393,7 +393,7 @@ Program Program::ImportFromCompiledFile(std::string_view file_path) {
 
 Program Program::ImportFromAssemble(std::string_view str) {
   Program prog;
-  prog.sexp_ = ReadIR(str);
+  prog.sexp_ = Assemble(str);
   return prog;
 }
 
@@ -413,10 +413,10 @@ using Op = std::function<int(OpStack&, ValStack&)>;
 
 class OpStack : public Stack<Op> {};
 
-std::tuple<int, CLVMObjectPtr> RunProgram(CLVMObjectPtr program,
-                                          CLVMObjectPtr args,
-                                          OperatorLookup const& operator_lookup,
-                                          Cost max_cost) {
+std::tuple<int, CLVMObjectPtr> RunProgram(
+    CLVMObjectPtr program, CLVMObjectPtr args,
+    OperatorLookup const& operator_lookup = OperatorLookup(),
+    Cost max_cost = 0) {
   auto traverse_path = [](CLVMObjectPtr sexp,
                           CLVMObjectPtr env) -> std::tuple<int, CLVMObjectPtr> {
     Cost cost{PATH_LOOKUP_BASE_COST};
@@ -564,9 +564,20 @@ std::tuple<int, CLVMObjectPtr> RunProgram(CLVMObjectPtr program,
 
 }  // namespace run
 
-std::tuple<int, CLVMObjectPtr> Program::Run(
-    CLVMObjectPtr args, OperatorLookup const& operator_lookup, Cost max_cost) {
-  return run::RunProgram(sexp_, args, operator_lookup, max_cost);
+std::tuple<int, CLVMObjectPtr> Program::Run(CLVMObjectPtr args) {
+  return run::RunProgram(sexp_, args);
+}
+
+std::string_view CURRY_OBJ_CODE =
+    "(a (q #a 4 (c 2 (c 5 (c 7 0)))) (c (q (c (q . 2) (c (c (q . 1) 5) (c (a 6 "
+    "(c 2 (c 11 (q 1)))) 0))) #a (i 5 (q 4 (q . 4) (c (c (q . 1) 9) (c (a 6 (c "
+    "2 (c 13 (c 11 0)))) 0))) (q . 11)) 1) 1))";
+
+std::tuple<int, CLVMObjectPtr> Program::Curry(CLVMObjectPtr program,
+                                              CLVMObjectPtr args) {
+  auto bind_args = ToSExpPair(program, args);
+  auto curry_program = Assemble(CURRY_OBJ_CODE);
+  return run::RunProgram(curry_program, bind_args);
 }
 
 }  // namespace chia
