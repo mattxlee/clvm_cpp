@@ -338,8 +338,8 @@ CLVMObjectPtr tokenize_sexp(std::string_view token, int offset,
   return {};
 }
 
-CLVMObjectPtr AssembleFromIR(std::string_view ir_sexp) {
-  stream::TokenStream s(ir_sexp);
+CLVMObjectPtr ReadIR(std::string_view str) {
+  stream::TokenStream s(str);
   auto [token, offset] = s.Next();
   while (!token.empty()) {
     return tokenize_sexp(token, offset, s);

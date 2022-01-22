@@ -3,6 +3,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "assemble.h"
 #include "costs.h"
 #include "crypto_utils.h"
 #include "key.h"
@@ -380,10 +381,20 @@ Program Program::ImportFromBytes(Bytes const& bytes) {
   return prog;
 }
 
-Program Program::LoadFromFile(std::string_view file_path) {
-  std::string prog_hex = utils::LoadHexFromFile(file_path);
-  Bytes prog_bytes = utils::BytesFromHex(prog_hex);
+Program Program::ImportFromHex(std::string_view hex) {
+  Bytes prog_bytes = utils::BytesFromHex(hex);
   return ImportFromBytes(prog_bytes);
+}
+
+Program Program::ImportFromCompiledFile(std::string_view file_path) {
+  std::string hex = utils::LoadHexFromFile(file_path);
+  return ImportFromHex(hex);
+}
+
+Program Program::ImportFromAssemble(std::string_view str) {
+  Program prog;
+  prog.sexp_ = ReadIR(str);
+  return prog;
 }
 
 Bytes32 Program::GetTreeHash() { return tree_hash::SHA256TreeHash(sexp_); }

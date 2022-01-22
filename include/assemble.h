@@ -8,7 +8,7 @@
 
 namespace chia {
 
-CLVMObjectPtr AssembleFromIR(std::string_view ir_sexp);
+CLVMObjectPtr ReadIR(std::string_view str);
 
 }  // namespace chia
 

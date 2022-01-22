@@ -49,14 +49,14 @@ std::string_view const s1_treehash =
     "../clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex.sha256tree";
 
 TEST(CLVM_SHA256_treehash, LoadAndVerify_s0) {
-  auto prog = chia::Program::LoadFromFile(s0);
+  auto prog = chia::Program::ImportFromCompiledFile(s0);
   auto treehash_bytes =
       chia::utils::BytesFromHex(chia::utils::LoadHexFromFile(s0_treehash));
   EXPECT_EQ(chia::utils::bytes_cast<32>(prog.GetTreeHash()), treehash_bytes);
 }
 
 TEST(CLVM_SHA256_treehash, LoadAndVerify_s1) {
-  auto prog = chia::Program::LoadFromFile(s1);
+  auto prog = chia::Program::ImportFromCompiledFile(s1);
   auto treehash_bytes =
       chia::utils::BytesFromHex(chia::utils::LoadHexFromFile(s1_treehash));
   EXPECT_EQ(chia::utils::bytes_cast<32>(prog.GetTreeHash()), treehash_bytes);

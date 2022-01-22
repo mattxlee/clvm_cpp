@@ -230,7 +230,11 @@ class Program {
  public:
   static Program ImportFromBytes(Bytes const& bytes);
 
-  static Program LoadFromFile(std::string_view file_path);
+  static Program ImportFromHex(std::string_view hex);
+
+  static Program ImportFromCompiledFile(std::string_view file_path);
+
+  static Program ImportFromAssemble(std::string_view str);
 
   Bytes32 GetTreeHash();
 
