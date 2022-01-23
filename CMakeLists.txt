@@ -64,7 +64,6 @@ include_directories(
 
 file(GLOB clvm_cpp_src
   ${CMAKE_SOURCE_DIR}/src/bech32.cpp
-  ${CMAKE_SOURCE_DIR}/src/clvm.cpp
   ${CMAKE_SOURCE_DIR}/src/crypto_utils.cpp
   ${CMAKE_SOURCE_DIR}/src/key.cpp
   ${CMAKE_SOURCE_DIR}/src/mnemonic.cpp

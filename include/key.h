@@ -64,6 +64,9 @@ class Key {
   /// Derive key
   Key DerivePath(std::vector<uint32_t> const& paths) const;
 
+  /// Calculate the address from public key
+  Address GetAddress() const;
+
  private:
   PrivateKey priv_key_;
 };

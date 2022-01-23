@@ -126,6 +126,13 @@ Bytes SubBytes(Bytes const& bytes, int start, int count) {
   return res;
 }
 
+std::vector<int> BytesToInts(Bytes const& bytes) {
+  std::vector<int> res;
+  res.resize(bytes.size());
+  std::copy(std::begin(bytes), std::end(bytes), std::begin(res));
+  return res;
+}
+
 void BufferConnector::Append(Bytes const& rhs) {
   std::size_t p = result_.size();
   result_.resize(result_.size() + rhs.size());

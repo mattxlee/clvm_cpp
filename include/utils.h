@@ -110,6 +110,8 @@ Bytes ByteToBytes(uint8_t b);
  */
 Bytes SubBytes(Bytes const& bytes, int start, int count = 0);
 
+std::vector<int> BytesToInts(Bytes const& bytes);
+
 class BufferConnector {
  public:
   void Append(Bytes const& rhs);

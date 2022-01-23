@@ -397,7 +397,11 @@ Program Program::ImportFromAssemble(std::string_view str) {
   return prog;
 }
 
-Bytes32 Program::GetTreeHash() { return tree_hash::SHA256TreeHash(sexp_); }
+Program::Program(CLVMObjectPtr sexp) : sexp_(sexp) {}
+
+Bytes32 Program::GetTreeHash() const {
+  return tree_hash::SHA256TreeHash(sexp_);
+}
 
 uint8_t MSBMask(uint8_t byte) {
   byte |= byte >> 1;
@@ -573,11 +577,11 @@ std::string_view CURRY_OBJ_CODE =
     "(c 2 (c 11 (q 1)))) 0))) #a (i 5 (q 4 (q . 4) (c (c (q . 1) 9) (c (a 6 (c "
     "2 (c 13 (c 11 0)))) 0))) (q . 11)) 1) 1))";
 
-std::tuple<int, CLVMObjectPtr> Program::Curry(CLVMObjectPtr program,
-                                              CLVMObjectPtr args) {
-  auto bind_args = ToSExpPair(program, args);
+Program Program::Curry(CLVMObjectPtr args) {
+  auto bind_args = ToSExpPair(sexp_, args);
   auto curry_program = Assemble(CURRY_OBJ_CODE);
-  return run::RunProgram(curry_program, bind_args);
+  auto [cost, sexp] = run::RunProgram(curry_program, bind_args);
+  return Program(sexp);
 }
 
 }  // namespace chia

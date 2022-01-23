@@ -1,8 +1,13 @@
 #include "key.h"
 
+#include <filesystem>
+#include <map>
 #include <schemes.hpp>
+namespace fs = std::filesystem;
 
+#include "bech32.h"
 #include "mnemonic.h"
+#include "program.h"
 #include "utils.h"
 
 namespace chia {
@@ -83,6 +88,118 @@ Key Key::DerivePath(std::vector<uint32_t> const& paths) const {
     sk = bls::AugSchemeMPL().DeriveChildSk(sk, path);
   }
   return Key(utils::bytes_cast<PRIV_KEY_LEN>(sk.Serialize()));
+}
+
+namespace puzzle {
+
+std::string_view DEFAULT_HIDDEN_PUZZLE = "DEFAULT_HIDDEN_PUZZLE ";
+std::string_view MOD = "MOD";
+std::string_view SYNTHETIC_MOD = "SYNTHETIC_MOD";
+
+class CLVMPrograms {
+ public:
+  static CLVMPrograms& GetInstance() {
+    static CLVMPrograms instance;
+    return instance;
+  }
+
+  void SetPrefix(std::string_view new_prefix) { prefix_ = new_prefix; }
+
+  void SetEntry(std::string_view name, Bytes const& bytes) {
+    Entry entry;
+    entry.type = EntryType::Bytes;
+    entry.content = utils::BytesToHex(bytes);
+    progs_.insert_or_assign(name.data(), std::move(entry));
+  }
+
+  void SetEntry(std::string_view name, std::string_view file_path) {
+    Entry entry;
+    entry.type = EntryType::File;
+    entry.content = file_path;
+    progs_.insert_or_assign(name.data(), std::move(entry));
+  }
+
+  Program GetProgram(std::string_view name) const {
+    auto i = progs_.find(name.data());
+    if (i == std::end(progs_)) {
+      throw std::runtime_error("the program doesn't exist");
+    }
+    Entry const& entry = i->second;
+    if (entry.type == EntryType::Bytes) {
+      return Program::ImportFromBytes(utils::BytesFromHex(entry.content));
+    } else if (entry.type == EntryType::File) {
+      fs::path file_path;
+      if (!prefix_.empty()) {
+        file_path = fs::path(prefix_) / entry.content;
+      } else {
+        file_path = entry.content;
+      }
+      return Program::ImportFromCompiledFile(file_path.string());
+    }
+    throw std::runtime_error("invalid entry type");
+  }
+
+ private:
+  CLVMPrograms() {
+    SetEntry(DEFAULT_HIDDEN_PUZZLE, utils::BytesFromHex("ff0980"));
+    SetEntry(MOD, "p2_delegated_puzzle_or_hidden_puzzle.clvm");
+    SetEntry(SYNTHETIC_MOD, "calculate_synthetic_public_key.clvm");
+  }
+
+ private:
+  enum class EntryType { File, Bytes };
+  struct Entry {
+    EntryType type;
+    std::string content;
+  };
+  std::string prefix_;
+  std::map<std::string, Entry> progs_;
+};
+
+PublicKey calculate_synthetic_public_key(PublicKey const& public_key,
+                                         Bytes32 const& hidden_puzzle_hash) {
+  auto [cost, pk] =
+      CLVMPrograms::GetInstance()
+          .GetProgram(SYNTHETIC_MOD)
+          .Run(ToSExpList(public_key,
+                          utils::bytes_cast<32>(hidden_puzzle_hash)));
+  return utils::bytes_cast<Key::PUB_KEY_LEN>(Atom(pk));
+}
+
+Program puzzle_for_synthetic_public_key(PublicKey const& synthetic_public_key) {
+  return CLVMPrograms::GetInstance().GetProgram(MOD).Curry(
+      ToSExp(synthetic_public_key));
+}
+
+Program puzzle_for_public_key_and_hidden_puzzle_hash(
+    PublicKey const& public_key, Bytes32 const& hidden_puzzle_hash) {
+  auto synthetic_public_key =
+      calculate_synthetic_public_key(public_key, hidden_puzzle_hash);
+
+  return puzzle_for_synthetic_public_key(synthetic_public_key);
+}
+
+Program puzzle_for_public_key_and_hidden_puzzle(PublicKey const& public_key,
+                                                Program const& hidden_puzzle) {
+  return puzzle_for_public_key_and_hidden_puzzle_hash(
+      public_key, hidden_puzzle.GetTreeHash());
+}
+
+Program puzzle_for_pk(PublicKey const& public_key) {
+  return puzzle_for_public_key_and_hidden_puzzle_hash(
+      public_key, CLVMPrograms::GetInstance()
+                      .GetProgram(DEFAULT_HIDDEN_PUZZLE)
+                      .GetTreeHash());
+}
+
+}  // namespace puzzle
+
+Address Key::GetAddress() const {
+  return bech32::Encode(
+      "xch",
+      bech32::ConvertBits(
+          utils::BytesToInts(utils::bytes_cast<PUB_KEY_LEN>(GetPublicKey())), 8,
+          5));
 }
 
 }  // namespace wallet

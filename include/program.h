@@ -236,12 +236,13 @@ class Program {
 
   static Program ImportFromAssemble(std::string_view str);
 
-  Bytes32 GetTreeHash();
+  explicit Program(CLVMObjectPtr sexp);
+
+  Bytes32 GetTreeHash() const;
 
   std::tuple<int, CLVMObjectPtr> Run(CLVMObjectPtr args);
 
-  std::tuple<int, CLVMObjectPtr> Curry(CLVMObjectPtr program,
-                                       CLVMObjectPtr args);
+  Program Curry(CLVMObjectPtr args);
 
  private:
   Program() {}
