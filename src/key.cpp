@@ -195,11 +195,10 @@ Program puzzle_for_pk(PublicKey const& public_key) {
 }  // namespace puzzle
 
 Address Key::GetAddress() const {
+  auto puzzle_hash = puzzle::puzzle_for_pk(GetPublicKey()).GetTreeHash();
   return bech32::Encode(
-      "xch",
-      bech32::ConvertBits(
-          utils::BytesToInts(utils::bytes_cast<PUB_KEY_LEN>(GetPublicKey())), 8,
-          5));
+      "xch", bech32::ConvertBits(
+                 utils::BytesToInts(utils::bytes_cast<32>(puzzle_hash)), 8, 5));
 }
 
 }  // namespace wallet
