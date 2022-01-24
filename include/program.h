@@ -39,7 +39,7 @@ class CLVMObject {
   NodeType GetNodeType() const { return type_; }
 
  private:
-  NodeType type_;
+  NodeType type_{NodeType::None};
 };
 
 class CLVMObject_Atom : public CLVMObject {
@@ -118,8 +118,8 @@ class ListBuilder {
       return;
     }
     auto next_pair = std::static_pointer_cast<CLVMObject_Pair>(next_);
-    next_pair->SetSecondNode(
-        std::make_shared<CLVMObject_Pair>(obj, MakeNull(), NodeType::List));
+    next_ = std::make_shared<CLVMObject_Pair>(obj, MakeNull(), NodeType::List);
+    next_pair->SetSecondNode(next_);
   }
 
   CLVMObjectPtr GetRoot() const { return root_; }
@@ -172,7 +172,7 @@ class ArgsIter {
     return Atom(a);
   }
 
-  bool IsEof() const { return args_->GetNodeType() != NodeType::None; }
+  bool IsEof() const { return args_->GetNodeType() == NodeType::None; }
 
  private:
   CLVMObjectPtr args_;

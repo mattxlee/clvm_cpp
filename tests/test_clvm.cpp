@@ -100,6 +100,24 @@ TEST(CLVM_BigInt, Sub) {
   EXPECT_EQ((aa - bb).ToInt(), a - b);
 }
 
+TEST(CLVM_SExp, List) {
+  auto sexp_list = chia::ToSExpList(10, 20, 30, 40);
+  EXPECT_EQ(chia::ListLen(sexp_list), 4);
+
+  chia::ArgsIter i(sexp_list);
+  auto val10 = chia::Int(i.Next());
+  auto val20 = chia::Int(i.Next());
+  auto val30 = chia::Int(i.Next());
+  auto val40 = chia::Int(i.Next());
+
+  EXPECT_TRUE(i.IsEof());
+
+  EXPECT_EQ(val10.ToInt(), 10);
+  EXPECT_EQ(val20.ToInt(), 20);
+  EXPECT_EQ(val30.ToInt(), 30);
+  EXPECT_EQ(val40.ToInt(), 40);
+}
+
 TEST(CLVM_MsbMask, MsbMask) {
   EXPECT_EQ(chia::MSBMask(0x0), 0x0);
   EXPECT_EQ(chia::MSBMask(0x01), 0x01);
