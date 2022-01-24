@@ -99,7 +99,9 @@ std::string ArgsToStr(std::vector<Bytes> const& args) {
 std::string LoadHexFromFile(std::string_view file_path) {
   std::ifstream in(file_path);
   if (!in.is_open()) {
-    throw std::runtime_error("cannot open file to read");
+    std::stringstream ss;
+    ss << "cannot open file: " << file_path << " to read";
+    throw std::runtime_error(ss.str());
   }
   std::stringstream ss;
   std::string line;
