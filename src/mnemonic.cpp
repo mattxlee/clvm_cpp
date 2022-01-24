@@ -95,7 +95,7 @@ Mnemonic::Words Mnemonic::GetWords() const { return words_; }
  *   mnemonic_normalized = unicodedata.normalize("NFKD",
  *       mnemonic).encode("utf-8")
  *   seed = pbkdf2_hmac("sha512", mnemonic_normalized, salt, 2048)
-
+ *
  *   assert len(seed) == 64
  *   return seed
  */
