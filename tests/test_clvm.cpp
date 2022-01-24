@@ -183,4 +183,7 @@ TEST(CLVM_Key, Verify) {
                 "adce14eef36f77e00bdf2ce7c54d7e3687fcc2e90b6e6a6ec3163fe7ae4cb4"
                 "49fc840b6f6d0a7bf49abb94415900a920"),
             pubk);
+
+  EXPECT_EQ(wallet.GetAddress(0),
+            "xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5");
 }
