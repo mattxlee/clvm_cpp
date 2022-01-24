@@ -195,6 +195,7 @@ void OperatorLookup::InitKeywords() {
     // Ready for next
     ++byte;
     start = next + 1;
+    next = KEYWORDS.find(" ", start);
   }
 }
 
