@@ -142,8 +142,8 @@ class CLVMPrograms {
  private:
   CLVMPrograms() {
     SetEntry(DEFAULT_HIDDEN_PUZZLE, utils::BytesFromHex("ff0980"));
-    SetEntry(MOD, "p2_delegated_puzzle_or_hidden_puzzle.clvm");
-    SetEntry(SYNTHETIC_MOD, "calculate_synthetic_public_key.clvm");
+    SetEntry(MOD, "p2_delegated_puzzle_or_hidden_puzzle.clvm.hex");
+    SetEntry(SYNTHETIC_MOD, "calculate_synthetic_public_key.clvm.hex");
   }
 
  private:
@@ -152,7 +152,7 @@ class CLVMPrograms {
     EntryType type;
     std::string content;
   };
-  std::string prefix_;
+  std::string prefix_{"../clvm"};
   std::map<std::string, Entry> progs_;
 };
 
