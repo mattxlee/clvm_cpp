@@ -104,11 +104,12 @@ Bytes64 Mnemonic::GetSeed(std::string_view passphrase) const {
       utils::NormalizeString(std::string("mnemonic") + passphrase.data());
   std::string mnemonic = utils::NormalizeString(WordsToString(words_));
   Bytes64 digest;
+  digest.fill('\0');
   int len =
       PKCS5_PBKDF2_HMAC(mnemonic.data(), mnemonic.size(),
                         reinterpret_cast<uint8_t const*>(salt.data()),
                         salt.size(), 2048, EVP_sha512(), 64, digest.data());
-  assert(len == 64);
+  assert(len == 1);
   return digest;
 }
 

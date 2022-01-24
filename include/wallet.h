@@ -31,6 +31,9 @@ class Wallet {
   /// Get `Key` object that is according the index
   Key GetKey(uint32_t index) const;
 
+  /// Get main-key which is generated directly from mnemonic
+  Key GetMainKey() const;
+
  private:
   Mnemonic mnemonic_;
   std::string passphrase_;

@@ -38,7 +38,7 @@ class Mnemonic {
   Words GetWords() const;
 
   /// Get the seed, fill with zeros if the mnemonic is empty
-  Bytes64 GetSeed(std::string_view passphrase) const;
+  Bytes64 GetSeed(std::string_view passphrase = "") const;
 
   /// Return `true` if current mnemonic is empty
   bool IsEmpty() const;

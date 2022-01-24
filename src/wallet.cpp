@@ -25,5 +25,7 @@ Key Wallet::GetKey(uint32_t index) const {
   return key.DerivePath({12381, 8444, 2, index});
 }
 
+Key Wallet::GetMainKey() const { return Key(mnemonic_, passphrase_); }
+
 }  // namespace wallet
 }  // namespace chia

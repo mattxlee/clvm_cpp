@@ -8,6 +8,7 @@
 #include "program.h"
 #include "types.h"
 #include "utils.h"
+#include "wallet.h"
 
 TEST(Utilities, ByteToBytes) {
   auto bytes = chia::utils::ByteToBytes('\1');
@@ -123,4 +124,45 @@ TEST(CLVM_Mnemonic, WordsList) {
 
   std::string str = chia::wallet::Mnemonic::WordsToString(words);
   EXPECT_EQ(str, "hello world");
+}
+
+/**
+ * Private key 2450593623
+ * Private key:
+ * 5829ad7349855dbec352bb5564833938092afe642dee4eb4aa194c8878c23b20
+ * Public key:
+ * adce14eef36f77e00bdf2ce7c54d7e3687fcc2e90b6e6a6ec3163fe7ae4cb449fc840b6f6d0a7bf49abb94415900a920
+ * Farmer public key:
+ * 89cb70ca22bbb4e7c84b66f4c415ec5e17b4ed39e4ecd3b254818c15e407f7164fc81c0466006f3249c7f9e6b2b1d289
+ * Pool public key:
+ * 944d51fc3e7da74f85666bd7700e4cca1e8b033774e2c7db01f4bc0e7d14aaaeab05d4c40f740039d01a20f96fa7a1e1
+ * Seed:
+ return village first merit biology slim leaf assume link physical silk identify
+ material peanut keen settle logic absorb better famous exit glove tower inhale
+
+ * Address 0: xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5
+ */
+
+TEST(CLVM_Key, Verify) {
+  chia::wallet::Mnemonic mnemonic(
+      "return village first merit biology slim leaf assume link physical silk "
+      "identify material peanut keen settle logic absorb better famous exit "
+      "glove tower inhale");
+
+  chia::wallet::Wallet wallet(mnemonic, "");
+  chia::wallet::Key key = wallet.GetMainKey();
+
+  auto pk = chia::utils::bytes_cast<chia::wallet::Key::PRIV_KEY_LEN>(
+      key.GetPrivateKey());
+  EXPECT_EQ(
+      chia::utils::BytesFromHex(
+          "5829ad7349855dbec352bb5564833938092afe642dee4eb4aa194c8878c23b20"),
+      pk);
+
+  auto pubk = chia::utils::bytes_cast<chia::wallet::Key::PUB_KEY_LEN>(
+      key.GetPublicKey());
+  EXPECT_EQ(chia::utils::BytesFromHex(
+                "adce14eef36f77e00bdf2ce7c54d7e3687fcc2e90b6e6a6ec3163fe7ae4cb4"
+                "49fc840b6f6d0a7bf49abb94415900a920"),
+            pubk);
 }
