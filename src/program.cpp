@@ -578,8 +578,8 @@ std::string_view CURRY_OBJ_CODE =
     "2 (c 13 (c 11 0)))) 0))) (q . 11)) 1) 1))";
 
 Program Program::Curry(CLVMObjectPtr args) {
-  auto bind_args = ToSExpPair(sexp_, args);
   auto curry_program = Assemble(CURRY_OBJ_CODE);
+  auto bind_args = ToSExpPair(sexp_, args);
   auto [cost, sexp] = run::RunProgram(curry_program, bind_args);
   return Program(sexp);
 }
