@@ -18,6 +18,9 @@ class Int {
 
   ~Int();
 
+  /// Parse an integer from a string
+  Int(std::string_view s, int base);
+
   explicit Int(Bytes const& s);
 
   explicit Int(long val);

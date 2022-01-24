@@ -43,6 +43,8 @@ class OperatorLookup {
 
   uint8_t KeywordToAtom(std::string_view keyword) const;
 
+  int GetCount() const;
+
  private:
   void InitKeywords();
 

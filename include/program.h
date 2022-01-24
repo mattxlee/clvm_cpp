@@ -32,7 +32,7 @@ using CLVMObjectPtr = std::shared_ptr<CLVMObject>;
 
 class CLVMObject {
  public:
-  explicit CLVMObject(NodeType type = NodeType::None);
+  explicit CLVMObject(NodeType type);
 
   virtual ~CLVMObject() {}
 
@@ -44,6 +44,8 @@ class CLVMObject {
 
 class CLVMObject_Atom : public CLVMObject {
  public:
+  CLVMObject_Atom();
+
   explicit CLVMObject_Atom(Bytes bytes);
 
   explicit CLVMObject_Atom(std::string_view str);
@@ -122,7 +124,12 @@ class ListBuilder {
     next_pair->SetSecondNode(next_);
   }
 
-  CLVMObjectPtr GetRoot() const { return root_; }
+  CLVMObjectPtr GetRoot() const {
+    if (root_) {
+      return root_;
+    }
+    return MakeNull();
+  }
 
  private:
   CLVMObjectPtr root_;
@@ -220,7 +227,15 @@ class Stack {
   std::stack<T> stack_;
 };
 
-using ValStack = Stack<CLVMObjectPtr>;
+class ValStack : public Stack<CLVMObjectPtr> {
+ public:
+  void Push(CLVMObjectPtr p) {
+    if (!p) {
+      throw std::runtime_error("push a nil sexp to stack");
+    }
+    Stack::Push(std::move(p));
+  }
+};
 
 using ReadStreamFunc = std::function<Bytes(int size)>;
 

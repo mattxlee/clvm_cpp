@@ -1,5 +1,6 @@
 #include "program.h"
 
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 
@@ -24,6 +25,8 @@ uint8_t const CONS_BOX_MARKER = 0xFF;
  */
 
 CLVMObject::CLVMObject(NodeType type) : type_(type) {}
+
+CLVMObject_Atom::CLVMObject_Atom() : CLVMObject(NodeType::None) {}
 
 CLVMObject_Atom::CLVMObject_Atom(Bytes bytes)
     : CLVMObject(NodeType::Atom_Bytes), bytes_(std::move(bytes)) {}
@@ -71,18 +74,28 @@ CLVMObjectPtr CLVMObject_Pair::GetSecondNode() const { return second_; }
 void CLVMObject_Pair::SetSecondNode(CLVMObjectPtr rest) { second_ = rest; }
 
 bool IsAtom(CLVMObjectPtr obj) {
+  if (!obj) {
+    throw std::runtime_error("can't find the type from a null element");
+  }
   return obj->GetNodeType() == NodeType::Atom_Bytes ||
          obj->GetNodeType() == NodeType::Atom_G1Element ||
          obj->GetNodeType() == NodeType::Atom_Int ||
-         obj->GetNodeType() == NodeType::Atom_Str;
+         obj->GetNodeType() == NodeType::Atom_Str ||
+         obj->GetNodeType() == NodeType::None;
 }
 
 bool IsPair(CLVMObjectPtr obj) {
+  if (!obj) {
+    throw std::runtime_error("can't find the type from a null element");
+  }
   return obj->GetNodeType() == NodeType::List ||
          obj->GetNodeType() == NodeType::Tuple;
 }
 
 Bytes Atom(CLVMObjectPtr obj) {
+  if (!obj) {
+    throw std::runtime_error("can't convert null to atom");
+  }
   if (!IsAtom(obj)) {
     throw std::runtime_error("it's not an ATOM");
   }
@@ -91,8 +104,11 @@ Bytes Atom(CLVMObjectPtr obj) {
 }
 
 std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj) {
+  if (!obj) {
+    throw std::runtime_error("can't convert null to pair");
+  }
   if (!IsPair(obj)) {
-    throw std::runtime_error("it's not a PAIR");
+    throw std::runtime_error("Pair() it's not a PAIR");
   }
   auto pair = static_cast<CLVMObject_Pair*>(obj.get());
   return std::make_tuple(pair->GetFirstNode(), pair->GetSecondNode());
@@ -100,7 +116,7 @@ std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj) {
 
 CLVMObjectPtr First(CLVMObjectPtr obj) {
   if (!IsPair(obj)) {
-    throw std::runtime_error("it's not a PAIR");
+    throw std::runtime_error("First() it's not a PAIR");
   }
   auto pair = static_cast<CLVMObject_Pair*>(obj.get());
   return pair->GetFirstNode();
@@ -108,13 +124,13 @@ CLVMObjectPtr First(CLVMObjectPtr obj) {
 
 CLVMObjectPtr Rest(CLVMObjectPtr obj) {
   if (!IsPair(obj)) {
-    throw std::runtime_error("it's not a PAIR");
+    throw std::runtime_error("Rest() it's not a PAIR");
   }
   auto pair = static_cast<CLVMObject_Pair*>(obj.get());
   return pair->GetSecondNode();
 }
 
-CLVMObjectPtr MakeNull() { return std::make_shared<CLVMObject>(); }
+CLVMObjectPtr MakeNull() { return std::make_shared<CLVMObject_Atom>(); }
 
 bool IsNull(CLVMObjectPtr obj) { return obj->GetNodeType() == NodeType::None; }
 
@@ -139,7 +155,7 @@ CLVMObjectPtr ToTrue() { return ToSExp(utils::ByteToBytes('\1')); }
 
 CLVMObjectPtr ToFalse() { return ToSExp(Bytes()); }
 
-bool ListP(CLVMObjectPtr obj) { return obj->GetNodeType() == NodeType::List; }
+bool ListP(CLVMObjectPtr obj) { return IsPair(obj); }
 
 int ArgsLen(CLVMObjectPtr obj) {
   int len{0};
@@ -225,7 +241,7 @@ class StreamReader {
 
 CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
   if (b == 0x80) {
-    return ToSExp(Bytes());
+    return ToSExp(MakeNull());
   }
   if (b <= MAX_SINGLE_BYTE) {
     return ToSExp(utils::ByteToBytes(b));
@@ -300,7 +316,7 @@ CLVMObjectPtr SExpFromStream(ReadStreamFunc f) {
 namespace tree_hash {
 
 class OpStack;
-using Op = std::function<void(Stack<CLVMObjectPtr>&, OpStack&)>;
+using Op = std::function<void(ValStack&, OpStack&)>;
 
 class OpStack : public Stack<Op> {};
 
@@ -426,7 +442,8 @@ std::tuple<int, CLVMObjectPtr> RunProgram(
     Cost cost{PATH_LOOKUP_BASE_COST};
     cost += PATH_LOOKUP_COST_PER_LEG;
     if (IsNull(sexp)) {
-      return std::make_tuple(cost, CLVMObjectPtr());
+      std::cerr << "sexp is null" << std::endl;
+      return std::make_tuple(cost, MakeNull());
     }
 
     Bytes b = Atom(sexp);
@@ -438,7 +455,8 @@ std::tuple<int, CLVMObjectPtr> RunProgram(
 
     cost += end_byte_cursor * PATH_LOOKUP_COST_PER_ZERO_BYTE;
     if (end_byte_cursor == b.size()) {
-      return std::make_tuple(cost, CLVMObjectPtr());
+      std::cerr << "end_byte_cursor equals to b.size()" << std::endl;
+      return std::make_tuple(cost, MakeNull());
     }
 
     int end_bitmask = MSBMask(b[end_byte_cursor]);
@@ -457,6 +475,10 @@ std::tuple<int, CLVMObjectPtr> RunProgram(
         --byte_cursor;
         bitmask = 0x01;
       }
+    }
+
+    if (!env) {
+      std::cerr << "env is null" << std::endl;
     }
     return std::make_tuple(cost, env);
   };
@@ -518,7 +540,7 @@ std::tuple<int, CLVMObjectPtr> RunProgram(
       operand_list = r;
     }
 
-    val_stack.Push(CLVMObjectPtr());
+    val_stack.Push(MakeNull());
     return 1;
   };
 

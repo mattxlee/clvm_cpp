@@ -158,6 +158,7 @@ class CLVMPrograms {
 
 PublicKey calculate_synthetic_public_key(PublicKey const& public_key,
                                          Bytes32 const& hidden_puzzle_hash) {
+  assert(!public_key.empty());
   auto [cost, pk] =
       CLVMPrograms::GetInstance()
           .GetProgram(SYNTHETIC_MOD)

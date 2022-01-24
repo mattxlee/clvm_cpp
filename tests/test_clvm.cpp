@@ -5,6 +5,7 @@
 #include "int.h"
 #include "key.h"
 #include "mnemonic.h"
+#include "operator_lookup.h"
 #include "program.h"
 #include "types.h"
 #include "utils.h"
@@ -132,6 +133,12 @@ TEST(CLVM_MsbMask, MsbMask) {
   EXPECT_EQ(chia::MSBMask(0x2a), 0x20);
   EXPECT_EQ(chia::MSBMask(0xff), 0x80);
   EXPECT_EQ(chia::MSBMask(0x0f), 0x08);
+}
+
+TEST(CLVM, OperatorLookup) {
+  chia::OperatorLookup ol;
+  EXPECT_EQ(ol.KeywordToAtom("q"), 0x01);
+  EXPECT_EQ(ol.KeywordToAtom("add"), 0x10);
 }
 
 TEST(CLVM_Mnemonic, WordsList) {

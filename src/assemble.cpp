@@ -8,6 +8,18 @@
 #include "program.h"
 #include "utils.h"
 
+#define CONS chia::types::Type::GetInstance().ToType("CONS")
+#define NIL chia::types::Type::GetInstance().ToType("NULL")
+#define INT chia::types::Type::GetInstance().ToType("INT")
+#define HEX chia::types::Type::GetInstance().ToType("HEX")
+#define QUOTES chia::types::Type::GetInstance().ToType("QUOTES")
+#define DOUBLE_QUOTE chia::types::Type::GetInstance().ToType("DOUBLE_QUOTE")
+#define SINGLE_QUOTE chia::types::Type::GetInstance().ToType("SINGLE_QUOTE")
+#define SYMBOL chia::types::Type::GetInstance().ToType("SYMBOL")
+#define OPERATOR chia::types::Type::GetInstance().ToType("OPERATOR")
+#define CODE chia::types::Type::GetInstance().ToType("CODE")
+#define NODE chia::types::Type::GetInstance().ToType("NODE")
+
 namespace chia {
 
 namespace stream {
@@ -53,7 +65,7 @@ class TokenStream {
       if (offset_ < str_.size()) {
         int off{offset_};
         ++offset_;
-        return std::make_tuple(str_.substr(start, offset_ - start).data(),
+        return std::make_tuple(std::string(str_.substr(start, offset_ - start)),
                                start);
       } else {
         throw std::runtime_error("unterminated string starting");
@@ -87,7 +99,8 @@ class TokenStream {
     while (offset < s.size() && !std::isspace(s[offset]) && s[offset] != ')') {
       ++offset;
     }
-    return std::make_tuple(s.substr(start, offset - start).data(), offset);
+    return std::make_tuple(std::string(s.substr(start, offset - start)),
+                           offset);
   }
 
  private:
@@ -129,22 +142,12 @@ class Type {
   std::vector<Int> types_;
 };
 
-Int CONS() { return Int(utils::StrToBytes("CONS")); }
-Int NIL() { return Int(utils::StrToBytes("NULL")); }
-Int INT() { return Int(utils::StrToBytes("INT")); }
-Int HEX() { return Int(utils::StrToBytes("HEX")); }
-Int QUOTES() { return Int(utils::StrToBytes("QUOTES")); }
-Int DOUBLE_QUOTE() { return Int(utils::StrToBytes("DOUBLE_QUOTE")); }
-Int SINGLE_QUOTE() { return Int(utils::StrToBytes("SINGLE_QUOTE")); }
-Int SYMBOL() { return Int(utils::StrToBytes("SYMBOL")); }
-Int OPERATOR() { return Int(utils::StrToBytes("OPERATOR")); }
-Int CODE() { return Int(utils::StrToBytes("CODE")); }
-Int NODE() { return Int(utils::StrToBytes("NODE")); }
-
 }  // namespace types
 
+Bytes ir_as_atom(CLVMObjectPtr ir_sexp);
+
 template <typename Type, typename Val>
-CLVMObjectPtr ir_new(Type&& type, Val&& val, int* offset = nullptr) {
+CLVMObjectPtr ir_new(Type&& type, Val&& val, std::optional<int> offset = {}) {
   CLVMObjectPtr first;
   if (offset) {
     first = ToSExpPair(std::forward<Type>(type), *offset);
@@ -154,11 +157,18 @@ CLVMObjectPtr ir_new(Type&& type, Val&& val, int* offset = nullptr) {
   return ToSExpPair(first, std::forward<Val>(val));
 }
 
-CLVMObjectPtr ir_cons(CLVMObjectPtr first, CLVMObjectPtr rest, int offset) {
-  return ir_new(types::CONS(), ir_new(first, rest), &offset);
+CLVMObjectPtr ir_cons(CLVMObjectPtr first, CLVMObjectPtr rest,
+                      std::optional<int> offset) {
+  if (!first) {
+    throw std::runtime_error("cons null on first place");
+  }
+  if (!rest) {
+    throw std::runtime_error("cons null on rest place");
+  }
+  return ir_new(CONS, ir_new(first, rest), offset);
 }
 
-CLVMObjectPtr ir_null() { return ir_new(types::NIL(), 0); }
+CLVMObjectPtr ir_null() { return ir_new(NIL, MakeNull()); }
 
 CLVMObjectPtr ir_list() { return ir_null(); }
 
@@ -175,27 +185,22 @@ Int ir_type(CLVMObjectPtr ir_sexp) {
   return Int(Atom(the_type));
 }
 
-Int ir_as_int(CLVMObjectPtr ir_sexp) { return Int(Atom(ir_sexp)); }
+Int ir_as_int(CLVMObjectPtr ir_sexp) { return Int(ir_as_atom(ir_sexp)); }
 
 Int ir_offset(CLVMObjectPtr ir_sexp) {
   auto the_offset = First(ir_sexp);
   if (ListP(the_offset)) {
-    the_offset = Rest(the_offset);
-    return Int(Atom(the_offset));
+    return Int(Atom(Rest(the_offset)));
   } else {
-    return Int(-1);
+    return Int(utils::ByteToBytes('\xff'));
   }
 }
 
 CLVMObjectPtr ir_val(CLVMObjectPtr ir_sexp) { return Rest(ir_sexp); }
 
-bool ir_nullp(CLVMObjectPtr ir_sexp) {
-  return ir_type(ir_sexp) == types::NIL();
-}
+bool ir_nullp(CLVMObjectPtr ir_sexp) { return ir_type(ir_sexp) == NIL; }
 
-bool ir_listp(CLVMObjectPtr ir_sexp) {
-  return ir_type(ir_sexp) == types::CONS();
-}
+bool ir_listp(CLVMObjectPtr ir_sexp) { return ir_type(ir_sexp) == CONS; }
 
 CLVMObjectPtr ir_first(CLVMObjectPtr ir_sexp) { return First(Rest(ir_sexp)); }
 
@@ -205,7 +210,7 @@ CLVMObjectPtr ir_as_sexp(CLVMObjectPtr ir_sexp) {
   if (ir_nullp(ir_sexp)) {
     return ToSExpList();
   }
-  if (ir_type(ir_sexp) == types::CONS()) {
+  if (ir_type(ir_sexp) == CONS) {
     return ToSExpPair(ir_as_sexp(ir_first(ir_sexp)),
                       ir_as_sexp(ir_rest(ir_sexp)));
   }
@@ -217,11 +222,11 @@ bool ir_is_atom(CLVMObjectPtr ir_sexp) { return !ir_listp(ir_sexp); }
 Bytes ir_as_atom(CLVMObjectPtr ir_sexp) { return Atom(Rest(ir_sexp)); }
 
 CLVMObjectPtr ir_symbol(std::string_view symbol) {
-  return ToSExpPair(types::SYMBOL(), symbol);
+  return ToSExpPair(SYMBOL, symbol);
 }
 
 std::optional<std::string> ir_as_symbol(CLVMObjectPtr ir_sexp) {
-  if (ListP(ir_sexp) && ir_type(ir_sexp) == types::SYMBOL()) {
+  if (ListP(ir_sexp) && ir_type(ir_sexp) == SYMBOL) {
     auto atom = std::static_pointer_cast<CLVMObject_Atom>(ir_as_sexp(ir_sexp));
     return atom->AsString();
   }
@@ -229,7 +234,7 @@ std::optional<std::string> ir_as_symbol(CLVMObjectPtr ir_sexp) {
 }
 
 bool is_ir(CLVMObjectPtr sexp) {
-  if (!IsPair(sexp)) {
+  if (IsAtom(sexp)) {
     return false;
   }
 
@@ -239,7 +244,7 @@ bool is_ir(CLVMObjectPtr sexp) {
     return false;
   }
 
-  if (the_type == types::CONS()) {
+  if (the_type == CONS) {
     if (IsNull(val_sexp)) {
       return true;
     }
@@ -261,16 +266,24 @@ std::tuple<std::string, int> next_cons_token(stream::TokenStream& stream) {
 }
 
 CLVMObjectPtr tokenize_int(std::string_view token, int offset) {
-  return ir_new(types::INT(), Int(utils::StrToBytes(token)), &offset);
+  try {
+    return ir_new(INT, Int(token, 0), offset);
+  } catch (std::exception const&) {
+    return {};
+  }
 }
 
 CLVMObjectPtr tokenize_hex(std::string_view token, int offset) {
   if (utils::ToUpper(token.substr(0, 2)) == "0X") {
-    std::string hex = token.substr(2).data();
+    std::string hex{token.substr(2)};
     if (hex.size() % 2 == 1) {
       hex.insert(std::begin(hex), '0');
     }
-    return ir_new(types::HEX(), utils::BytesFromHex(hex), &offset);
+    try {
+      return ir_new(HEX, utils::BytesFromHex(hex), offset);
+    } catch (std::exception const&) {
+      // The token cannot be parsed into bytes
+    }
   }
   return {};
 }
@@ -283,12 +296,12 @@ CLVMObjectPtr tokenize_quotes(std::string_view token, int offset) {
   if (c != '\'' && c != '"') {
     return {};
   }
-  auto q_type = c == '"' ? types::DOUBLE_QUOTE() : types::SINGLE_QUOTE();
-  return ir_new(q_type, token.substr(1, token.size() - 2), &offset);
+  auto q_type = c == '"' ? DOUBLE_QUOTE : SINGLE_QUOTE;
+  return ir_new(q_type, token.substr(1, token.size() - 2), offset);
 }
 
 CLVMObjectPtr tokenize_symbol(std::string_view token, int offset) {
-  return ir_new(types::SYMBOL(), token, &offset);
+  return ir_new(SYMBOL, token, offset);
 }
 
 CLVMObjectPtr tokenize_sexp(std::string_view token, int offset,
@@ -297,7 +310,7 @@ CLVMObjectPtr tokenize_sexp(std::string_view token, int offset,
 CLVMObjectPtr tokenize_cons(std::string_view token, int offset,
                             stream::TokenStream& stream) {
   if (token == ")") {
-    return ir_new(types::NIL(), 0, &offset);
+    return ir_new(NIL, MakeNull(), offset);
   }
 
   int initial_offset = offset;
@@ -310,13 +323,19 @@ CLVMObjectPtr tokenize_cons(std::string_view token, int offset,
     int dot_offset = offset;
     // grab the last item
     std::tie(token, offset) = next_cons_token(stream);
-    auto rest_sexp = tokenize_sexp(token, offset, stream);
+    rest_sexp = tokenize_sexp(token, offset, stream);
+    if (!rest_sexp) {
+      throw std::runtime_error("receive a null from tokenize_sexp");
+    }
     std::tie(token, offset) = next_cons_token(stream);
     if (token != ")") {
       throw std::runtime_error("illegal dot expression");
     }
   } else {
     rest_sexp = tokenize_cons(token, offset, stream);
+    if (!rest_sexp) {
+      throw std::runtime_error("tokenize_cons returns a null");
+    }
   }
   return ir_cons(first_sexp, rest_sexp, initial_offset);
 }
@@ -336,7 +355,7 @@ CLVMObjectPtr tokenize_sexp(std::string_view token, int offset,
     }
   }
 
-  return {};
+  throw std::runtime_error("cannot be tokenized");
 }
 
 CLVMObjectPtr assemble_from_ir(CLVMObjectPtr ir_sexp) {
@@ -355,12 +374,12 @@ CLVMObjectPtr assemble_from_ir(CLVMObjectPtr ir_sexp) {
     }
   }
 
-  if (!ir_listp(ir_sexp)) {
-    return ir_val(ir_sexp);
+  if (ir_nullp(ir_sexp)) {
+    return ToSExpList();
   }
 
-  if (ir_nullp(ir_sexp)) {
-    return {};
+  if (!ir_listp(ir_sexp)) {
+    return ir_val(ir_sexp);
   }
 
   auto first = ir_first(ir_sexp);

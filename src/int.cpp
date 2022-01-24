@@ -22,6 +22,10 @@ Int::Int(Int const& rhs) : impl_(new Impl{rhs.impl_->mpz}) {}
 
 Int::~Int() { delete impl_; }
 
+Int::Int(std::string_view s, int base) {
+  impl_ = new Impl{mpz_class(std::string(s), base)};
+}
+
 Int::Int(Bytes const& s) {
   std::stringstream ss;
   ss << "0x" << utils::BytesToHex(s);

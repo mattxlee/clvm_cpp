@@ -1,5 +1,7 @@
 #include "operator_lookup.h"
 
+#include <iostream>
+
 #include "core_opts.h"
 #include "costs.h"
 #include "more_opts.h"
@@ -89,7 +91,7 @@ std::tuple<int, CLVMObjectPtr> default_unknown_op(Bytes const& op,
     throw std::runtime_error("invalid operator");
   }
 
-  return std::make_tuple(cost, CLVMObjectPtr());
+  return std::make_tuple(cost, MakeNull());
 }
 
 Ops& Ops::GetInstance() {
@@ -111,37 +113,37 @@ OpFunc Ops::Query(std::string_view op_name) {
 
 Ops::Ops() {
   // Core operators
-  Assign("op_if", op_if);
-  Assign("op_cons", op_cons);
-  Assign("op_first", op_first);
-  Assign("op_rest", op_rest);
-  Assign("op_listp", op_listp);
-  Assign("op_raise", op_raise);
-  Assign("op_eq", op_eq);
+  Assign("if", op_if);
+  Assign("cons", op_cons);
+  Assign("first", op_first);
+  Assign("rest", op_rest);
+  Assign("listp", op_listp);
+  Assign("raise", op_raise);
+  Assign("eq", op_eq);
   // More operators
-  Assign("op_sha256", op_sha256);
-  Assign("op_add", op_add);
-  Assign("op_subtract", op_subtract);
-  Assign("op_multiply", op_multiply);
-  Assign("op_divmod", op_divmod);
-  Assign("op_div", op_div);
-  Assign("op_gr", op_gr);
-  Assign("op_gr_bytes", op_gr_bytes);
-  Assign("op_pubkey_for_exp", op_pubkey_for_exp);
-  Assign("op_point_add", op_point_add);
-  Assign("op_strlen", op_strlen);
-  Assign("op_substr", op_substr);
-  Assign("op_concat", op_concat);
-  Assign("op_ash", op_ash);
-  Assign("op_lsh", op_lsh);
-  Assign("op_logand", op_logand);
-  Assign("op_logior", op_logior);
-  Assign("op_logxor", op_logxor);
-  Assign("op_lognot", op_lognot);
-  Assign("op_not", op_not);
-  Assign("op_any", op_any);
-  Assign("op_all", op_all);
-  Assign("op_softfork", op_softfork);
+  Assign("sha256", op_sha256);
+  Assign("add", op_add);
+  Assign("subtract", op_subtract);
+  Assign("multiply", op_multiply);
+  Assign("divmod", op_divmod);
+  Assign("div", op_div);
+  Assign("gr", op_gr);
+  Assign("gr_bytes", op_gr_bytes);
+  Assign("pubkey_for_exp", op_pubkey_for_exp);
+  Assign("point_add", op_point_add);
+  Assign("strlen", op_strlen);
+  Assign("substr", op_substr);
+  Assign("concat", op_concat);
+  Assign("ash", op_ash);
+  Assign("lsh", op_lsh);
+  Assign("logand", op_logand);
+  Assign("logior", op_logior);
+  Assign("logxor", op_logxor);
+  Assign("lognot", op_lognot);
+  Assign("not", op_not);
+  Assign("any", op_any);
+  Assign("all", op_all);
+  Assign("softfork", op_softfork);
 }
 
 OperatorLookup::OperatorLookup() {
@@ -159,6 +161,7 @@ std::tuple<int, CLVMObjectPtr> OperatorLookup::operator()(
       return op_f(args);
     }
   }
+  std::cerr << "unknown op " << utils::BytesToHex(op) << std::endl;
   return default_unknown_op(op, args);
 }
 
@@ -178,12 +181,17 @@ uint8_t OperatorLookup::KeywordToAtom(std::string_view keyword) const {
   throw std::runtime_error("atom cannot be found by the keyword");
 }
 
+int OperatorLookup::GetCount() const {
+  assert(atom_to_keyword_.size() == keyword_to_atom_.size());
+  return atom_to_keyword_.size();
+}
+
 void OperatorLookup::InitKeywords() {
   std::string::size_type start{0};
   uint8_t byte{0};
   auto next = KEYWORDS.find(" ", start);
   while (next != std::string::npos) {
-    std::string keyword = KEYWORDS.substr(start, next - start).data();
+    std::string keyword{KEYWORDS.substr(start, next - start)};
     // Replace the keyword with OP_REWRITE
     auto i = OP_REWRITE.find(keyword);
     if (i != std::end(OP_REWRITE)) {
