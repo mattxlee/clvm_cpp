@@ -18,6 +18,12 @@ class Mnemonic {
   /// Generate a new mnemonic
   static Mnemonic GenerateNew(std::string_view lang = "en");
 
+  /// Convert words into separated words string
+  static std::string WordsToString(Mnemonic::Words const& words);
+
+  /// Parse words from a string
+  static Mnemonic::Words StringToWords(std::string_view str);
+
   /// Create a mnemonic object by importing words
   explicit Mnemonic(Words words, std::string_view lang = "en");
 

@@ -3,6 +3,8 @@
 
 #include "gtest/gtest.h"
 #include "int.h"
+#include "key.h"
+#include "mnemonic.h"
 #include "program.h"
 #include "types.h"
 #include "utils.h"
@@ -97,7 +99,7 @@ TEST(CLVM_BigInt, Sub) {
   EXPECT_EQ((aa - bb).ToInt(), a - b);
 }
 
-TEST(CLVM, MsbMask) {
+TEST(CLVM_MsbMask, MsbMask) {
   EXPECT_EQ(chia::MSBMask(0x0), 0x0);
   EXPECT_EQ(chia::MSBMask(0x01), 0x01);
   EXPECT_EQ(chia::MSBMask(0x02), 0x02);
@@ -111,4 +113,14 @@ TEST(CLVM, MsbMask) {
   EXPECT_EQ(chia::MSBMask(0x2a), 0x20);
   EXPECT_EQ(chia::MSBMask(0xff), 0x80);
   EXPECT_EQ(chia::MSBMask(0x0f), 0x08);
+}
+
+TEST(CLVM_Mnemonic, WordsList) {
+  auto words = chia::wallet::Mnemonic::StringToWords("hello world");
+  EXPECT_EQ(words.size(), 2);
+  EXPECT_EQ(words[0], "hello");
+  EXPECT_EQ(words[1], "world");
+
+  std::string str = chia::wallet::Mnemonic::WordsToString(words);
+  EXPECT_EQ(str, "hello world");
 }
