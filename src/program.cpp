@@ -444,7 +444,7 @@ void debug_atom(std::string_view prefix, OperatorLookup const& operator_lookup,
   }
 }
 
-std::tuple<int, CLVMObjectPtr> RunProgram(
+std::tuple<int, CLVMObjectPtr> run_program(
     CLVMObjectPtr program, CLVMObjectPtr args,
     OperatorLookup const& operator_lookup = OperatorLookup(),
     Cost max_cost = 0) {
@@ -605,7 +605,7 @@ std::tuple<int, CLVMObjectPtr> RunProgram(
 }  // namespace run
 
 std::tuple<int, CLVMObjectPtr> Program::Run(CLVMObjectPtr args) {
-  return run::RunProgram(sexp_, args);
+  return run::run_program(sexp_, args);
 }
 
 std::string_view CURRY_OBJ_CODE =
@@ -616,7 +616,7 @@ std::string_view CURRY_OBJ_CODE =
 Program Program::Curry(CLVMObjectPtr args) {
   auto curry_program = Assemble(CURRY_OBJ_CODE);
   auto bind_args = ToSExpPair(sexp_, args);
-  auto [cost, sexp] = run::RunProgram(curry_program, bind_args);
+  auto [cost, sexp] = run::run_program(curry_program, bind_args);
   return Program(sexp);
 }
 
