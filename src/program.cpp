@@ -435,14 +435,12 @@ class OpStack : public Stack<Op> {};
 
 void debug_atom(std::string_view prefix, OperatorLookup const& operator_lookup,
                 uint8_t atom) {
-  std::cerr << prefix << ": looking up keyword for atom: 0x" << std::hex
-            << (int)atom << std::endl;
   try {
     std::string keyword = operator_lookup.AtomToKeyword(atom);
-    std::cerr << prefix << ": keyword for atom 0x" << std::hex << (int)atom
-              << " is " << keyword << std::endl;
-  } catch (std::exception const& e) {
-    std::cerr << e.what() << std::endl;
+    std::cerr << prefix << ": " << keyword << std::endl;
+  } catch (std::exception const&) {
+    std::cerr << prefix << ": unknown keyword -> 0x" << std::hex << (int)atom
+              << std::endl;
   }
 }
 
@@ -536,7 +534,6 @@ std::tuple<int, CLVMObjectPtr> RunProgram(
     }
 
     Bytes op = Atom(opt);
-    debug_atom("eval_op", operator_lookup, op[0]);
     auto operand_list = sexp_rest;
     if (op == operator_lookup.QUOTE_ATOM) {
       val_stack.Push(operand_list);
@@ -567,7 +564,6 @@ std::tuple<int, CLVMObjectPtr> RunProgram(
     }
 
     Bytes op = Atom(opt);
-    debug_atom("apply_op", operator_lookup, op[0]);
     if (op == operator_lookup.APPLY_ATOM) {
       if (ListLen(operand_list) != 2) {
         throw std::runtime_error("apply requires exactly 2 parameters");
@@ -582,6 +578,7 @@ std::tuple<int, CLVMObjectPtr> RunProgram(
       return APPLY_COST;
     }
 
+    debug_atom("apply_op", operator_lookup, op[0]);
     auto [additional_cost, r] = operator_lookup(op, operand_list);
     val_stack.Push(r);
     return additional_cost;
