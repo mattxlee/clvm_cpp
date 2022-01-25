@@ -154,36 +154,61 @@ OperatorLookup::OperatorLookup() {
 
 std::tuple<int, CLVMObjectPtr> OperatorLookup::operator()(
     Bytes const& op, CLVMObjectPtr args) const {
-  auto i = atom_to_keyword_.find(op[0]);
-  if (i != std::end(atom_to_keyword_)) {
-    auto op_f = Ops::GetInstance().Query(i->second);
-    if (op_f) {
-      return op_f(args);
+  try {
+    Keywords keywords = AtomToKeywords(op[0]);
+    for (std::string const& keyword : keywords) {
+      auto op_f = Ops::GetInstance().Query(keyword);
+      if (op_f) {
+        return op_f(args);
+      }
     }
+  } catch (std::exception const& e) {
+    std::cerr << e.what() << std::endl;
   }
-  std::cerr << "unknown op " << utils::BytesToHex(op) << std::endl;
+  std::cerr << "unknown op 0x" << utils::BytesToHex(op) << std::endl;
   return default_unknown_op(op, args);
 }
 
 std::string OperatorLookup::AtomToKeyword(uint8_t a) const {
-  auto i = atom_to_keyword_.find(a);
-  if (i != std::end(atom_to_keyword_)) {
+  auto i = atom_to_keywords_.find(a);
+  if (i != std::end(atom_to_keywords_)) {
+    return i->second[0];
+  }
+  throw std::runtime_error("keyword cannot be found by the atom");
+}
+
+OperatorLookup::Keywords OperatorLookup::AtomToKeywords(uint8_t a) const {
+  auto i = atom_to_keywords_.find(a);
+  if (i != std::end(atom_to_keywords_)) {
     return i->second;
   }
   throw std::runtime_error("keyword cannot be found by the atom");
 }
 
 uint8_t OperatorLookup::KeywordToAtom(std::string_view keyword) const {
-  auto i = keyword_to_atom_.find(keyword.data());
-  if (i != std::end(keyword_to_atom_)) {
-    return i->second;
+  auto i =
+      std::find_if(std::begin(atom_to_keywords_), std::end(atom_to_keywords_),
+                   [keyword](auto const& val) -> bool {
+                     auto i = std::find(std::begin(val.second),
+                                        std::end(val.second), keyword);
+                     return i != std::end(val.second);
+                   });
+  if (i != std::end(atom_to_keywords_)) {
+    return i->first;
   }
   throw std::runtime_error("atom cannot be found by the keyword");
 }
 
-int OperatorLookup::GetCount() const {
-  assert(atom_to_keyword_.size() == keyword_to_atom_.size());
-  return atom_to_keyword_.size();
+int OperatorLookup::GetCount() const { return atom_to_keywords_.size(); }
+
+void OperatorLookup::AddKeyword(uint8_t atom, std::string_view keyword) {
+  auto i = atom_to_keywords_.find(atom);
+  if (i != std::end(atom_to_keywords_)) {
+    i->second.push_back(std::string(keyword));
+    return;
+  }
+  Keywords keywords{std::string(keyword)};
+  atom_to_keywords_.emplace(std::make_tuple(atom, keywords));
 }
 
 void OperatorLookup::InitKeywords() {
@@ -196,10 +221,9 @@ void OperatorLookup::InitKeywords() {
     auto i = OP_REWRITE.find(keyword);
     if (i != std::end(OP_REWRITE)) {
       // Override the keyword
-      keyword = i->second;
+      AddKeyword(byte, i->second);
     }
-    atom_to_keyword_[byte] = keyword;
-    keyword_to_atom_[keyword] = byte;
+    AddKeyword(byte, keyword);
     // Ready for next
     ++byte;
     start = next + 1;

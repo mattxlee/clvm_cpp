@@ -31,6 +31,8 @@ class Ops {
 
 class OperatorLookup {
  public:
+  using Keywords = std::vector<std::string>;
+
   Bytes QUOTE_ATOM;
   Bytes APPLY_ATOM;
 
@@ -41,16 +43,19 @@ class OperatorLookup {
 
   std::string AtomToKeyword(uint8_t a) const;
 
+  Keywords AtomToKeywords(uint8_t a) const;
+
   uint8_t KeywordToAtom(std::string_view keyword) const;
 
   int GetCount() const;
 
  private:
+  void AddKeyword(uint8_t atom, std::string_view keyword);
+  
   void InitKeywords();
 
  private:
-  std::map<uint8_t, std::string> atom_to_keyword_;
-  std::map<std::string, uint8_t> keyword_to_atom_;
+  std::map<uint8_t, Keywords> atom_to_keywords_;
 };
 
 }  // namespace chia
