@@ -433,6 +433,19 @@ using Op = std::function<int(OpStack&, ValStack&)>;
 
 class OpStack : public Stack<Op> {};
 
+void debug_atom(std::string_view prefix, OperatorLookup const& operator_lookup,
+                uint8_t atom) {
+  std::cerr << prefix << ": looking up keyword for atom: 0x" << std::hex
+            << (int)atom << std::endl;
+  try {
+    std::string keyword = operator_lookup.AtomToKeyword(atom);
+    std::cerr << prefix << ": keyword for atom 0x" << std::hex << (int)atom
+              << " is " << keyword << std::endl;
+  } catch (std::exception const& e) {
+    std::cerr << e.what() << std::endl;
+  }
+}
+
 std::tuple<int, CLVMObjectPtr> RunProgram(
     CLVMObjectPtr program, CLVMObjectPtr args,
     OperatorLookup const& operator_lookup = OperatorLookup(),
@@ -523,6 +536,7 @@ std::tuple<int, CLVMObjectPtr> RunProgram(
     }
 
     Bytes op = Atom(opt);
+    debug_atom("eval_op", operator_lookup, op[0]);
     auto operand_list = sexp_rest;
     if (op == operator_lookup.QUOTE_ATOM) {
       val_stack.Push(operand_list);
@@ -553,14 +567,17 @@ std::tuple<int, CLVMObjectPtr> RunProgram(
     }
 
     Bytes op = Atom(opt);
+    debug_atom("apply_op", operator_lookup, op[0]);
     if (op == operator_lookup.APPLY_ATOM) {
       if (ListLen(operand_list) != 2) {
         throw std::runtime_error("apply requires exactly 2 parameters");
       }
       auto [new_program, r] = Pair(operand_list);
-      CLVMObjectPtr new_args;
-      std::tie(new_args, std::ignore) = Pair(r);
-      val_stack.Push(ToSExpPair(new_program, new_args));
+      auto r_first = First(r);
+      if (!IsPair(r_first)) {
+        throw std::runtime_error("argument of eval_op is not a pair");
+      }
+      val_stack.Push(ToSExpPair(new_program, r_first));
       op_stack.Push(eval_op);
       return APPLY_COST;
     }
