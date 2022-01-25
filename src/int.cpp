@@ -9,6 +9,46 @@
 namespace chia
 {
 
+bool is_valid_int_char(char ch) { return ch >= '0' && ch <= '9'; }
+
+bool is_valid_hex_char(char ch)
+{
+  return ch >= 'a' && ch <= 'f' || ch >= 'A' && ch <= 'F';
+}
+
+bool check_valid_hex_string(std::string_view s)
+{
+  if (s.empty()) {
+    return false;
+  }
+  for (char ch : s) {
+    if (!is_valid_int_char(ch) && !is_valid_hex_char(ch)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool check_valid_int(std::string_view s)
+{
+  if (s.empty()) {
+    return false;
+  }
+  if (s.size() >= 3) {
+    // check hex prefix
+    std::string prefix { s.substr(0, 2) };
+    if (prefix == "0x" || prefix == "0X") {
+      return check_valid_hex_string(s.substr(2));
+    }
+  }
+  for (char ch : s) {
+    if (!is_valid_int_char(ch)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 struct Impl {
   mpz_class mpz;
 };
@@ -19,6 +59,8 @@ Int Int::Create(Impl* impl)
   res.impl_ = impl;
   return res;
 }
+
+bool Int::IsValidNumberStr(std::string_view s) { return check_valid_int(s); }
 
 Int::Int(Int const& rhs)
     : impl_(new Impl { rhs.impl_->mpz })

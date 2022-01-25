@@ -293,11 +293,10 @@ std::tuple<std::string, int> next_cons_token(stream::TokenStream& stream)
 
 CLVMObjectPtr tokenize_int(std::string_view token, int offset)
 {
-  try {
+  if (Int::IsValidNumberStr(token)) {
     return ir_new(INT, Int(token, 0), offset);
-  } catch (std::exception const&) {
-    return {};
   }
+  return {};
 }
 
 CLVMObjectPtr tokenize_hex(std::string_view token, int offset)

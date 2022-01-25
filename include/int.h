@@ -16,6 +16,8 @@ class Int
 public:
   static Int Create(Impl* impl);
 
+  static bool IsValidNumberStr(std::string_view s);
+
   Int(Int const& rhs);
 
   ~Int();
