@@ -148,8 +148,8 @@ Ops::Ops() {
 
 OperatorLookup::OperatorLookup() {
   InitKeywords();
-  QUOTE_ATOM = utils::ByteToBytes(keyword_to_atom_["q"]);
-  APPLY_ATOM = utils::ByteToBytes(keyword_to_atom_["a"]);
+  QUOTE_ATOM = utils::ByteToBytes(KeywordToAtom("q"));
+  APPLY_ATOM = utils::ByteToBytes(KeywordToAtom("a"));
 }
 
 std::tuple<int, CLVMObjectPtr> OperatorLookup::operator()(
