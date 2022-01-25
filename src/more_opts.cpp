@@ -37,14 +37,14 @@ OpResult op_add(CLVMObjectPtr args) {
     cost += ARITH_COST_PER_ARG;
   }
   cost += arg_size * ARITH_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(total.ToBytes()));
+  return MallocCost(cost, ToSExp(total));
 }
 
 OpResult op_subtract(CLVMObjectPtr args) {
   Cost cost{ARITH_BASE_COST};
   ArgsIter iter(args);
   if (iter.IsEof()) {
-    return MallocCost(cost, ToSExp(Int(0).ToBytes()));
+    return MallocCost(cost, ToSExp(Int(0)));
   }
   int sign{1}, arg_size{0};
   Int total{0};
@@ -57,14 +57,16 @@ OpResult op_subtract(CLVMObjectPtr args) {
     cost += ARITH_COST_PER_ARG;
   }
   cost += arg_size * ARITH_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(total.ToBytes()));
+  return MallocCost(cost, ToSExp(total));
 }
+
+int limbs_for_int(Int const& v) { return (v.NumBytes() * 8 + 7) >> 3; }
 
 OpResult op_multiply(CLVMObjectPtr args) {
   Cost cost{MUL_BASE_COST};
   ArgsIter iter(args);
   if (iter.IsEof()) {
-    return MallocCost(cost, ToSExp(Int(1).ToBytes()));
+    return MallocCost(cost, ToSExp(Int(1)));
   }
   int vs;
   Int v = iter.NextInt(&vs);
@@ -75,9 +77,9 @@ OpResult op_multiply(CLVMObjectPtr args) {
     cost += (rs + vs) * MUL_LINEAR_COST_PER_BYTE;
     cost += (rs * vs) / MUL_SQUARE_COST_PER_BYTE_DIVIDER;
     v *= r;
-    vs = v.NumBytes();
+    vs = limbs_for_int(v);
   }
-  return MallocCost(cost, ToSExp(v.ToBytes()));
+  return MallocCost(cost, ToSExp(v));
 }
 
 OpResult op_divmod(CLVMObjectPtr args) {
@@ -91,8 +93,8 @@ OpResult op_divmod(CLVMObjectPtr args) {
   cost += (l0 + l1) * DIVMOD_COST_PER_BYTE;
   auto q = i0 / i1;
   auto r = i0 % i1;
-  auto q1 = ToSExp(q.ToBytes());
-  auto r1 = ToSExp(r.ToBytes());
+  auto q1 = ToSExp(q);
+  auto r1 = ToSExp(r);
   cost += (Atom(q1).size() + Atom(r1).size()) * MALLOC_COST_PER_BYTE;
   return std::make_tuple(cost, ToSExpPair(q1, r1));
 }
@@ -114,7 +116,7 @@ OpResult op_div(CLVMObjectPtr args) {
   if (q == Int(-1) && r != Int(0)) {
     q += Int(1);
   }
-  return MallocCost(cost, ToSExp(q.ToBytes()));
+  return MallocCost(cost, ToSExp(q));
 }
 
 OpResult op_gr(CLVMObjectPtr args) {
@@ -170,9 +172,7 @@ OpResult op_point_add(CLVMObjectPtr args) {
     p = p + wallet::PubKey(utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(b));
     cost += POINT_ADD_COST_PER_ARG;
   }
-  return MallocCost(
-      cost,
-      ToSExp(utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(p.ToPublicKey())));
+  return MallocCost(cost, ToSExp(p.ToPublicKey()));
 }
 
 OpResult op_strlen(CLVMObjectPtr args) {
@@ -182,7 +182,7 @@ OpResult op_strlen(CLVMObjectPtr args) {
   auto a0 = Atom(First(args));
   Int size(a0.size());
   Cost cost = a0.size() * STRLEN_COST_PER_BYTE + STRLEN_BASE_COST;
-  return MallocCost(cost, ToSExp(size.ToBytes()));
+  return MallocCost(cost, ToSExp(size));
 }
 
 OpResult op_substr(CLVMObjectPtr args) {
@@ -239,8 +239,8 @@ OpResult op_ash(CLVMObjectPtr args) {
     r = i0 >> -i1;
   }
   Cost cost{ASHIFT_BASE_COST};
-  cost += (l0 + sizeof(int)) * ASHIFT_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(Int(r).ToBytes()));
+  cost += (l0 + limbs_for_int(Int(r))) * ASHIFT_COST_PER_BYTE;
+  return MallocCost(cost, ToSExp(r));
 }
 
 OpResult op_lsh(CLVMObjectPtr args) {
@@ -261,8 +261,8 @@ OpResult op_lsh(CLVMObjectPtr args) {
     r = i0 >> -i1;
   }
   Cost cost{LSHIFT_BASE_COST};
-  cost += (sizeof(i0) + sizeof(r)) * LSHIFT_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(Int(r).ToBytes()));
+  cost += (sizeof(i0) + limbs_for_int(Int(r))) * LSHIFT_COST_PER_BYTE;
+  return MallocCost(cost, ToSExp(r));
 }
 
 using BinOpFunc = std::function<int(int, int)>;
@@ -281,7 +281,7 @@ OpResult binop_reduction(std::string_view op_name, int initial_value,
     cost += LOG_COST_PER_ARG;
   }
   cost += arg_size * LOG_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(Int(total).ToBytes()));
+  return MallocCost(cost, ToSExp(total));
 }
 
 OpResult op_logand(CLVMObjectPtr args) {
@@ -316,7 +316,7 @@ OpResult op_lognot(CLVMObjectPtr args) {
   auto i0 = Int(b0).ToInt();
   int l0 = b0.size();
   Cost cost = LOGNOT_BASE_COST + l0 * LOGNOT_COST_PER_BYTE;
-  return MallocCost(cost, ToSExp(Int(~i0).ToBytes()));
+  return MallocCost(cost, ToSExp(~i0));
 }
 
 OpResult op_not(CLVMObjectPtr args) {
