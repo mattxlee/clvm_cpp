@@ -8,12 +8,14 @@
 #include "program.h"
 #include "utils.h"
 
-namespace chia {
+namespace chia
+{
 
-OpResult op_sha256(CLVMObjectPtr args) {
+OpResult op_sha256(CLVMObjectPtr args)
+{
   crypto_utils::SHA256 sha256;
-  Cost cost{SHA256_BASE_COST};
-  int arg_len{0};
+  Cost cost { SHA256_BASE_COST };
+  int arg_len { 0 };
   ArgsIter iter(args);
   while (!iter.IsEof()) {
     Bytes b = iter.Next();
@@ -25,10 +27,11 @@ OpResult op_sha256(CLVMObjectPtr args) {
   return MallocCost(cost, ToSExp(utils::bytes_cast<32>(sha256.Finish())));
 }
 
-OpResult op_add(CLVMObjectPtr args) {
-  Int total{0};
-  Cost cost{ARITH_BASE_COST};
-  int arg_size{0};
+OpResult op_add(CLVMObjectPtr args)
+{
+  Int total { 0 };
+  Cost cost { ARITH_BASE_COST };
+  int arg_size { 0 };
   int len;
   ArgsIter iter(args);
   while (!iter.IsEof()) {
@@ -40,14 +43,15 @@ OpResult op_add(CLVMObjectPtr args) {
   return MallocCost(cost, ToSExp(total));
 }
 
-OpResult op_subtract(CLVMObjectPtr args) {
-  Cost cost{ARITH_BASE_COST};
+OpResult op_subtract(CLVMObjectPtr args)
+{
+  Cost cost { ARITH_BASE_COST };
   ArgsIter iter(args);
   if (iter.IsEof()) {
     return MallocCost(cost, ToSExp(Int(0)));
   }
-  int sign{1}, arg_size{0};
-  Int total{0};
+  int sign { 1 }, arg_size { 0 };
+  Int total { 0 };
   while (!iter.IsEof()) {
     int l;
     Int r = iter.NextInt(&l);
@@ -62,8 +66,9 @@ OpResult op_subtract(CLVMObjectPtr args) {
 
 int limbs_for_int(Int const& v) { return (v.NumBytes() * 8 + 7) >> 3; }
 
-OpResult op_multiply(CLVMObjectPtr args) {
-  Cost cost{MUL_BASE_COST};
+OpResult op_multiply(CLVMObjectPtr args)
+{
+  Cost cost { MUL_BASE_COST };
   ArgsIter iter(args);
   if (iter.IsEof()) {
     return MallocCost(cost, ToSExp(Int(1)));
@@ -82,8 +87,9 @@ OpResult op_multiply(CLVMObjectPtr args) {
   return MallocCost(cost, ToSExp(v));
 }
 
-OpResult op_divmod(CLVMObjectPtr args) {
-  Cost cost{DIVMOD_BASE_COST};
+OpResult op_divmod(CLVMObjectPtr args)
+{
+  Cost cost { DIVMOD_BASE_COST };
   auto ints = ListInts(args);
   if (ints.size() != 2) {
     throw std::runtime_error("invalid length of args");
@@ -99,8 +105,9 @@ OpResult op_divmod(CLVMObjectPtr args) {
   return std::make_tuple(cost, ToSExpPair(q1, r1));
 }
 
-OpResult op_div(CLVMObjectPtr args) {
-  Cost cost{DIV_BASE_COST};
+OpResult op_div(CLVMObjectPtr args)
+{
+  Cost cost { DIV_BASE_COST };
   auto ints = ListInts(args);
   if (ints.size() != 2) {
     throw std::runtime_error("the number of arguments must equals to 2");
@@ -119,31 +126,34 @@ OpResult op_div(CLVMObjectPtr args) {
   return MallocCost(cost, ToSExp(q));
 }
 
-OpResult op_gr(CLVMObjectPtr args) {
+OpResult op_gr(CLVMObjectPtr args)
+{
   auto ints = ListInts(args);
   auto [i0, l0] = ints[0];
   auto [i1, l1] = ints[1];
   if (ints.size() != 2) {
     throw std::runtime_error("the number of args must equals to 2");
   }
-  Cost cost{GR_BASE_COST};
+  Cost cost { GR_BASE_COST };
   cost += (l0 + l1) * GR_COST_PER_BYTE;
   return std::make_tuple(cost, i0 > i1 ? ToTrue() : ToFalse());
 }
 
-OpResult op_gr_bytes(CLVMObjectPtr args) {
+OpResult op_gr_bytes(CLVMObjectPtr args)
+{
   auto bytes_list = ListBytes(args);
   if (bytes_list.size() != 2) {
     throw std::runtime_error(">s takes exactly 2 arguments");
   }
   auto b0 = bytes_list[0];
   auto b1 = bytes_list[1];
-  Cost cost{GRS_BASE_COST};
+  Cost cost { GRS_BASE_COST };
   cost += (b0.size() + b1.size()) * GRS_COST_PER_BYTE;
   return std::make_tuple(cost, Int(b0) > Int(b1) ? ToTrue() : ToFalse());
 }
 
-OpResult op_pubkey_for_exp(CLVMObjectPtr args) {
+OpResult op_pubkey_for_exp(CLVMObjectPtr args)
+{
   if (ListLen(args) != 1) {
     throw std::runtime_error("pubkey for exp takes exactly 1 parameter");
   }
@@ -158,13 +168,14 @@ OpResult op_pubkey_for_exp(CLVMObjectPtr args) {
       utils::SubBytes(i0.ToBytes(), 0, wallet::Key::PRIV_KEY_LEN));
   wallet::Key exponent(pk);
   auto r = utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(exponent.GetPublicKey());
-  Cost cost{PUBKEY_BASE_COST};
+  Cost cost { PUBKEY_BASE_COST };
   cost += l0 * PUBKEY_COST_PER_BYTE;
   return MallocCost(cost, ToSExp(r));
 }
 
-OpResult op_point_add(CLVMObjectPtr args) {
-  Cost cost{POINT_ADD_BASE_COST};
+OpResult op_point_add(CLVMObjectPtr args)
+{
+  Cost cost { POINT_ADD_BASE_COST };
   wallet::PubKey p;
   ArgsIter iter(args);
   while (!iter.IsEof()) {
@@ -175,7 +186,8 @@ OpResult op_point_add(CLVMObjectPtr args) {
   return MallocCost(cost, ToSExp(p.GetPublicKey()));
 }
 
-OpResult op_strlen(CLVMObjectPtr args) {
+OpResult op_strlen(CLVMObjectPtr args)
+{
   if (ListLen(args) != 1) {
     throw std::runtime_error("strlen takes exactly 1 argument");
   }
@@ -185,7 +197,8 @@ OpResult op_strlen(CLVMObjectPtr args) {
   return MallocCost(cost, ToSExp(size));
 }
 
-OpResult op_substr(CLVMObjectPtr args) {
+OpResult op_substr(CLVMObjectPtr args)
+{
   auto arg_list = ListBytes(args);
   int arg_count = arg_list.size();
   if (arg_count != 2 && arg_count != 3) {
@@ -193,7 +206,7 @@ OpResult op_substr(CLVMObjectPtr args) {
   }
   auto s0 = arg_list[0];
   int i1 = Int(arg_list[1]).ToInt();
-  int i2{0};
+  int i2 { 0 };
   if (arg_count == 2) {
     i2 = s0.size();
   } else {
@@ -207,8 +220,9 @@ OpResult op_substr(CLVMObjectPtr args) {
   return std::make_tuple(cost, ToSExp(s));
 }
 
-OpResult op_concat(CLVMObjectPtr args) {
-  Cost cost{CONCAT_BASE_COST};
+OpResult op_concat(CLVMObjectPtr args)
+{
+  Cost cost { CONCAT_BASE_COST };
   utils::BufferConnector conn;
   ArgsIter iter(args);
   while (!iter.IsEof()) {
@@ -220,7 +234,8 @@ OpResult op_concat(CLVMObjectPtr args) {
   return MallocCost(cost, ToSExp(r));
 }
 
-OpResult op_ash(CLVMObjectPtr args) {
+OpResult op_ash(CLVMObjectPtr args)
+{
   auto arg_list = ListInts(args);
   auto [bi0, l0] = arg_list[0];
   auto [bi1, l1] = arg_list[1];
@@ -238,12 +253,13 @@ OpResult op_ash(CLVMObjectPtr args) {
   } else {
     r = i0 >> -i1;
   }
-  Cost cost{ASHIFT_BASE_COST};
+  Cost cost { ASHIFT_BASE_COST };
   cost += (l0 + limbs_for_int(Int(r))) * ASHIFT_COST_PER_BYTE;
   return MallocCost(cost, ToSExp(r));
 }
 
-OpResult op_lsh(CLVMObjectPtr args) {
+OpResult op_lsh(CLVMObjectPtr args)
+{
   auto arg_list = ListInts(args);
   auto [bi1, l1] = arg_list[1];
   auto i1 = bi1.ToInt();
@@ -260,7 +276,7 @@ OpResult op_lsh(CLVMObjectPtr args) {
   } else {
     r = i0 >> -i1;
   }
-  Cost cost{LSHIFT_BASE_COST};
+  Cost cost { LSHIFT_BASE_COST };
   cost += (sizeof(i0) + limbs_for_int(Int(r))) * LSHIFT_COST_PER_BYTE;
   return MallocCost(cost, ToSExp(r));
 }
@@ -268,10 +284,11 @@ OpResult op_lsh(CLVMObjectPtr args) {
 using BinOpFunc = std::function<int(int, int)>;
 
 OpResult binop_reduction(std::string_view op_name, int initial_value,
-                         CLVMObjectPtr args, BinOpFunc op_f) {
-  int total{initial_value};
-  int arg_size{0};
-  Cost cost{LOG_BASE_COST};
+    CLVMObjectPtr args, BinOpFunc op_f)
+{
+  int total { initial_value };
+  int arg_size { 0 };
+  Cost cost { LOG_BASE_COST };
   ArgsIter iter(args);
   while (!iter.IsEof()) {
     int l;
@@ -284,7 +301,8 @@ OpResult binop_reduction(std::string_view op_name, int initial_value,
   return MallocCost(cost, ToSExp(total));
 }
 
-OpResult op_logand(CLVMObjectPtr args) {
+OpResult op_logand(CLVMObjectPtr args)
+{
   auto binop = [](int a, int b) -> int {
     a &= b;
     return a;
@@ -292,7 +310,8 @@ OpResult op_logand(CLVMObjectPtr args) {
   return binop_reduction("logand", -1, args, binop);
 }
 
-OpResult op_logior(CLVMObjectPtr args) {
+OpResult op_logior(CLVMObjectPtr args)
+{
   auto binop = [](int a, int b) -> int {
     a |= b;
     return a;
@@ -300,7 +319,8 @@ OpResult op_logior(CLVMObjectPtr args) {
   return binop_reduction("logior", 0, args, binop);
 }
 
-OpResult op_logxor(CLVMObjectPtr args) {
+OpResult op_logxor(CLVMObjectPtr args)
+{
   auto binop = [](int a, int b) -> int {
     a ^= b;
     return a;
@@ -308,7 +328,8 @@ OpResult op_logxor(CLVMObjectPtr args) {
   return binop_reduction("logxor", 0, args, binop);
 }
 
-OpResult op_lognot(CLVMObjectPtr args) {
+OpResult op_lognot(CLVMObjectPtr args)
+{
   if (ListLen(args) != 1) {
     throw std::runtime_error("op_not takes exactly 1 argument");
   }
@@ -319,7 +340,8 @@ OpResult op_lognot(CLVMObjectPtr args) {
   return MallocCost(cost, ToSExp(~i0));
 }
 
-OpResult op_not(CLVMObjectPtr args) {
+OpResult op_not(CLVMObjectPtr args)
+{
   if (ListLen(args) != 1) {
     throw std::runtime_error("not takes exactly 1 argument");
   }
@@ -327,7 +349,8 @@ OpResult op_not(CLVMObjectPtr args) {
   return std::make_tuple(cost, IsNull(First(args)) ? ToTrue() : ToFalse());
 }
 
-OpResult op_any(CLVMObjectPtr args) {
+OpResult op_any(CLVMObjectPtr args)
+{
   int num_items = ListLen(args);
   Cost cost = BOOL_BASE_COST + num_items * BOOL_COST_PER_ARG;
   auto r = ToFalse();
@@ -342,7 +365,8 @@ OpResult op_any(CLVMObjectPtr args) {
   return std::make_tuple(cost, r);
 }
 
-OpResult op_all(CLVMObjectPtr args) {
+OpResult op_all(CLVMObjectPtr args)
+{
   int num_items = ListLen(args);
   Cost cost = BOOL_BASE_COST + num_items * BOOL_COST_PER_ARG;
   auto r = ToTrue();
@@ -357,7 +381,8 @@ OpResult op_all(CLVMObjectPtr args) {
   return std::make_tuple(cost, r);
 }
 
-OpResult op_softfork(CLVMObjectPtr args) {
+OpResult op_softfork(CLVMObjectPtr args)
+{
   int num_items = ListLen(args);
   if (num_items < 1) {
     throw std::runtime_error("softfork takes at least 1 argument");
@@ -370,4 +395,4 @@ OpResult op_softfork(CLVMObjectPtr args) {
   return std::make_tuple(cost, ToFalse());
 }
 
-}  // namespace chia
+} // namespace chia

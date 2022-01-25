@@ -6,10 +6,11 @@
 #include "program.h"
 #include "types.h"
 
-namespace chia {
+namespace chia
+{
 
 CLVMObjectPtr Assemble(std::string_view str);
 
-}  // namespace chia
+} // namespace chia
 
 #endif

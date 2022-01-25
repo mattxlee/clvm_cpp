@@ -9,28 +9,31 @@
 
 #include "program.h"
 
-namespace chia {
+namespace chia
+{
 
-using OpFunc =
-    std::function<std::tuple<int, CLVMObjectPtr>(CLVMObjectPtr args)>;
+using OpFunc
+    = std::function<std::tuple<int, CLVMObjectPtr>(CLVMObjectPtr args)>;
 
-class Ops {
- public:
+class Ops
+{
+public:
   static Ops& GetInstance();
 
   void Assign(std::string_view op_name, OpFunc f);
 
   OpFunc Query(std::string_view op_name);
 
- private:
+private:
   Ops();
 
- private:
+private:
   std::map<std::string, OpFunc> ops_;
 };
 
-class OperatorLookup {
- public:
+class OperatorLookup
+{
+public:
   using Keywords = std::vector<std::string>;
 
   Bytes QUOTE_ATOM;
@@ -38,8 +41,8 @@ class OperatorLookup {
 
   OperatorLookup();
 
-  std::tuple<int, CLVMObjectPtr> operator()(Bytes const& op,
-                                            CLVMObjectPtr args) const;
+  std::tuple<int, CLVMObjectPtr> operator()(
+      Bytes const& op, CLVMObjectPtr args) const;
 
   std::string AtomToKeyword(uint8_t a) const;
 
@@ -49,15 +52,15 @@ class OperatorLookup {
 
   int GetCount() const;
 
- private:
+private:
   void AddKeyword(uint8_t atom, std::string_view keyword);
-  
+
   void InitKeywords();
 
- private:
+private:
   std::map<uint8_t, Keywords> atom_to_keywords_;
 };
 
-}  // namespace chia
+} // namespace chia
 
 #endif

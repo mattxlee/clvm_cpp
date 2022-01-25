@@ -13,7 +13,8 @@
 #include "utils.h"
 #include "wallet.h"
 
-namespace chia {
+namespace chia
+{
 
 uint8_t const MAX_SINGLE_BYTE = 0x7F;
 uint8_t const CONS_BOX_MARKER = 0xFF;
@@ -24,34 +25,50 @@ uint8_t const CONS_BOX_MARKER = 0xFF;
  * =============================================================================
  */
 
-CLVMObject::CLVMObject(NodeType type) : type_(type) {}
+CLVMObject::CLVMObject(NodeType type)
+    : type_(type)
+{
+}
 
-CLVMObject_Atom::CLVMObject_Atom() : CLVMObject(NodeType::None) {}
+CLVMObject_Atom::CLVMObject_Atom()
+    : CLVMObject(NodeType::None)
+{
+}
 
 CLVMObject_Atom::CLVMObject_Atom(Bytes bytes)
-    : CLVMObject(NodeType::Atom_Bytes), bytes_(std::move(bytes)) {}
+    : CLVMObject(NodeType::Atom_Bytes)
+    , bytes_(std::move(bytes))
+{
+}
 
 CLVMObject_Atom::CLVMObject_Atom(std::string_view str)
-    : CLVMObject(NodeType::Atom_Str) {
+    : CLVMObject(NodeType::Atom_Str)
+{
   bytes_.resize(str.size());
   memcpy(bytes_.data(), str.data(), str.size());
 }
 
-CLVMObject_Atom::CLVMObject_Atom(long i) : CLVMObject_Atom(Int(i)) {}
+CLVMObject_Atom::CLVMObject_Atom(long i)
+    : CLVMObject_Atom(Int(i))
+{
+}
 
 CLVMObject_Atom::CLVMObject_Atom(Int const& i)
-    : CLVMObject(NodeType::Atom_Int) {
+    : CLVMObject(NodeType::Atom_Int)
+{
   bytes_ = i.ToBytes();
 }
 
 CLVMObject_Atom::CLVMObject_Atom(PublicKey const& g1_element)
-    : CLVMObject(NodeType::Atom_G1Element) {
+    : CLVMObject(NodeType::Atom_G1Element)
+{
   bytes_ = utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(g1_element);
 }
 
 Bytes CLVMObject_Atom::GetBytes() const { return bytes_; }
 
-std::string CLVMObject_Atom::AsString() const {
+std::string CLVMObject_Atom::AsString() const
+{
   return std::string(std::begin(bytes_), std::end(bytes_));
 }
 
@@ -59,13 +76,18 @@ long CLVMObject_Atom::AsLong() const { return Int(bytes_).ToInt(); }
 
 Int CLVMObject_Atom::AsInt() const { return Int(bytes_); }
 
-PublicKey CLVMObject_Atom::AsG1Element() const {
+PublicKey CLVMObject_Atom::AsG1Element() const
+{
   return utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(bytes_);
 }
 
-CLVMObject_Pair::CLVMObject_Pair(CLVMObjectPtr first, CLVMObjectPtr second,
-                                 NodeType type)
-    : CLVMObject(type), first_(first), second_(second) {}
+CLVMObject_Pair::CLVMObject_Pair(
+    CLVMObjectPtr first, CLVMObjectPtr second, NodeType type)
+    : CLVMObject(type)
+    , first_(first)
+    , second_(second)
+{
+}
 
 CLVMObjectPtr CLVMObject_Pair::GetFirstNode() const { return first_; }
 
@@ -73,26 +95,29 @@ CLVMObjectPtr CLVMObject_Pair::GetSecondNode() const { return second_; }
 
 void CLVMObject_Pair::SetSecondNode(CLVMObjectPtr rest) { second_ = rest; }
 
-bool IsAtom(CLVMObjectPtr obj) {
+bool IsAtom(CLVMObjectPtr obj)
+{
   if (!obj) {
     throw std::runtime_error("can't find the type from a null element");
   }
-  return obj->GetNodeType() == NodeType::Atom_Bytes ||
-         obj->GetNodeType() == NodeType::Atom_G1Element ||
-         obj->GetNodeType() == NodeType::Atom_Int ||
-         obj->GetNodeType() == NodeType::Atom_Str ||
-         obj->GetNodeType() == NodeType::None;
+  return obj->GetNodeType() == NodeType::Atom_Bytes
+      || obj->GetNodeType() == NodeType::Atom_G1Element
+      || obj->GetNodeType() == NodeType::Atom_Int
+      || obj->GetNodeType() == NodeType::Atom_Str
+      || obj->GetNodeType() == NodeType::None;
 }
 
-bool IsPair(CLVMObjectPtr obj) {
+bool IsPair(CLVMObjectPtr obj)
+{
   if (!obj) {
     throw std::runtime_error("can't find the type from a null element");
   }
-  return obj->GetNodeType() == NodeType::List ||
-         obj->GetNodeType() == NodeType::Tuple;
+  return obj->GetNodeType() == NodeType::List
+      || obj->GetNodeType() == NodeType::Tuple;
 }
 
-Bytes Atom(CLVMObjectPtr obj) {
+Bytes Atom(CLVMObjectPtr obj)
+{
   if (!obj) {
     throw std::runtime_error("can't convert null to atom");
   }
@@ -103,7 +128,8 @@ Bytes Atom(CLVMObjectPtr obj) {
   return atom->GetBytes();
 }
 
-std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj) {
+std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj)
+{
   if (!obj) {
     throw std::runtime_error("can't convert null to pair");
   }
@@ -114,7 +140,8 @@ std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj) {
   return std::make_tuple(pair->GetFirstNode(), pair->GetSecondNode());
 }
 
-CLVMObjectPtr First(CLVMObjectPtr obj) {
+CLVMObjectPtr First(CLVMObjectPtr obj)
+{
   if (!IsPair(obj)) {
     throw std::runtime_error("First() it's not a PAIR");
   }
@@ -122,7 +149,8 @@ CLVMObjectPtr First(CLVMObjectPtr obj) {
   return pair->GetFirstNode();
 }
 
-CLVMObjectPtr Rest(CLVMObjectPtr obj) {
+CLVMObjectPtr Rest(CLVMObjectPtr obj)
+{
   if (!IsPair(obj)) {
     throw std::runtime_error("Rest() it's not a PAIR");
   }
@@ -134,8 +162,9 @@ CLVMObjectPtr MakeNull() { return std::make_shared<CLVMObject_Atom>(); }
 
 bool IsNull(CLVMObjectPtr obj) { return obj->GetNodeType() == NodeType::None; }
 
-int ListLen(CLVMObjectPtr list) {
-  int count{0};
+int ListLen(CLVMObjectPtr list)
+{
+  int count { 0 };
   while (IsPair(list)) {
     ++count;
     std::tie(std::ignore, list) = Pair(list);
@@ -157,8 +186,9 @@ CLVMObjectPtr ToFalse() { return ToSExp(Bytes()); }
 
 bool ListP(CLVMObjectPtr obj) { return IsPair(obj); }
 
-int ArgsLen(CLVMObjectPtr obj) {
-  int len{0};
+int ArgsLen(CLVMObjectPtr obj)
+{
+  int len { 0 };
   while (obj->GetNodeType() == NodeType::List) {
     auto [a, r] = Pair(obj);
     if (!IsAtom(a)) {
@@ -171,7 +201,8 @@ int ArgsLen(CLVMObjectPtr obj) {
   return len;
 }
 
-std::tuple<bool, Bytes, CLVMObjectPtr> ArgsNext(CLVMObjectPtr obj) {
+std::tuple<bool, Bytes, CLVMObjectPtr> ArgsNext(CLVMObjectPtr obj)
+{
   if (obj->GetNodeType() != NodeType::List) {
     return std::make_tuple(false, Bytes(), CLVMObjectPtr());
   }
@@ -180,11 +211,13 @@ std::tuple<bool, Bytes, CLVMObjectPtr> ArgsNext(CLVMObjectPtr obj) {
   return std::make_tuple(true, bytes, next);
 }
 
-std::tuple<Cost, CLVMObjectPtr> MallocCost(Cost cost, CLVMObjectPtr atom) {
+std::tuple<Cost, CLVMObjectPtr> MallocCost(Cost cost, CLVMObjectPtr atom)
+{
   return std::make_tuple(cost + Atom(atom).size() * MALLOC_COST_PER_BYTE, atom);
 }
 
-std::vector<std::tuple<Int, int>> ListInts(CLVMObjectPtr args) {
+std::vector<std::tuple<Int, int>> ListInts(CLVMObjectPtr args)
+{
   ArgsIter iter(args);
   std::vector<std::tuple<Int, int>> res;
   while (!iter.IsEof()) {
@@ -195,7 +228,8 @@ std::vector<std::tuple<Int, int>> ListInts(CLVMObjectPtr args) {
   return res;
 }
 
-std::vector<Bytes> ListBytes(CLVMObjectPtr args) {
+std::vector<Bytes> ListBytes(CLVMObjectPtr args)
+{
   std::vector<Bytes> res;
   ArgsIter iter(args);
   while (!iter.IsEof()) {
@@ -210,19 +244,27 @@ std::vector<Bytes> ListBytes(CLVMObjectPtr args) {
  * =============================================================================
  */
 
-namespace stream {
+namespace stream
+{
 
 class OpStack;
 
 using Op = std::function<void(OpStack&, ValStack&, StreamReadFunc&)>;
 
-class OpStack : public Stack<Op> {};
+class OpStack : public Stack<Op>
+{
+};
 
-class StreamReader {
- public:
-  explicit StreamReader(Bytes const& bytes) : bytes_(bytes) {}
+class StreamReader
+{
+public:
+  explicit StreamReader(Bytes const& bytes)
+      : bytes_(bytes)
+  {
+  }
 
-  Bytes operator()(int size) const {
+  Bytes operator()(int size) const
+  {
     Bytes res;
     int read_size = std::min<std::size_t>(size, bytes_.size() - pos_);
     if (read_size == 0) {
@@ -234,20 +276,21 @@ class StreamReader {
     return res;
   }
 
- private:
+private:
   Bytes const& bytes_;
-  mutable int pos_{0};
+  mutable int pos_ { 0 };
 };
 
-CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
+CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b)
+{
   if (b == 0x80) {
     return ToSExp(MakeNull());
   }
   if (b <= MAX_SINGLE_BYTE) {
     return ToSExp(utils::ByteToBytes(b));
   }
-  int bit_count{0};
-  int bit_mask{0x80};
+  int bit_count { 0 };
+  int bit_mask { 0x80 };
   while (b & bit_mask) {
     bit_count += 1;
     b &= 0xff ^ bit_mask;
@@ -261,7 +304,7 @@ CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
     }
     size_blob = utils::ConnectBuffers(size_blob, b);
   }
-  uint64_t size = Int(size_blob).ToUInt();  // TODO The size might overflow
+  uint64_t size = Int(size_blob).ToUInt(); // TODO The size might overflow
   if (size >= 0x400000000) {
     throw std::runtime_error("blob too large");
   }
@@ -272,13 +315,15 @@ CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b) {
   return ToSExp(blob);
 }
 
-void OpCons(OpStack& op_stack, ValStack& val_stack, StreamReadFunc& f) {
+void OpCons(OpStack& op_stack, ValStack& val_stack, StreamReadFunc& f)
+{
   auto right = val_stack.Pop();
   auto left = val_stack.Pop();
   val_stack.Push(ToSExpPair(left, right));
 }
 
-void OpReadSExp(OpStack& op_stack, ValStack& val_stack, StreamReadFunc& f) {
+void OpReadSExp(OpStack& op_stack, ValStack& val_stack, StreamReadFunc& f)
+{
   Bytes blob = f(1);
   if (blob.empty()) {
     throw std::runtime_error("bad encoding");
@@ -293,7 +338,8 @@ void OpReadSExp(OpStack& op_stack, ValStack& val_stack, StreamReadFunc& f) {
   val_stack.Push(AtomFromStream(f, b));
 }
 
-CLVMObjectPtr SExpFromStream(ReadStreamFunc f) {
+CLVMObjectPtr SExpFromStream(ReadStreamFunc f)
+{
   OpStack op_stack;
   op_stack.Push(OpReadSExp);
   ValStack val_stack;
@@ -305,7 +351,7 @@ CLVMObjectPtr SExpFromStream(ReadStreamFunc f) {
   return val_stack.Pop();
 }
 
-}  // namespace stream
+} // namespace stream
 
 /**
  * =============================================================================
@@ -313,16 +359,19 @@ CLVMObjectPtr SExpFromStream(ReadStreamFunc f) {
  * =============================================================================
  */
 
-namespace tree_hash {
+namespace tree_hash
+{
 
 class OpStack;
 using Op = std::function<void(ValStack&, OpStack&)>;
 
-class OpStack : public Stack<Op> {};
+class OpStack : public Stack<Op>
+{
+};
 
-Bytes32 SHA256TreeHash(
-    CLVMObjectPtr sexp,
-    std::vector<Bytes> const& precalculated = std::vector<Bytes>()) {
+Bytes32 SHA256TreeHash(CLVMObjectPtr sexp,
+    std::vector<Bytes> const& precalculated = std::vector<Bytes>())
+{
   Op handle_pair = [](ValStack& sexp_stack, OpStack& op_stack) {
     auto p0 = sexp_stack.Pop();
     auto p1 = sexp_stack.Pop();
@@ -351,8 +400,8 @@ Bytes32 SHA256TreeHash(
       op_stack.Push(handle_sexp);
     } else {
       Bytes atom = Atom(sexp);
-      auto i =
-          std::find(std::begin(precalculated), std::end(precalculated), atom);
+      auto i
+          = std::find(std::begin(precalculated), std::end(precalculated), atom);
       Bytes r;
       if (i != std::end(precalculated)) {
         r = atom;
@@ -383,7 +432,7 @@ Bytes32 SHA256TreeHash(
   return utils::bytes_cast<32>(Atom(res));
 }
 
-}  // namespace tree_hash
+} // namespace tree_hash
 
 /**
  * =============================================================================
@@ -391,50 +440,63 @@ Bytes32 SHA256TreeHash(
  * =============================================================================
  */
 
-Program Program::ImportFromBytes(Bytes const& bytes) {
+Program Program::ImportFromBytes(Bytes const& bytes)
+{
   Program prog;
   prog.sexp_ = stream::SExpFromStream(stream::StreamReader(bytes));
   return prog;
 }
 
-Program Program::ImportFromHex(std::string_view hex) {
+Program Program::ImportFromHex(std::string_view hex)
+{
   Bytes prog_bytes = utils::BytesFromHex(hex);
   return ImportFromBytes(prog_bytes);
 }
 
-Program Program::ImportFromCompiledFile(std::string_view file_path) {
+Program Program::ImportFromCompiledFile(std::string_view file_path)
+{
   std::string hex = utils::LoadHexFromFile(file_path);
   return ImportFromHex(hex);
 }
 
-Program Program::ImportFromAssemble(std::string_view str) {
+Program Program::ImportFromAssemble(std::string_view str)
+{
   Program prog;
   prog.sexp_ = Assemble(str);
   return prog;
 }
 
-Program::Program(CLVMObjectPtr sexp) : sexp_(sexp) {}
+Program::Program(CLVMObjectPtr sexp)
+    : sexp_(sexp)
+{
+}
 
-Bytes32 Program::GetTreeHash() const {
+Bytes32 Program::GetTreeHash() const
+{
   return tree_hash::SHA256TreeHash(sexp_);
 }
 
-uint8_t MSBMask(uint8_t byte) {
+uint8_t MSBMask(uint8_t byte)
+{
   byte |= byte >> 1;
   byte |= byte >> 2;
   byte |= byte >> 4;
   return (byte + 1) >> 1;
 }
 
-namespace run {
+namespace run
+{
 
 class OpStack;
 using Op = std::function<int(OpStack&, ValStack&)>;
 
-class OpStack : public Stack<Op> {};
+class OpStack : public Stack<Op>
+{
+};
 
 void debug_atom(std::string_view prefix, OperatorLookup const& operator_lookup,
-                uint8_t atom) {
+    uint8_t atom)
+{
   try {
     std::string keyword = operator_lookup.AtomToKeyword(atom);
     std::cerr << prefix << ": " << keyword << std::endl;
@@ -444,13 +506,14 @@ void debug_atom(std::string_view prefix, OperatorLookup const& operator_lookup,
   }
 }
 
-std::tuple<int, CLVMObjectPtr> run_program(
-    CLVMObjectPtr program, CLVMObjectPtr args,
-    OperatorLookup const& operator_lookup = OperatorLookup(),
-    Cost max_cost = 0) {
-  auto traverse_path = [](CLVMObjectPtr sexp,
-                          CLVMObjectPtr env) -> std::tuple<int, CLVMObjectPtr> {
-    Cost cost{PATH_LOOKUP_BASE_COST};
+std::tuple<int, CLVMObjectPtr> run_program(CLVMObjectPtr program,
+    CLVMObjectPtr args,
+    OperatorLookup const& operator_lookup = OperatorLookup(), Cost max_cost = 0)
+{
+  auto traverse_path
+      = [](CLVMObjectPtr sexp,
+            CLVMObjectPtr env) -> std::tuple<int, CLVMObjectPtr> {
+    Cost cost { PATH_LOOKUP_BASE_COST };
     cost += PATH_LOOKUP_COST_PER_LEG;
     if (IsNull(sexp)) {
       std::cerr << "sexp is null" << std::endl;
@@ -459,7 +522,7 @@ std::tuple<int, CLVMObjectPtr> run_program(
 
     Bytes b = Atom(sexp);
 
-    int end_byte_cursor{0};
+    int end_byte_cursor { 0 };
     while (end_byte_cursor < b.size() && b[end_byte_cursor] == 0) {
       ++end_byte_cursor;
     }
@@ -512,7 +575,7 @@ std::tuple<int, CLVMObjectPtr> run_program(
   };
 
   eval_op = [traverse_path, &operator_lookup, &apply_op, &cons_op, &eval_op,
-             &swap_op](OpStack& op_stack, ValStack& val_stack) -> int {
+                &swap_op](OpStack& op_stack, ValStack& val_stack) -> int {
     auto [sexp, args] = Pair(val_stack.Pop());
     if (!IsPair(sexp)) {
       auto [cost, r] = traverse_path(sexp, args);
@@ -555,8 +618,8 @@ std::tuple<int, CLVMObjectPtr> run_program(
     return 1;
   };
 
-  apply_op = [&operator_lookup, &eval_op](OpStack& op_stack,
-                                          ValStack& val_stack) -> int {
+  apply_op = [&operator_lookup, &eval_op](
+                 OpStack& op_stack, ValStack& val_stack) -> int {
     auto operand_list = val_stack.Pop();
     auto opt = val_stack.Pop();
     if (IsPair(opt)) {
@@ -589,7 +652,7 @@ std::tuple<int, CLVMObjectPtr> run_program(
 
   ValStack val_stack;
   val_stack.Push(ToSExpPair(program, args));
-  Cost cost{0};
+  Cost cost { 0 };
 
   while (!op_stack.IsEmpty()) {
     auto f = op_stack.Pop();
@@ -602,22 +665,25 @@ std::tuple<int, CLVMObjectPtr> run_program(
   return std::make_tuple(cost, val_stack.GetLast());
 }
 
-}  // namespace run
+} // namespace run
 
-std::tuple<int, CLVMObjectPtr> Program::Run(CLVMObjectPtr args) {
+std::tuple<int, CLVMObjectPtr> Program::Run(CLVMObjectPtr args)
+{
   return run::run_program(sexp_, args);
 }
 
-std::string_view CURRY_OBJ_CODE =
-    "(a (q #a 4 (c 2 (c 5 (c 7 0)))) (c (q (c (q . 2) (c (c (q . 1) 5) (c (a 6 "
-    "(c 2 (c 11 (q 1)))) 0))) #a (i 5 (q 4 (q . 4) (c (c (q . 1) 9) (c (a 6 (c "
-    "2 (c 13 (c 11 0)))) 0))) (q . 11)) 1) 1))";
+std::string_view CURRY_OBJ_CODE = "(a (q #a 4 (c 2 (c 5 (c 7 0)))) (c (q (c (q "
+                                  ". 2) (c (c (q . 1) 5) (c (a 6 "
+                                  "(c 2 (c 11 (q 1)))) 0))) #a (i 5 (q 4 (q . "
+                                  "4) (c (c (q . 1) 9) (c (a 6 (c "
+                                  "2 (c 13 (c 11 0)))) 0))) (q . 11)) 1) 1))";
 
-Program Program::Curry(CLVMObjectPtr args) {
+Program Program::Curry(CLVMObjectPtr args)
+{
   auto curry_program = Assemble(CURRY_OBJ_CODE);
   auto bind_args = ToSExpPair(sexp_, args);
   auto [cost, sexp] = run::run_program(curry_program, bind_args);
   return Program(sexp);
 }
 
-}  // namespace chia
+} // namespace chia

@@ -8,11 +8,14 @@
 #include "mnemonic.h"
 #include "types.h"
 
-namespace chia {
-namespace wallet {
+namespace chia
+{
+namespace wallet
+{
 
-class Wallet {
- public:
+class Wallet
+{
+public:
   /// Create a new empty wallet object
   explicit Wallet(std::string_view passphrase);
 
@@ -34,12 +37,12 @@ class Wallet {
   /// Get main-key which is generated directly from mnemonic
   Key GetMainKey() const;
 
- private:
+private:
   Mnemonic mnemonic_;
   std::string passphrase_;
 };
 
-}  // namespace wallet
-}  // namespace chia
+} // namespace wallet
+} // namespace chia
 
 #endif

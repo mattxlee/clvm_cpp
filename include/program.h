@@ -10,7 +10,8 @@
 #include "types.h"
 #include "utils.h"
 
-namespace chia {
+namespace chia
+{
 
 class OperatorLookup;
 
@@ -30,20 +31,22 @@ enum class NodeType : int {
 class CLVMObject;
 using CLVMObjectPtr = std::shared_ptr<CLVMObject>;
 
-class CLVMObject {
- public:
+class CLVMObject
+{
+public:
   explicit CLVMObject(NodeType type);
 
-  virtual ~CLVMObject() {}
+  virtual ~CLVMObject() { }
 
   NodeType GetNodeType() const { return type_; }
 
- private:
-  NodeType type_{NodeType::None};
+private:
+  NodeType type_ { NodeType::None };
 };
 
-class CLVMObject_Atom : public CLVMObject {
- public:
+class CLVMObject_Atom : public CLVMObject
+{
+public:
   CLVMObject_Atom();
 
   explicit CLVMObject_Atom(Bytes bytes);
@@ -66,12 +69,13 @@ class CLVMObject_Atom : public CLVMObject {
 
   PublicKey AsG1Element() const;
 
- private:
+private:
   Bytes bytes_;
 };
 
-class CLVMObject_Pair : public CLVMObject {
- public:
+class CLVMObject_Pair : public CLVMObject
+{
+public:
   CLVMObject_Pair(CLVMObjectPtr first, CLVMObjectPtr second, NodeType type);
 
   CLVMObjectPtr GetFirstNode() const;
@@ -80,7 +84,7 @@ class CLVMObject_Pair : public CLVMObject {
 
   void SetSecondNode(CLVMObjectPtr rest);
 
- private:
+private:
   CLVMObjectPtr first_;
   CLVMObjectPtr second_;
 };
@@ -105,18 +109,20 @@ int ListLen(CLVMObjectPtr list);
 
 CLVMObjectPtr ToSExp(CLVMObjectPtr obj);
 
-template <typename T>
-CLVMObjectPtr ToSExp(T&& val) {
+template <typename T> CLVMObjectPtr ToSExp(T&& val)
+{
   return std::make_shared<CLVMObject_Atom>(std::forward<T>(val));
 }
 
-class ListBuilder {
- public:
-  void Add(CLVMObjectPtr obj) {
+class ListBuilder
+{
+public:
+  void Add(CLVMObjectPtr obj)
+  {
     if (!next_) {
       // Prepare root_
-      root_ = next_ =
-          std::make_shared<CLVMObject_Pair>(obj, MakeNull(), NodeType::List);
+      root_ = next_
+          = std::make_shared<CLVMObject_Pair>(obj, MakeNull(), NodeType::List);
       return;
     }
     auto next_pair = std::static_pointer_cast<CLVMObject_Pair>(next_);
@@ -124,29 +130,31 @@ class ListBuilder {
     next_pair->SetSecondNode(next_);
   }
 
-  CLVMObjectPtr GetRoot() const {
+  CLVMObjectPtr GetRoot() const
+  {
     if (root_) {
       return root_;
     }
     return MakeNull();
   }
 
- private:
+private:
   CLVMObjectPtr root_;
   CLVMObjectPtr next_;
 };
 
-template <typename... T>
-CLVMObjectPtr ToSExpList(T&&... vals) {
+template <typename... T> CLVMObjectPtr ToSExpList(T&&... vals)
+{
   ListBuilder build;
   (build.Add(ToSExp(std::forward<T>(vals))), ...);
   return build.GetRoot();
 }
 
 template <typename T1, typename T2>
-CLVMObjectPtr ToSExpPair(T1&& val1, T2&& val2) {
-  return std::make_shared<CLVMObject_Pair>(ToSExp(val1), ToSExp(val2),
-                                           NodeType::Tuple);
+CLVMObjectPtr ToSExpPair(T1&& val1, T2&& val2)
+{
+  return std::make_shared<CLVMObject_Pair>(
+      ToSExp(val1), ToSExp(val2), NodeType::Tuple);
 }
 
 CLVMObjectPtr ToTrue();
@@ -161,11 +169,16 @@ std::tuple<bool, Bytes, CLVMObjectPtr> ArgsNext(CLVMObjectPtr obj);
 
 std::tuple<Cost, CLVMObjectPtr> MallocCost(Cost cost, CLVMObjectPtr atom);
 
-class ArgsIter {
- public:
-  explicit ArgsIter(CLVMObjectPtr args) : args_(args) {}
+class ArgsIter
+{
+public:
+  explicit ArgsIter(CLVMObjectPtr args)
+      : args_(args)
+  {
+  }
 
-  Int NextInt(int* num_bytes) {
+  Int NextInt(int* num_bytes)
+  {
     Bytes b = Next();
     if (num_bytes) {
       *num_bytes = b.size();
@@ -173,7 +186,8 @@ class ArgsIter {
     return Int(b);
   }
 
-  Bytes Next() {
+  Bytes Next()
+  {
     auto [a, n] = Pair(args_);
     args_ = n;
     return Atom(a);
@@ -181,7 +195,7 @@ class ArgsIter {
 
   bool IsEof() const { return args_->GetNodeType() == NodeType::None; }
 
- private:
+private:
   CLVMObjectPtr args_;
 };
 
@@ -191,12 +205,13 @@ std::vector<Bytes> ListBytes(CLVMObjectPtr args);
 
 using StreamReadFunc = std::function<Bytes(int size)>;
 
-template <typename T>
-class Stack {
- public:
+template <typename T> class Stack
+{
+public:
   void Push(T op) { stack_.push(std::move(op)); }
 
-  T Pop() {
+  T Pop()
+  {
     if (stack_.empty()) {
       throw std::runtime_error("stack is empty");
     }
@@ -205,7 +220,8 @@ class Stack {
     return res;
   }
 
-  T GetLast() const {
+  T GetLast() const
+  {
     if (stack_.empty()) {
       throw std::runtime_error("no last item");
     }
@@ -214,7 +230,8 @@ class Stack {
 
   bool IsEmpty() const { return stack_.empty(); }
 
-  bool Exists(T const& op) {
+  bool Exists(T const& op)
+  {
     for (auto const& op_in_stack : stack_) {
       if (op == op_in_stack) {
         return true;
@@ -223,13 +240,15 @@ class Stack {
     return false;
   }
 
- private:
+private:
   std::stack<T> stack_;
 };
 
-class ValStack : public Stack<CLVMObjectPtr> {
- public:
-  void Push(CLVMObjectPtr p) {
+class ValStack : public Stack<CLVMObjectPtr>
+{
+public:
+  void Push(CLVMObjectPtr p)
+  {
     if (!p) {
       throw std::runtime_error("push a nil sexp to stack");
     }
@@ -241,8 +260,9 @@ using ReadStreamFunc = std::function<Bytes(int size)>;
 
 CLVMObjectPtr SExpFromStream(ReadStreamFunc f);
 
-class Program {
- public:
+class Program
+{
+public:
   static Program ImportFromBytes(Bytes const& bytes);
 
   static Program ImportFromHex(std::string_view hex);
@@ -259,15 +279,15 @@ class Program {
 
   Program Curry(CLVMObjectPtr args);
 
- private:
-  Program() {}
+private:
+  Program() { }
 
- private:
+private:
   CLVMObjectPtr sexp_;
 };
 
 uint8_t MSBMask(uint8_t byte);
 
-}  // namespace chia
+} // namespace chia
 
 #endif

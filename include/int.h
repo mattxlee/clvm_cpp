@@ -6,12 +6,14 @@
 
 #include "types.h"
 
-namespace chia {
+namespace chia
+{
 
 struct Impl;
 
-class Int {
- public:
+class Int
+{
+public:
   static Int Create(Impl* impl);
 
   Int(Int const& rhs);
@@ -64,8 +66,8 @@ class Int {
   friend bool operator>(Int const& lhs, Int const& rhs);
   friend bool operator>=(Int const& lhs, Int const& rhs);
 
- private:
-  Impl* impl_{nullptr};
+private:
+  Impl* impl_ { nullptr };
 };
 
 bool operator==(Int const& lhs, Int const& rhs);
@@ -74,6 +76,6 @@ bool operator<=(Int const& lhs, Int const& rhs);
 bool operator>(Int const& lhs, Int const& rhs);
 bool operator>=(Int const& lhs, Int const& rhs);
 
-}  // namespace chia
+} // namespace chia
 
 #endif

@@ -1,3 +1,10 @@
 ---
-Language:        Cpp
-BasedOnStyle:  Google
+Language:                         Cpp
+BasedOnStyle:                     Webkit
+AccessModifierOffset:             -2
+BreakBeforeBraces:                Linux
+ColumnLimit:                      80
+IndentWidth:                      2
+DerivePointerAlignment:           false
+PointerAlignment:                 Left
+NamespaceIndentation:             None

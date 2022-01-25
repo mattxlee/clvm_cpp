@@ -1,7 +1,8 @@
 #ifndef CHIA_COSTS_H
 #define CHIA_COSTS_H
 
-namespace chia {
+namespace chia
+{
 
 int const IF_COST = 33;
 int const CONS_COST = 50;
@@ -75,6 +76,6 @@ int const LOGNOT_COST_PER_BYTE = 3;
 int const APPLY_COST = 90;
 int const QUOTE_COST = 20;
 
-}  // namespace chia
+} // namespace chia
 
 #endif

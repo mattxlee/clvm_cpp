@@ -8,7 +8,8 @@
 #include "program.h"
 #include "utils.h"
 
-namespace chia {
+namespace chia
+{
 
 static std::string_view KEYWORDS =
     // core opcodes 0x01-x08
@@ -33,14 +34,24 @@ static std::string_view KEYWORDS =
     "softfork ";
 
 std::map<std::string, std::string> OP_REWRITE = {
-    {"+", "add"},       {"-", "subtract"}, {"*", "multiply"}, {"/", "div"},
-    {"i", "if"},        {"c", "cons"},     {"f", "first"},    {"r", "rest"},
-    {"l", "listp"},     {"x", "raise"},    {"=", "eq"},       {">", "gr"},
-    {">s", "gr_bytes"},
+  { "+", "add" },
+  { "-", "subtract" },
+  { "*", "multiply" },
+  { "/", "div" },
+  { "i", "if" },
+  { "c", "cons" },
+  { "f", "first" },
+  { "r", "rest" },
+  { "l", "listp" },
+  { "x", "raise" },
+  { "=", "eq" },
+  { ">", "gr" },
+  { ">s", "gr_bytes" },
 };
 
-std::tuple<int, CLVMObjectPtr> default_unknown_op(Bytes const& op,
-                                                  CLVMObjectPtr args) {
+std::tuple<int, CLVMObjectPtr> default_unknown_op(
+    Bytes const& op, CLVMObjectPtr args)
+{
   if (op.empty() || (op.size() > 2 && op[0] == 0xff && op[1] == 0xff)) {
     throw std::runtime_error("reserved operator");
   }
@@ -53,7 +64,7 @@ std::tuple<int, CLVMObjectPtr> default_unknown_op(Bytes const& op,
 
   Cost cost_multiplier = Int(utils::ByteToBytes(*op.rbegin())).ToInt() + 1;
 
-  Cost cost{0};
+  Cost cost { 0 };
   if (cost_function == 0) {
     cost = 1;
   } else if (cost_function == 1) {
@@ -94,24 +105,28 @@ std::tuple<int, CLVMObjectPtr> default_unknown_op(Bytes const& op,
   return std::make_tuple(cost, MakeNull());
 }
 
-Ops& Ops::GetInstance() {
+Ops& Ops::GetInstance()
+{
   static Ops instance;
   return instance;
 }
 
-void Ops::Assign(std::string_view op_name, OpFunc f) {
+void Ops::Assign(std::string_view op_name, OpFunc f)
+{
   ops_[op_name.data()] = std::move(f);
 }
 
-OpFunc Ops::Query(std::string_view op_name) {
+OpFunc Ops::Query(std::string_view op_name)
+{
   auto i = ops_.find(op_name.data());
   if (i == std::end(ops_)) {
-    return OpFunc();  // an empty op indicates the op cannot be found
+    return OpFunc(); // an empty op indicates the op cannot be found
   }
   return i->second;
 }
 
-Ops::Ops() {
+Ops::Ops()
+{
   // Core operators
   Assign("if", op_if);
   Assign("cons", op_cons);
@@ -146,14 +161,16 @@ Ops::Ops() {
   Assign("softfork", op_softfork);
 }
 
-OperatorLookup::OperatorLookup() {
+OperatorLookup::OperatorLookup()
+{
   InitKeywords();
   QUOTE_ATOM = utils::ByteToBytes(KeywordToAtom("q"));
   APPLY_ATOM = utils::ByteToBytes(KeywordToAtom("a"));
 }
 
 std::tuple<int, CLVMObjectPtr> OperatorLookup::operator()(
-    Bytes const& op, CLVMObjectPtr args) const {
+    Bytes const& op, CLVMObjectPtr args) const
+{
   try {
     Keywords keywords = AtomToKeywords(op[0]);
     for (std::string const& keyword : keywords) {
@@ -169,7 +186,8 @@ std::tuple<int, CLVMObjectPtr> OperatorLookup::operator()(
   return default_unknown_op(op, args);
 }
 
-std::string OperatorLookup::AtomToKeyword(uint8_t a) const {
+std::string OperatorLookup::AtomToKeyword(uint8_t a) const
+{
   auto i = atom_to_keywords_.find(a);
   if (i != std::end(atom_to_keywords_)) {
     return i->second[0];
@@ -177,7 +195,8 @@ std::string OperatorLookup::AtomToKeyword(uint8_t a) const {
   throw std::runtime_error("keyword cannot be found by the atom");
 }
 
-OperatorLookup::Keywords OperatorLookup::AtomToKeywords(uint8_t a) const {
+OperatorLookup::Keywords OperatorLookup::AtomToKeywords(uint8_t a) const
+{
   auto i = atom_to_keywords_.find(a);
   if (i != std::end(atom_to_keywords_)) {
     return i->second;
@@ -185,14 +204,14 @@ OperatorLookup::Keywords OperatorLookup::AtomToKeywords(uint8_t a) const {
   throw std::runtime_error("keyword cannot be found by the atom");
 }
 
-uint8_t OperatorLookup::KeywordToAtom(std::string_view keyword) const {
-  auto i =
-      std::find_if(std::begin(atom_to_keywords_), std::end(atom_to_keywords_),
-                   [keyword](auto const& val) -> bool {
-                     auto i = std::find(std::begin(val.second),
-                                        std::end(val.second), keyword);
-                     return i != std::end(val.second);
-                   });
+uint8_t OperatorLookup::KeywordToAtom(std::string_view keyword) const
+{
+  auto i = std::find_if(std::begin(atom_to_keywords_),
+      std::end(atom_to_keywords_), [keyword](auto const& val) -> bool {
+        auto i
+            = std::find(std::begin(val.second), std::end(val.second), keyword);
+        return i != std::end(val.second);
+      });
   if (i != std::end(atom_to_keywords_)) {
     return i->first;
   }
@@ -201,22 +220,24 @@ uint8_t OperatorLookup::KeywordToAtom(std::string_view keyword) const {
 
 int OperatorLookup::GetCount() const { return atom_to_keywords_.size(); }
 
-void OperatorLookup::AddKeyword(uint8_t atom, std::string_view keyword) {
+void OperatorLookup::AddKeyword(uint8_t atom, std::string_view keyword)
+{
   auto i = atom_to_keywords_.find(atom);
   if (i != std::end(atom_to_keywords_)) {
     i->second.push_back(std::string(keyword));
     return;
   }
-  Keywords keywords{std::string(keyword)};
+  Keywords keywords { std::string(keyword) };
   atom_to_keywords_.emplace(std::make_tuple(atom, keywords));
 }
 
-void OperatorLookup::InitKeywords() {
-  std::string::size_type start{0};
-  uint8_t byte{0};
+void OperatorLookup::InitKeywords()
+{
+  std::string::size_type start { 0 };
+  uint8_t byte { 0 };
   auto next = KEYWORDS.find(" ", start);
   while (next != std::string::npos) {
-    std::string keyword{KEYWORDS.substr(start, next - start)};
+    std::string keyword { KEYWORDS.substr(start, next - start) };
     // Replace the keyword with OP_REWRITE
     auto i = OP_REWRITE.find(keyword);
     if (i != std::end(OP_REWRITE)) {
@@ -231,4 +252,4 @@ void OperatorLookup::InitKeywords() {
   }
 }
 
-}  // namespace chia
+} // namespace chia

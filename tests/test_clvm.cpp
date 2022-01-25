@@ -1,7 +1,6 @@
 #include <fstream>
 #include <string_view>
 
-#include "gtest/gtest.h"
 #include "int.h"
 #include "key.h"
 #include "mnemonic.h"
@@ -10,13 +9,16 @@
 #include "types.h"
 #include "utils.h"
 #include "wallet.h"
+#include "gtest/gtest.h"
 
-TEST(Utilities, ByteToBytes) {
+TEST(Utilities, ByteToBytes)
+{
   auto bytes = chia::utils::ByteToBytes('\1');
   EXPECT_EQ(bytes[0], '\1');
 }
 
-TEST(Utilities, Bytes) {
+TEST(Utilities, Bytes)
+{
   EXPECT_EQ(chia::utils::Byte4bToHexChar(10), 'a');
   EXPECT_EQ(chia::utils::HexCharToByte4b('b'), 11);
 
@@ -30,58 +32,65 @@ TEST(Utilities, Bytes) {
   EXPECT_TRUE(chia::utils::ConnectBuffers(empty, empty).empty());
 
   EXPECT_EQ(chia::utils::ConnectBuffers(bytes, bytes),
-            chia::utils::BytesFromHex("abefabef"));
+      chia::utils::BytesFromHex("abefabef"));
 
   EXPECT_EQ(chia::utils::ConnectBuffers(empty, bytes),
-            chia::utils::BytesFromHex("abef"));
+      chia::utils::BytesFromHex("abef"));
 
   EXPECT_EQ(chia::utils::ConnectBuffers(bytes, empty),
-            chia::utils::BytesFromHex("abef"));
+      chia::utils::BytesFromHex("abef"));
 }
 
-TEST(Utilities, IntBigEndianConvertion) {
+TEST(Utilities, IntBigEndianConvertion)
+{
   EXPECT_EQ(chia::Int(chia::utils::SerializeBytes(0x01, 0x02)).ToInt(), 0x0102);
 }
 
 std::string_view const s0 = "../clvm/calculate_synthetic_public_key.clvm.hex";
-std::string_view const s0_treehash =
-    "../clvm/calculate_synthetic_public_key.clvm.hex.sha256tree";
+std::string_view const s0_treehash
+    = "../clvm/calculate_synthetic_public_key.clvm.hex.sha256tree";
 
-std::string_view const s1 =
-    "../clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex";
-std::string_view const s1_treehash =
-    "../clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex.sha256tree";
+std::string_view const s1
+    = "../clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex";
+std::string_view const s1_treehash
+    = "../clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex.sha256tree";
 
-TEST(CLVM_SHA256_treehash, LoadAndVerify_s0) {
+TEST(CLVM_SHA256_treehash, LoadAndVerify_s0)
+{
   auto prog = chia::Program::ImportFromCompiledFile(s0);
-  auto treehash_bytes =
-      chia::utils::BytesFromHex(chia::utils::LoadHexFromFile(s0_treehash));
+  auto treehash_bytes
+      = chia::utils::BytesFromHex(chia::utils::LoadHexFromFile(s0_treehash));
   EXPECT_EQ(chia::utils::bytes_cast<32>(prog.GetTreeHash()), treehash_bytes);
 }
 
-TEST(CLVM_SHA256_treehash, LoadAndVerify_s1) {
+TEST(CLVM_SHA256_treehash, LoadAndVerify_s1)
+{
   auto prog = chia::Program::ImportFromCompiledFile(s1);
-  auto treehash_bytes =
-      chia::utils::BytesFromHex(chia::utils::LoadHexFromFile(s1_treehash));
+  auto treehash_bytes
+      = chia::utils::BytesFromHex(chia::utils::LoadHexFromFile(s1_treehash));
   EXPECT_EQ(chia::utils::bytes_cast<32>(prog.GetTreeHash()), treehash_bytes);
 }
 
-TEST(CLVM_BigInt, Initial100) {
+TEST(CLVM_BigInt, Initial100)
+{
   chia::Int i(100);
   EXPECT_EQ(i.ToInt(), 100);
 }
 
-TEST(CLVM_BigInt, InitialN100) {
+TEST(CLVM_BigInt, InitialN100)
+{
   chia::Int i(-100);
   EXPECT_EQ(i.ToInt(), -100);
 }
 
-TEST(CLVM_BigInt, Initial100FromBytes) {
+TEST(CLVM_BigInt, Initial100FromBytes)
+{
   chia::Int i(chia::utils::IntToBEBytes(100));
   EXPECT_EQ(i.ToInt(), 100);
 }
 
-TEST(CLVM_BigInt, Add) {
+TEST(CLVM_BigInt, Add)
+{
   long a = 0x1234567812345678;
   long b = 0x1234567812345678;
 
@@ -91,7 +100,8 @@ TEST(CLVM_BigInt, Add) {
   EXPECT_EQ((aa + bb).ToInt(), a + b);
 }
 
-TEST(CLVM_BigInt, Sub) {
+TEST(CLVM_BigInt, Sub)
+{
   long a = 0x1234567812345678;
   long b = 0x1234567812345600;
 
@@ -101,7 +111,8 @@ TEST(CLVM_BigInt, Sub) {
   EXPECT_EQ((aa - bb).ToInt(), a - b);
 }
 
-TEST(CLVM_SExp, List) {
+TEST(CLVM_SExp, List)
+{
   auto sexp_list = chia::ToSExpList(10, 20, 30, 40);
   EXPECT_EQ(chia::ListLen(sexp_list), 4);
 
@@ -119,7 +130,8 @@ TEST(CLVM_SExp, List) {
   EXPECT_EQ(val40.ToInt(), 40);
 }
 
-TEST(CLVM_MsbMask, MsbMask) {
+TEST(CLVM_MsbMask, MsbMask)
+{
   EXPECT_EQ(chia::MSBMask(0x0), 0x0);
   EXPECT_EQ(chia::MSBMask(0x01), 0x01);
   EXPECT_EQ(chia::MSBMask(0x02), 0x02);
@@ -135,13 +147,15 @@ TEST(CLVM_MsbMask, MsbMask) {
   EXPECT_EQ(chia::MSBMask(0x0f), 0x08);
 }
 
-TEST(CLVM, OperatorLookup) {
+TEST(CLVM, OperatorLookup)
+{
   chia::OperatorLookup ol;
   EXPECT_EQ(ol.KeywordToAtom("q"), 0x01);
   EXPECT_EQ(ol.KeywordToAtom("add"), 0x10);
 }
 
-TEST(CLVM_Mnemonic, WordsList) {
+TEST(CLVM_Mnemonic, WordsList)
+{
   auto words = chia::wallet::Mnemonic::StringToWords("hello world");
   EXPECT_EQ(words.size(), 2);
   EXPECT_EQ(words[0], "hello");
@@ -168,7 +182,8 @@ TEST(CLVM_Mnemonic, WordsList) {
  * Address 0: xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5
  */
 
-TEST(CLVM_Key, Verify) {
+TEST(CLVM_Key, Verify)
+{
   chia::wallet::Mnemonic mnemonic(
       "return village first merit biology slim leaf assume link physical silk "
       "identify material peanut keen settle logic absorb better famous exit "
@@ -189,8 +204,8 @@ TEST(CLVM_Key, Verify) {
   EXPECT_EQ(chia::utils::BytesFromHex(
                 "adce14eef36f77e00bdf2ce7c54d7e3687fcc2e90b6e6a6ec3163fe7ae4cb4"
                 "49fc840b6f6d0a7bf49abb94415900a920"),
-            pubk);
+      pubk);
 
   EXPECT_EQ(wallet.GetAddress(0),
-            "xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5");
+      "xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5");
 }

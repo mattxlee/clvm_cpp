@@ -8,11 +8,14 @@
 
 #include "types.h"
 
-namespace chia {
-namespace wallet {
+namespace chia
+{
+namespace wallet
+{
 
-class Mnemonic {
- public:
+class Mnemonic
+{
+public:
   using Words = std::vector<std::string>;
 
   /// Generate a new mnemonic
@@ -43,12 +46,12 @@ class Mnemonic {
   /// Return `true` if current mnemonic is empty
   bool IsEmpty() const;
 
- private:
+private:
   Words words_;
   Bytes bytes_;
 };
 
-}  // namespace wallet
-}  // namespace chia
+} // namespace wallet
+} // namespace chia
 
 #endif

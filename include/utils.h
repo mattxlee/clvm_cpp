@@ -6,18 +6,20 @@
 
 #include "types.h"
 
-namespace chia {
-namespace utils {
+namespace chia
+{
+namespace utils
+{
 
-template <int LEN>
-Bytes bytes_cast(std::array<uint8_t, LEN> const& rhs) {
+template <int LEN> Bytes bytes_cast(std::array<uint8_t, LEN> const& rhs)
+{
   Bytes bytes(LEN);
   memcpy(bytes.data(), rhs.data(), LEN);
   return bytes;
 }
 
-template <int LEN>
-std::array<uint8_t, LEN> bytes_cast(Bytes const& rhs) {
+template <int LEN> std::array<uint8_t, LEN> bytes_cast(Bytes const& rhs)
+{
   assert(rhs.size() >= LEN);
 
   std::array<uint8_t, LEN> res;
@@ -26,7 +28,8 @@ std::array<uint8_t, LEN> bytes_cast(Bytes const& rhs) {
 }
 
 template <typename Container>
-Container ConnectContainers(Container const& lhs, Container const& rhs) {
+Container ConnectContainers(Container const& lhs, Container const& rhs)
+{
   Container res = lhs;
   std::copy(std::begin(rhs), std::end(rhs), std::back_inserter(res));
   return res;
@@ -112,25 +115,26 @@ Bytes SubBytes(Bytes const& bytes, int start, int count = 0);
 
 std::vector<int> BytesToInts(Bytes const& bytes);
 
-class BufferConnector {
- public:
+class BufferConnector
+{
+public:
   void Append(Bytes const& rhs);
 
   Bytes const& GetResult() const;
 
- private:
+private:
   Bytes result_;
 };
 
-template <typename... T>
-Bytes ConnectBuffers(T&&... bufs) {
+template <typename... T> Bytes ConnectBuffers(T&&... bufs)
+{
   BufferConnector conn;
   (conn.Append(std::forward<T>(bufs)), ...);
   return conn.GetResult();
 }
 
-template <typename... T>
-Bytes SerializeBytes(T&&... vals) {
+template <typename... T> Bytes SerializeBytes(T&&... vals)
+{
   Bytes res;
   (res.push_back(std::forward<T>(vals)), ...);
   return res;
@@ -138,8 +142,8 @@ Bytes SerializeBytes(T&&... vals) {
 
 Bytes RevertBytes(Bytes const& in);
 
-template <typename T>
-Bytes IntToBEBytes(T const& val) {
+template <typename T> Bytes IntToBEBytes(T const& val)
+{
   Bytes b(sizeof(val));
   memcpy(b.data(), &val, sizeof(val));
   b = RevertBytes(b);
@@ -148,7 +152,7 @@ Bytes IntToBEBytes(T const& val) {
 
 std::string ToUpper(std::string_view str);
 
-}  // namespace utils
-}  // namespace chia
+} // namespace utils
+} // namespace chia
 
 #endif

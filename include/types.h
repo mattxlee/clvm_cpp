@@ -5,7 +5,8 @@
 #include <string>
 #include <vector>
 
-namespace chia {
+namespace chia
+{
 
 using Bytes = std::vector<uint8_t>;
 using Bytes32 = std::array<uint8_t, 32>;
@@ -18,6 +19,6 @@ using PublicKey = Bytes48;
 using Signature = Bytes96;
 using Address = std::string;
 
-}  // namespace chia
+} // namespace chia
 
 #endif

@@ -3,22 +3,26 @@
 #include <fstream>
 #include <sstream>
 
-namespace chia {
-namespace utils {
+namespace chia
+{
+namespace utils
+{
 
-Bytes StrToBytes(std::string_view str) {
+Bytes StrToBytes(std::string_view str)
+{
   Bytes b;
   b.resize(str.size());
   memcpy(b.data(), str.data(), str.size());
   return b;
 }
 
-char const hex_chars[16] = {'0', '1', '2', '3', '4', '5', '6', '7',
-                            '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+char const hex_chars[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  'a', 'b', 'c', 'd', 'e', 'f' };
 
 char Byte4bToHexChar(uint8_t hex) { return hex_chars[hex]; }
 
-uint8_t HexCharToByte4b(char ch) {
+uint8_t HexCharToByte4b(char ch)
+{
   for (int i = 0; i < 16; ++i) {
     if (std::tolower(ch) == hex_chars[i]) {
       return i;
@@ -28,7 +32,8 @@ uint8_t HexCharToByte4b(char ch) {
   throw std::runtime_error("invalid character");
 }
 
-std::string ByteToHex(uint8_t byte) {
+std::string ByteToHex(uint8_t byte)
+{
   std::string hex(2, '0');
   uint8_t hi = (byte & 0xf0) >> 4;
   uint8_t lo = byte & 0x0f;
@@ -37,7 +42,8 @@ std::string ByteToHex(uint8_t byte) {
   return hex;
 }
 
-uint8_t ByteFromHex(std::string_view hex, int* consumed) {
+uint8_t ByteFromHex(std::string_view hex, int* consumed)
+{
   if (hex.empty()) {
     if (consumed) {
       *consumed = 0;
@@ -50,15 +56,16 @@ uint8_t ByteFromHex(std::string_view hex, int* consumed) {
     }
     return HexCharToByte4b(hex[0]);
   }
-  uint8_t byte = (static_cast<int>(HexCharToByte4b(hex[0])) << 4) +
-                 HexCharToByte4b(hex[1]);
+  uint8_t byte = (static_cast<int>(HexCharToByte4b(hex[0])) << 4)
+      + HexCharToByte4b(hex[1]);
   if (consumed) {
     *consumed = 2;
   }
   return byte;
 }
 
-std::string BytesToHex(Bytes const& bytes) {
+std::string BytesToHex(Bytes const& bytes)
+{
   std::stringstream ss;
   for (uint8_t byte : bytes) {
     ss << ByteToHex(byte);
@@ -66,7 +73,8 @@ std::string BytesToHex(Bytes const& bytes) {
   return ss.str();
 }
 
-Bytes BytesFromHex(std::string_view hex) {
+Bytes BytesFromHex(std::string_view hex)
+{
   Bytes res;
   int consumed;
   uint8_t byte = ByteFromHex(hex, &consumed);
@@ -79,7 +87,8 @@ Bytes BytesFromHex(std::string_view hex) {
   return res;
 }
 
-std::string ArgsToStr(std::vector<Bytes> const& args) {
+std::string ArgsToStr(std::vector<Bytes> const& args)
+{
   if (args.empty()) {
     return "";
   }
@@ -96,7 +105,8 @@ std::string ArgsToStr(std::vector<Bytes> const& args) {
   return ss.str();
 }
 
-std::string LoadHexFromFile(std::string_view file_path) {
+std::string LoadHexFromFile(std::string_view file_path)
+{
   std::ifstream in(file_path);
   if (!in.is_open()) {
     std::stringstream ss;
@@ -112,15 +122,17 @@ std::string LoadHexFromFile(std::string_view file_path) {
   return ss.str();
 }
 
-Bytes ByteToBytes(uint8_t b) {
+Bytes ByteToBytes(uint8_t b)
+{
   Bytes res(1);
   res[0] = b;
   return res;
 }
 
-Bytes SubBytes(Bytes const& bytes, int start, int count) {
+Bytes SubBytes(Bytes const& bytes, int start, int count)
+{
   Bytes res;
-  int i{0};
+  int i { 0 };
   for (auto beg = std::begin(bytes) + start;
        beg != std::end(bytes) && i < count; ++beg, ++i) {
     res.push_back(*beg);
@@ -128,14 +140,16 @@ Bytes SubBytes(Bytes const& bytes, int start, int count) {
   return res;
 }
 
-std::vector<int> BytesToInts(Bytes const& bytes) {
+std::vector<int> BytesToInts(Bytes const& bytes)
+{
   std::vector<int> res;
   res.resize(bytes.size());
   std::copy(std::begin(bytes), std::end(bytes), std::begin(res));
   return res;
 }
 
-void BufferConnector::Append(Bytes const& rhs) {
+void BufferConnector::Append(Bytes const& rhs)
+{
   std::size_t p = result_.size();
   result_.resize(result_.size() + rhs.size());
   memcpy(result_.data() + p, rhs.data(), rhs.size());
@@ -143,18 +157,20 @@ void BufferConnector::Append(Bytes const& rhs) {
 
 Bytes const& BufferConnector::GetResult() const { return result_; }
 
-Bytes RevertBytes(Bytes const& in) {
+Bytes RevertBytes(Bytes const& in)
+{
   Bytes b;
   std::copy(std::rbegin(in), std::rend(in), std::back_inserter(b));
   return b;
 }
 
-std::string ToUpper(std::string_view str) {
+std::string ToUpper(std::string_view str)
+{
   std::string res;
   std::transform(std::begin(str), std::end(str), std::back_inserter(res),
-                 [](char ch) { return std::toupper(ch); });
+      [](char ch) { return std::toupper(ch); });
   return res;
 }
 
-}  // namespace utils
-}  // namespace chia
+} // namespace utils
+} // namespace chia

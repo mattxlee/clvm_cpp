@@ -5,7 +5,8 @@
 #include "program.h"
 #include "types.h"
 
-namespace chia {
+namespace chia
+{
 
 OpResult op_sha256(CLVMObjectPtr args);
 
@@ -53,6 +54,6 @@ OpResult op_all(CLVMObjectPtr args);
 
 OpResult op_softfork(CLVMObjectPtr args);
 
-}  // namespace chia
+} // namespace chia
 
 #endif

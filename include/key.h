@@ -5,13 +5,16 @@
 
 #include "types.h"
 
-namespace chia {
-namespace wallet {
+namespace chia
+{
+namespace wallet
+{
 
 class Mnemonic;
 
-class PubKey {
- public:
+class PubKey
+{
+public:
   PubKey();
 
   explicit PubKey(PublicKey pubkey);
@@ -22,18 +25,19 @@ class PubKey {
 
   PublicKey const& GetPublicKey() const;
 
- private:
+private:
   PublicKey pubkey_;
 };
 
-class Key {
- public:
+class Key
+{
+public:
   static int const PRIV_KEY_LEN = 32;
   static int const PUB_KEY_LEN = 48;
   static int const SIG_LEN = 96;
 
-  static bool VerifySig(PublicKey const& pub_key, Bytes const& msg,
-                        Signature const& sig);
+  static bool VerifySig(
+      PublicKey const& pub_key, Bytes const& msg, Signature const& sig);
 
   static PublicKey CreatePublicKey();
 
@@ -69,12 +73,12 @@ class Key {
   /// Calculate the address from public key
   Address GetAddress() const;
 
- private:
+private:
   PrivateKey priv_key_;
 };
 
-}  // namespace wallet
+} // namespace wallet
 
-}  // namespace chia
+} // namespace chia
 
 #endif

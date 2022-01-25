@@ -5,7 +5,8 @@
 
 #include "program.h"
 
-namespace chia {
+namespace chia
+{
 
 using OpResult = std::tuple<int, CLVMObjectPtr>;
 
