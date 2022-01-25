@@ -18,7 +18,9 @@ class PubKey {
 
   PubKey operator+(PubKey const& rhs) const;
 
-  PublicKey ToPublicKey() const;
+  PubKey& operator+=(PubKey const& rhs);
+
+  PublicKey const& GetPublicKey() const;
 
  private:
   PublicKey pubkey_;

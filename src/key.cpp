@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <map>
 #include <schemes.hpp>
+
+#include "elements.hpp"
 namespace fs = std::filesystem;
 
 #include "bech32.h"
@@ -26,12 +28,20 @@ PubKey::PubKey() {
 PubKey::PubKey(PublicKey pubkey) : pubkey_(std::move(pubkey)) {}
 
 PubKey PubKey::operator+(PubKey const& rhs) const {
-  auto res =
+  auto lhs_g1 =
       bls::G1Element::FromBytes(bls::Bytes(pubkey_.data(), pubkey_.size()));
+  auto rhs_g1 = bls::G1Element::FromBytes(
+      bls::Bytes(rhs.pubkey_.data(), rhs.pubkey_.size()));
+  auto res = bls::AugSchemeMPL().Aggregate({lhs_g1, rhs_g1});
   return PubKey(utils::bytes_cast<Key::PUB_KEY_LEN>(res.Serialize()));
 }
 
-PublicKey PubKey::ToPublicKey() const { return pubkey_; }
+PubKey& PubKey::operator+=(PubKey const& rhs) {
+  *this = *this + rhs;
+  return *this;
+}
+
+PublicKey const& PubKey::GetPublicKey() const { return pubkey_; }
 
 PublicKey Key::CreatePublicKey() {
   return utils::bytes_cast<PUB_KEY_LEN>(bls::G1Element().Serialize());
