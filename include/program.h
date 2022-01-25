@@ -28,6 +28,8 @@ enum class NodeType : int {
   Tuple
 };
 
+std::string NodeTypeToString(NodeType type);
+
 class CLVMObject;
 using CLVMObjectPtr = std::shared_ptr<CLVMObject>;
 
@@ -286,7 +288,7 @@ private:
   CLVMObjectPtr sexp_;
 };
 
-uint8_t MSBMask(uint8_t byte);
+uint8_t msb_mask(uint8_t byte);
 
 } // namespace chia
 

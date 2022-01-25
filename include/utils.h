@@ -13,7 +13,7 @@ namespace utils
 
 template <int LEN> Bytes bytes_cast(std::array<uint8_t, LEN> const& rhs)
 {
-  Bytes bytes(LEN);
+  Bytes bytes(LEN, '\0');
   memcpy(bytes.data(), rhs.data(), LEN);
   return bytes;
 }

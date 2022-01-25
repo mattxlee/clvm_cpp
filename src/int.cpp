@@ -29,24 +29,36 @@ bool check_valid_hex_string(std::string_view s)
   return true;
 }
 
+bool check_valid_int_string(std::string_view s) {
+  if (s.empty()) {
+    return false;
+  }
+  for (char ch: s) {
+    if (!is_valid_int_char(ch)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool check_valid_int(std::string_view s)
 {
   if (s.empty()) {
     return false;
   }
-  if (s.size() >= 3) {
+  if (s.size() >= 1) {
+    if (s[0] == '+' || s[0] == '-') {
+      return check_valid_int(s.substr(1));
+    }
+  }
+  if (s.size() >= 2) {
     // check hex prefix
     std::string prefix { s.substr(0, 2) };
     if (prefix == "0x" || prefix == "0X") {
       return check_valid_hex_string(s.substr(2));
     }
   }
-  for (char ch : s) {
-    if (!is_valid_int_char(ch)) {
-      return false;
-    }
-  }
-  return true;
+  return check_valid_int_string(s);
 }
 
 struct Impl {

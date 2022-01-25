@@ -19,6 +19,26 @@ namespace chia
 uint8_t const MAX_SINGLE_BYTE = 0x7F;
 uint8_t const CONS_BOX_MARKER = 0xFF;
 
+std::string NodeTypeToString(NodeType type)
+{
+  switch (type) {
+  case NodeType::None:
+    return "None";
+  case NodeType::List:
+    return "List";
+  case NodeType::Tuple:
+    return "Tuple";
+  case NodeType::Atom_Bytes:
+    return "Atom_Bytes";
+  case NodeType::Atom_G1Element:
+    return "Atom_G1Element";
+  case NodeType::Atom_Int:
+    return "Atom_Int";
+  case NodeType::Atom_Str:
+    return "Atom_Str";
+  }
+}
+
 /**
  * =============================================================================
  * CLVMObject
@@ -476,7 +496,7 @@ Bytes32 Program::GetTreeHash() const
   return tree_hash::SHA256TreeHash(sexp_);
 }
 
-uint8_t MSBMask(uint8_t byte)
+uint8_t msb_mask(uint8_t byte)
 {
   byte |= byte >> 1;
   byte |= byte >> 2;
@@ -506,54 +526,52 @@ void debug_atom(std::string_view prefix, OperatorLookup const& operator_lookup,
   }
 }
 
+std::tuple<int, CLVMObjectPtr> traverse_path(
+    CLVMObjectPtr sexp, CLVMObjectPtr env)
+{
+  Cost cost { PATH_LOOKUP_BASE_COST };
+  cost += PATH_LOOKUP_COST_PER_LEG;
+  if (IsNull(sexp)) {
+    return std::make_tuple(cost, MakeNull());
+  }
+
+  Bytes b = Atom(sexp);
+
+  int end_byte_cursor { 0 };
+  while (end_byte_cursor < b.size() && b[end_byte_cursor] == 0) {
+    ++end_byte_cursor;
+  }
+
+  cost += end_byte_cursor * PATH_LOOKUP_COST_PER_ZERO_BYTE;
+  if (end_byte_cursor == b.size()) {
+    return std::make_tuple(cost, MakeNull());
+  }
+
+  int end_bitmask = msb_mask(b[end_byte_cursor]);
+
+  int byte_cursor = b.size() - 1;
+  int bitmask = 0x01;
+  while (byte_cursor > end_byte_cursor || bitmask < end_bitmask) {
+    if (!IsPair(env)) {
+      throw std::runtime_error("path into atom {env}");
+    }
+    auto [first, rest] = Pair(env);
+    env = (b[byte_cursor] & bitmask) ? rest : first;
+    cost += PATH_LOOKUP_COST_PER_LEG;
+    bitmask <<= 1;
+    if (bitmask == 0x100) {
+      --byte_cursor;
+      bitmask = 0x01;
+    }
+  }
+
+  return std::make_tuple(cost, env);
+};
+
 std::tuple<int, CLVMObjectPtr> run_program(CLVMObjectPtr program,
     CLVMObjectPtr args,
     OperatorLookup const& operator_lookup = OperatorLookup(), Cost max_cost = 0)
 {
-  auto traverse_path
-      = [](CLVMObjectPtr sexp,
-            CLVMObjectPtr env) -> std::tuple<int, CLVMObjectPtr> {
-    Cost cost { PATH_LOOKUP_BASE_COST };
-    cost += PATH_LOOKUP_COST_PER_LEG;
-    if (IsNull(sexp)) {
-      return std::make_tuple(cost, MakeNull());
-    }
-
-    Bytes b = Atom(sexp);
-
-    int end_byte_cursor { 0 };
-    while (end_byte_cursor < b.size() && b[end_byte_cursor] == 0) {
-      ++end_byte_cursor;
-    }
-
-    cost += end_byte_cursor * PATH_LOOKUP_COST_PER_ZERO_BYTE;
-    if (end_byte_cursor == b.size()) {
-      return std::make_tuple(cost, MakeNull());
-    }
-
-    int end_bitmask = MSBMask(b[end_byte_cursor]);
-
-    int byte_cursor = b.size() - 1;
-    int bitmask = 0x01;
-    while (byte_cursor > end_byte_cursor || bitmask < end_bitmask) {
-      if (!IsPair(env)) {
-        throw std::runtime_error("path into atom {env}");
-      }
-      auto [first, rest] = Pair(env);
-      env = (b[byte_cursor] & bitmask) ? rest : first;
-      cost += PATH_LOOKUP_COST_PER_LEG;
-      bitmask <<= 1;
-      if (bitmask == 0x100) {
-        --byte_cursor;
-        bitmask = 0x01;
-      }
-    }
-
-    if (!env) {
-      std::cerr << "env is null" << std::endl;
-    }
-    return std::make_tuple(cost, env);
-  };
 
   Op swap_op, cons_op, eval_op, apply_op;
 
@@ -566,15 +584,16 @@ std::tuple<int, CLVMObjectPtr> run_program(CLVMObjectPtr program,
   };
 
   cons_op = [](OpStack& op_stack, ValStack& val_stack) -> int {
-    auto v1 = val_stack.Pop();
     auto v2 = val_stack.Pop();
-    val_stack.Push(ToSExpPair(v1, v2));
+    auto v1 = val_stack.Pop();
+    val_stack.Push(ToSExpPair(v2, v1));
     return 0;
   };
 
-  eval_op = [traverse_path, &operator_lookup, &apply_op, &cons_op, &eval_op,
-                &swap_op](OpStack& op_stack, ValStack& val_stack) -> int {
-    auto [sexp, args] = Pair(val_stack.Pop());
+  eval_op = [&operator_lookup, &apply_op, &cons_op, &eval_op, &swap_op](
+                OpStack& op_stack, ValStack& val_stack) -> int {
+    auto pair = val_stack.Pop();
+    auto [sexp, args] = Pair(pair);
     if (!IsPair(sexp)) {
       auto [cost, r] = traverse_path(sexp, args);
       val_stack.Push(r);
@@ -639,7 +658,7 @@ std::tuple<int, CLVMObjectPtr> run_program(CLVMObjectPtr program,
       return APPLY_COST;
     }
 
-    debug_atom("apply_op", operator_lookup, op[0]);
+    // debug_atom("apply_op", operator_lookup, op[0]);
     auto [additional_cost, r] = operator_lookup(op, operand_list);
     val_stack.Push(r);
     return additional_cost;
