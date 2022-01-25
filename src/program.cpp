@@ -516,7 +516,6 @@ std::tuple<int, CLVMObjectPtr> run_program(CLVMObjectPtr program,
     Cost cost { PATH_LOOKUP_BASE_COST };
     cost += PATH_LOOKUP_COST_PER_LEG;
     if (IsNull(sexp)) {
-      std::cerr << "sexp is null" << std::endl;
       return std::make_tuple(cost, MakeNull());
     }
 
@@ -529,7 +528,6 @@ std::tuple<int, CLVMObjectPtr> run_program(CLVMObjectPtr program,
 
     cost += end_byte_cursor * PATH_LOOKUP_COST_PER_ZERO_BYTE;
     if (end_byte_cursor == b.size()) {
-      std::cerr << "end_byte_cursor equals to b.size()" << std::endl;
       return std::make_tuple(cost, MakeNull());
     }
 
