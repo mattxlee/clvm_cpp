@@ -406,12 +406,12 @@ CLVMObjectPtr assemble_from_ir(CLVMObjectPtr ir_sexp)
     }
   }
 
-  if (ir_nullp(ir_sexp)) {
-    return ToSExpList();
-  }
-
   if (!ir_listp(ir_sexp)) {
     return ir_val(ir_sexp);
+  }
+
+  if (ir_nullp(ir_sexp)) {
+    return ToSExpList();
   }
 
   auto first = ir_first(ir_sexp);
