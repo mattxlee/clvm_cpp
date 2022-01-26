@@ -748,7 +748,7 @@ std::string_view CURRY_OBJ_CODE = "(a (q #a 4 (c 2 (c 5 (c 7 0)))) (c (q (c (q "
 Program Program::Curry(CLVMObjectPtr args)
 {
   auto curry_program = Assemble(CURRY_OBJ_CODE);
-  auto bind_args = ToSExpPair(sexp_, args);
+  auto bind_args = ToSExpPair(sexp_, ToSExpList(args));
   auto [cost, sexp] = run::run_program(curry_program, bind_args);
   return Program(sexp);
 }
