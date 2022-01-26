@@ -415,7 +415,7 @@ TEST(CLVM_RunProgram, Env_ThroughInt_Complex6)
  return village first merit biology slim leaf assume link physical silk identify
  material peanut keen settle logic absorb better famous exit glove tower inhale
 
- * Address 0: xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5
+ * Address 2: xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5
  */
 
 TEST(CLVM_Key, Verify)
@@ -442,6 +442,6 @@ TEST(CLVM_Key, Verify)
                 "49fc840b6f6d0a7bf49abb94415900a920"),
       pubk);
 
-  EXPECT_EQ(wallet.GetAddress(1),
+  EXPECT_EQ(wallet.GetAddress(2),
       "xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5");
 }
