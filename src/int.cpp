@@ -213,6 +213,22 @@ Int Int::operator|(Int const& rhs) const
   return i;
 }
 
+Int Int::operator<<(int rhs) const
+{
+  mpz_class mpz = impl_->mpz << rhs;
+  Int i;
+  i.impl_ = create_impl_from_mpz(std::move(mpz));
+  return i;
+}
+
+Int Int::operator>>(int rhs) const
+{
+  mpz_class mpz = impl_->mpz >> rhs;
+  Int i;
+  i.impl_ = create_impl_from_mpz(std::move(mpz));
+  return i;
+}
+
 Int& Int::operator+=(Int const& rhs)
 {
   *this = *this + rhs;
@@ -258,6 +274,18 @@ Int& Int::operator&=(Int const& rhs)
 Int& Int::operator|=(Int const& rhs)
 {
   *this = *this | rhs;
+  return *this;
+}
+
+Int& Int::operator<<=(int rhs)
+{
+  *this = *this << rhs;
+  return *this;
+}
+
+Int& Int::operator>>=(int rhs)
+{
+  *this = *this >> rhs;
   return *this;
 }
 

@@ -49,6 +49,8 @@ public:
   Int operator^(Int const& rhs) const;
   Int operator&(Int const& rhs) const;
   Int operator|(Int const& rhs) const;
+  Int operator<<(int rhs) const;
+  Int operator>>(int rhs) const;
 
   Int& operator+=(Int const& rhs);
   Int& operator-=(Int const& rhs);
@@ -58,6 +60,8 @@ public:
   Int& operator^=(Int const& rhs);
   Int& operator&=(Int const& rhs);
   Int& operator|=(Int const& rhs);
+  Int& operator<<=(int rhs);
+  Int& operator>>=(int rhs);
 
   Int operator++(int);
   Int& operator++();

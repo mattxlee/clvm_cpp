@@ -442,6 +442,6 @@ TEST(CLVM_Key, Verify)
                 "49fc840b6f6d0a7bf49abb94415900a920"),
       pubk);
 
-  EXPECT_EQ(wallet.GetAddress(0),
+  EXPECT_EQ(wallet.GetAddress(1),
       "xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5");
 }

@@ -140,11 +140,12 @@ Bytes SubBytes(Bytes const& bytes, int start, int count)
   return res;
 }
 
-std::vector<int> BytesToInts(Bytes const& bytes)
+std::vector<Int> BytesToInts(Bytes const& bytes)
 {
-  std::vector<int> res;
+  std::vector<Int> res;
   res.resize(bytes.size());
-  std::copy(std::begin(bytes), std::end(bytes), std::begin(res));
+  std::transform(std::begin(bytes), std::end(bytes), std::begin(res),
+      [](uint8_t val) -> Int { return Int(val); });
   return res;
 }
 

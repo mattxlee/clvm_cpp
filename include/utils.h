@@ -4,6 +4,7 @@
 #include <string>
 #include <string_view>
 
+#include "int.h"
 #include "types.h"
 
 namespace chia
@@ -113,7 +114,7 @@ Bytes ByteToBytes(uint8_t b);
  */
 Bytes SubBytes(Bytes const& bytes, int start, int count = 0);
 
-std::vector<int> BytesToInts(Bytes const& bytes);
+std::vector<Int> BytesToInts(Bytes const& bytes);
 
 class BufferConnector
 {
