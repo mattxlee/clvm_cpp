@@ -76,13 +76,37 @@ CLVMObject_Atom::CLVMObject_Atom(long i)
 CLVMObject_Atom::CLVMObject_Atom(Int const& i)
     : CLVMObject(NodeType::Atom_Int)
 {
-  bytes_ = i.ToBytes();
+  bytes_ = i.ToBytes(&neg_);
 }
 
 CLVMObject_Atom::CLVMObject_Atom(PublicKey const& g1_element)
     : CLVMObject(NodeType::Atom_G1Element)
 {
   bytes_ = utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(g1_element);
+}
+
+bool CLVMObject_Atom::IsFalse() const
+{
+  if (GetNodeType() == NodeType::None) {
+    return true;
+  }
+  if (GetNodeType() == NodeType::Atom_Int) {
+    Int i(bytes_, neg_);
+    return i == Int(0);
+  }
+  return false;
+}
+
+bool CLVMObject_Atom::EqualsTo(CLVMObjectPtr rhs) const
+{
+  if (IsFalse() && rhs->IsFalse()) {
+    return true;
+  }
+  if (GetNodeType() != rhs->GetNodeType()) {
+    return false;
+  }
+  auto rhs_p = std::static_pointer_cast<CLVMObject_Atom>(rhs);
+  return neg_ == rhs_p->neg_ && bytes_ == rhs_p->bytes_;
 }
 
 Bytes CLVMObject_Atom::GetBytes() const { return bytes_; }
@@ -92,9 +116,9 @@ std::string CLVMObject_Atom::AsString() const
   return std::string(std::begin(bytes_), std::end(bytes_));
 }
 
-long CLVMObject_Atom::AsLong() const { return Int(bytes_).ToInt(); }
+long CLVMObject_Atom::AsLong() const { return Int(bytes_, neg_).ToInt(); }
 
-Int CLVMObject_Atom::AsInt() const { return Int(bytes_); }
+Int CLVMObject_Atom::AsInt() const { return Int(bytes_, neg_); }
 
 PublicKey CLVMObject_Atom::AsG1Element() const
 {
@@ -102,18 +126,23 @@ PublicKey CLVMObject_Atom::AsG1Element() const
 }
 
 CLVMObject_Pair::CLVMObject_Pair(
-    CLVMObjectPtr first, CLVMObjectPtr second, NodeType type)
+    CLVMObjectPtr first, CLVMObjectPtr rest, NodeType type)
     : CLVMObject(type)
     , first_(first)
-    , second_(second)
+    , rest_(rest)
 {
 }
 
 CLVMObjectPtr CLVMObject_Pair::GetFirstNode() const { return first_; }
 
-CLVMObjectPtr CLVMObject_Pair::GetSecondNode() const { return second_; }
+CLVMObjectPtr CLVMObject_Pair::GetRestNode() const { return rest_; }
 
-void CLVMObject_Pair::SetSecondNode(CLVMObjectPtr rest) { second_ = rest; }
+void CLVMObject_Pair::SetRestNode(CLVMObjectPtr rest) { rest_ = rest; }
+
+bool CLVMObject_Pair::EqualsTo(CLVMObjectPtr rhs) const
+{
+  throw std::runtime_error("cannot compare pairs");
+}
 
 bool IsAtom(CLVMObjectPtr obj)
 {
@@ -136,6 +165,8 @@ bool IsPair(CLVMObjectPtr obj)
       || obj->GetNodeType() == NodeType::Tuple;
 }
 
+bool IsNull(CLVMObjectPtr obj) { return obj->GetNodeType() == NodeType::None; }
+
 Bytes Atom(CLVMObjectPtr obj)
 {
   if (!obj) {
@@ -148,6 +179,27 @@ Bytes Atom(CLVMObjectPtr obj)
   return atom->GetBytes();
 }
 
+Int ToInt(CLVMObjectPtr obj)
+{
+  if (IsNull(obj)) {
+    return Int(0);
+  }
+  if (obj->GetNodeType() != NodeType::Atom_Int) {
+    throw std::runtime_error("it's not an INT");
+  }
+  auto int_p = std::static_pointer_cast<CLVMObject_Atom>(obj);
+  return int_p->AsInt();
+}
+
+std::string ToString(CLVMObjectPtr obj)
+{
+  if (obj->GetNodeType() != NodeType::Atom_Str) {
+    return "";
+  }
+  auto b = Atom(obj);
+  return std::string(std::begin(b), std::end(b));
+}
+
 std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj)
 {
   if (!obj) {
@@ -157,7 +209,7 @@ std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj)
     throw std::runtime_error("Pair() it's not a PAIR");
   }
   auto pair = static_cast<CLVMObject_Pair*>(obj.get());
-  return std::make_tuple(pair->GetFirstNode(), pair->GetSecondNode());
+  return std::make_tuple(pair->GetFirstNode(), pair->GetRestNode());
 }
 
 CLVMObjectPtr First(CLVMObjectPtr obj)
@@ -175,12 +227,10 @@ CLVMObjectPtr Rest(CLVMObjectPtr obj)
     throw std::runtime_error("Rest() it's not a PAIR");
   }
   auto pair = static_cast<CLVMObject_Pair*>(obj.get());
-  return pair->GetSecondNode();
+  return pair->GetRestNode();
 }
 
 CLVMObjectPtr MakeNull() { return std::make_shared<CLVMObject_Atom>(); }
-
-bool IsNull(CLVMObjectPtr obj) { return obj->GetNodeType() == NodeType::None; }
 
 int ListLen(CLVMObjectPtr list)
 {
@@ -200,9 +250,9 @@ CLVMObjectPtr ToSExp(CLVMObjectPtr obj) { return obj; }
  * =============================================================================
  */
 
-CLVMObjectPtr ToTrue() { return ToSExp(utils::ByteToBytes('\1')); }
+CLVMObjectPtr ToTrue() { return ToSExp(1); }
 
-CLVMObjectPtr ToFalse() { return ToSExp(Bytes()); }
+CLVMObjectPtr ToFalse() { return CLVMObjectPtr(new CLVMObject_Atom()); }
 
 bool ListP(CLVMObjectPtr obj) { return IsPair(obj); }
 

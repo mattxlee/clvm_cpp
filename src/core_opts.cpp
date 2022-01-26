@@ -12,7 +12,7 @@ OpResult op_if(CLVMObjectPtr args)
     throw std::runtime_error("i takes exactly 3 arguments");
   }
   auto [first, r] = Pair(args);
-  if (IsNull(first)) {
+  if (first->IsFalse()) {
     return std::make_tuple(IF_COST, First(Rest(r)));
   }
   return std::make_tuple(IF_COST, First(r));
@@ -69,7 +69,7 @@ OpResult op_eq(CLVMObjectPtr args)
   auto b1 = Atom(a1);
   Cost cost { EQ_BASE_COST };
   cost += (b0.size() + b1.size()) * EQ_COST_PER_BYTE;
-  return std::make_tuple(cost, b0 == b1 ? ToTrue() : ToFalse());
+  return std::make_tuple(cost, a0->EqualsTo(a1) ? ToTrue() : ToFalse());
 }
 
 } // namespace chia

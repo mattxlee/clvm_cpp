@@ -14,22 +14,22 @@ struct Impl;
 class Int
 {
 public:
-  static Int Create(Impl* impl);
-
   static bool IsValidNumberStr(std::string_view s);
 
-  Int(Int const& rhs);
+  Int();
 
   ~Int();
+
+  Int(Int const& rhs);
 
   /// Parse an integer from a string
   Int(std::string_view s, int base);
 
-  explicit Int(Bytes const& s);
+  explicit Int(Bytes const& s, bool neg = false);
 
   explicit Int(long val);
 
-  Bytes ToBytes() const;
+  Bytes ToBytes(bool* neg = nullptr) const;
 
   int NumBytes() const;
 
@@ -47,6 +47,8 @@ public:
   Int operator/(Int const& rhs) const;
   Int operator%(Int const& rhs) const;
   Int operator^(Int const& rhs) const;
+  Int operator&(Int const& rhs) const;
+  Int operator|(Int const& rhs) const;
 
   Int& operator+=(Int const& rhs);
   Int& operator-=(Int const& rhs);
@@ -54,12 +56,16 @@ public:
   Int& operator/=(Int const& rhs);
   Int& operator%=(Int const& rhs);
   Int& operator^=(Int const& rhs);
+  Int& operator&=(Int const& rhs);
+  Int& operator|=(Int const& rhs);
 
   Int operator++(int);
   Int& operator++();
 
   Int operator--(int);
   Int& operator--();
+
+  Int operator~() const;
 
   friend bool operator==(Int const& lhs, Int const& rhs);
   friend bool operator!=(Int const& lhs, Int const& rhs);
@@ -69,7 +75,7 @@ public:
   friend bool operator>=(Int const& lhs, Int const& rhs);
 
 private:
-  Impl* impl_ { nullptr };
+  std::unique_ptr<Impl> impl_;
 };
 
 bool operator==(Int const& lhs, Int const& rhs);

@@ -42,6 +42,10 @@ public:
 
   NodeType GetNodeType() const { return type_; }
 
+  virtual bool IsFalse() const = 0;
+
+  virtual bool EqualsTo(CLVMObjectPtr rhs) const = 0;
+
 private:
   NodeType type_ { NodeType::None };
 };
@@ -61,7 +65,13 @@ public:
 
   explicit CLVMObject_Atom(PublicKey const& g1_element);
 
+  bool IsFalse() const override;
+
+  bool EqualsTo(CLVMObjectPtr rhs) const override;
+
   Bytes GetBytes() const;
+
+  bool IsNeg() const { return neg_; }
 
   std::string AsString() const;
 
@@ -72,30 +82,41 @@ public:
   PublicKey AsG1Element() const;
 
 private:
+  bool neg_ { false };
   Bytes bytes_;
 };
 
 class CLVMObject_Pair : public CLVMObject
 {
 public:
-  CLVMObject_Pair(CLVMObjectPtr first, CLVMObjectPtr second, NodeType type);
+  CLVMObject_Pair(CLVMObjectPtr first, CLVMObjectPtr rest, NodeType type);
 
   CLVMObjectPtr GetFirstNode() const;
 
-  CLVMObjectPtr GetSecondNode() const;
+  CLVMObjectPtr GetRestNode() const;
 
-  void SetSecondNode(CLVMObjectPtr rest);
+  void SetRestNode(CLVMObjectPtr rest);
+
+  bool IsFalse() const override { return false; }
+
+  bool EqualsTo(CLVMObjectPtr rhs) const override;
 
 private:
   CLVMObjectPtr first_;
-  CLVMObjectPtr second_;
+  CLVMObjectPtr rest_;
 };
 
 bool IsAtom(CLVMObjectPtr obj);
 
 bool IsPair(CLVMObjectPtr obj);
 
+bool IsNull(CLVMObjectPtr obj);
+
 Bytes Atom(CLVMObjectPtr obj);
+
+Int ToInt(CLVMObjectPtr obj);
+
+std::string ToString(CLVMObjectPtr obj);
 
 std::tuple<CLVMObjectPtr, CLVMObjectPtr> Pair(CLVMObjectPtr obj);
 
@@ -104,8 +125,6 @@ CLVMObjectPtr First(CLVMObjectPtr obj);
 CLVMObjectPtr Rest(CLVMObjectPtr obj);
 
 CLVMObjectPtr MakeNull();
-
-bool IsNull(CLVMObjectPtr obj);
 
 int ListLen(CLVMObjectPtr list);
 
@@ -129,7 +148,7 @@ public:
     }
     auto next_pair = std::static_pointer_cast<CLVMObject_Pair>(next_);
     next_ = std::make_shared<CLVMObject_Pair>(obj, MakeNull(), NodeType::List);
-    next_pair->SetSecondNode(next_);
+    next_pair->SetRestNode(next_);
   }
 
   CLVMObjectPtr GetRoot() const
@@ -179,20 +198,25 @@ public:
   {
   }
 
-  Int NextInt(int* num_bytes)
+  Int NextInt(int* num_bytes = nullptr)
   {
-    Bytes b = Next();
+    auto n = NextCLVMObj();
+    auto val = ToInt(n);
     if (num_bytes) {
-      *num_bytes = b.size();
+      *num_bytes = val.NumBytes();
     }
-    return Int(b);
+    return val;
   }
 
-  Bytes Next()
+  std::string NextStr() { return ToString(NextCLVMObj()); }
+
+  Bytes Next() { return Atom(NextCLVMObj()); }
+
+  CLVMObjectPtr NextCLVMObj()
   {
     auto [a, n] = Pair(args_);
     args_ = n;
-    return Atom(a);
+    return a;
   }
 
   bool IsEof() const { return args_->GetNodeType() == NodeType::None; }
@@ -277,7 +301,7 @@ public:
 
   Bytes32 GetTreeHash() const;
 
-  std::tuple<int, CLVMObjectPtr> Run(CLVMObjectPtr args);
+  std::tuple<int, CLVMObjectPtr> Run(CLVMObjectPtr args = MakeNull());
 
   Program Curry(CLVMObjectPtr args);
 

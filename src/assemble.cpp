@@ -160,7 +160,7 @@ private:
 
 } // namespace types
 
-Bytes ir_as_atom(CLVMObjectPtr ir_sexp);
+CLVMObjectPtr ir_as_atom(CLVMObjectPtr ir_sexp);
 
 template <typename Type, typename Val>
 CLVMObjectPtr ir_new(Type&& type, Val&& val, std::optional<int> offset = {})
@@ -205,7 +205,11 @@ Int ir_type(CLVMObjectPtr ir_sexp)
   return Int(Atom(the_type));
 }
 
-Int ir_as_int(CLVMObjectPtr ir_sexp) { return Int(ir_as_atom(ir_sexp)); }
+Int ir_as_int(CLVMObjectPtr ir_sexp)
+{
+  auto atom_p = std::static_pointer_cast<CLVMObject_Atom>(ir_as_atom(ir_sexp));
+  return atom_p->AsInt();
+}
 
 Int ir_offset(CLVMObjectPtr ir_sexp)
 {
@@ -241,7 +245,13 @@ CLVMObjectPtr ir_as_sexp(CLVMObjectPtr ir_sexp)
 
 bool ir_is_atom(CLVMObjectPtr ir_sexp) { return !ir_listp(ir_sexp); }
 
-Bytes ir_as_atom(CLVMObjectPtr ir_sexp) { return Atom(Rest(ir_sexp)); }
+CLVMObjectPtr ir_as_atom(CLVMObjectPtr ir_sexp)
+{
+  if (!ir_is_atom(ir_sexp)) {
+    throw std::runtime_error("ir is not an atom");
+  }
+  return Rest(ir_sexp);
+}
 
 CLVMObjectPtr ir_symbol(std::string_view symbol)
 {

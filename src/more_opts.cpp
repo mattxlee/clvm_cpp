@@ -11,6 +11,16 @@
 namespace chia
 {
 
+std::tuple<Int, Int> divmod(Int a, Int b)
+{
+  auto q = a / b;
+  auto r = a % b;
+  if (r != Int(0)) {
+    q += Int((q < Int(0)) ? -1 : 1);
+  }
+  return std::make_tuple(q, r);
+}
+
 OpResult op_sha256(CLVMObjectPtr args)
 {
   crypto_utils::SHA256 sha256;
@@ -97,8 +107,7 @@ OpResult op_divmod(CLVMObjectPtr args)
   auto [i0, l0] = ints[0];
   auto [i1, l1] = ints[1];
   cost += (l0 + l1) * DIVMOD_COST_PER_BYTE;
-  auto q = i0 / i1;
-  auto r = i0 % i1;
+  auto [q, r] = divmod(i0, i1);
   auto q1 = ToSExp(q);
   auto r1 = ToSExp(r);
   cost += (Atom(q1).size() + Atom(r1).size()) * MALLOC_COST_PER_BYTE;
@@ -118,10 +127,9 @@ OpResult op_div(CLVMObjectPtr args)
     throw std::runtime_error("div with 0");
   }
   cost += (l0 + l1) * DIV_COST_PER_BYTE;
-  auto q = i0 / i1;
-  auto r = i0 % i1;
+  auto [q, r] = divmod(i0, i1);
   if (q == Int(-1) && r != Int(0)) {
-    q += Int(1);
+    ++q;
   }
   return MallocCost(cost, ToSExp(q));
 }
@@ -157,9 +165,8 @@ OpResult op_pubkey_for_exp(CLVMObjectPtr args)
   if (ListLen(args) != 1) {
     throw std::runtime_error("pubkey for exp takes exactly 1 parameter");
   }
-  auto b0 = Atom(First(args));
-  int l0 = b0.size();
-  auto i0 = Int(b0);
+  auto i0 = Int(Atom(First(args)));
+  auto l0 = i0.NumBytes();
   auto mb = utils::BytesFromHex(
       "73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001");
   auto m = Int(mb);
@@ -281,18 +288,18 @@ OpResult op_lsh(CLVMObjectPtr args)
   return MallocCost(cost, ToSExp(r));
 }
 
-using BinOpFunc = std::function<int(int, int)>;
+using BinOpFunc = std::function<Int(Int, Int)>;
 
-OpResult binop_reduction(std::string_view op_name, int initial_value,
+OpResult binop_reduction(std::string_view op_name, Int initial_value,
     CLVMObjectPtr args, BinOpFunc op_f)
 {
-  int total { initial_value };
+  Int total { initial_value };
   int arg_size { 0 };
   Cost cost { LOG_BASE_COST };
   ArgsIter iter(args);
   while (!iter.IsEof()) {
     int l;
-    int r = iter.NextInt(&l).ToInt();
+    Int r = iter.NextInt(&l);
     total = op_f(total, r);
     arg_size += l;
     cost += LOG_COST_PER_ARG;
@@ -303,29 +310,29 @@ OpResult binop_reduction(std::string_view op_name, int initial_value,
 
 OpResult op_logand(CLVMObjectPtr args)
 {
-  auto binop = [](int a, int b) -> int {
+  auto binop = [](Int a, Int b) -> Int {
     a &= b;
     return a;
   };
-  return binop_reduction("logand", -1, args, binop);
+  return binop_reduction("logand", Int(-1), args, binop);
 }
 
 OpResult op_logior(CLVMObjectPtr args)
 {
-  auto binop = [](int a, int b) -> int {
+  auto binop = [](Int a, Int b) -> Int {
     a |= b;
     return a;
   };
-  return binop_reduction("logior", 0, args, binop);
+  return binop_reduction("logior", Int(0), args, binop);
 }
 
 OpResult op_logxor(CLVMObjectPtr args)
 {
-  auto binop = [](int a, int b) -> int {
+  auto binop = [](Int a, Int b) -> Int {
     a ^= b;
     return a;
   };
-  return binop_reduction("logxor", 0, args, binop);
+  return binop_reduction("logxor", Int(0), args, binop);
 }
 
 OpResult op_lognot(CLVMObjectPtr args)
@@ -333,9 +340,8 @@ OpResult op_lognot(CLVMObjectPtr args)
   if (ListLen(args) != 1) {
     throw std::runtime_error("op_not takes exactly 1 argument");
   }
-  auto b0 = Atom(First(args));
-  auto i0 = Int(b0).ToInt();
-  int l0 = b0.size();
+  auto i0 = ToInt(First(args));
+  int l0 = i0.NumBytes();
   Cost cost = LOGNOT_BASE_COST + l0 * LOGNOT_COST_PER_BYTE;
   return MallocCost(cost, ToSExp(~i0));
 }
@@ -387,8 +393,7 @@ OpResult op_softfork(CLVMObjectPtr args)
   if (num_items < 1) {
     throw std::runtime_error("softfork takes at least 1 argument");
   }
-  auto a = Atom(First(args));
-  Cost cost = Int(a).ToInt();
+  Cost cost = ToInt(First(args)).ToInt();
   if (cost < 1) {
     throw std::runtime_error("cost must be > 0");
   }
