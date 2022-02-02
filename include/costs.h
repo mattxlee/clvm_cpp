@@ -4,6 +4,8 @@
 namespace chia
 {
 
+uint64_t const INFINITE_COST = 0x7FFFFFFFFFFFFFFF;
+
 int const IF_COST = 33;
 int const CONS_COST = 50;
 int const FIRST_COST = 30;

@@ -299,6 +299,8 @@ public:
 
   explicit Program(CLVMObjectPtr sexp);
 
+  CLVMObjectPtr GetSExp() const { return sexp_; }
+
   Bytes32 GetTreeHash() const;
 
   std::tuple<int, CLVMObjectPtr> Run(CLVMObjectPtr args = MakeNull());
