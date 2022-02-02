@@ -151,6 +151,15 @@ template <typename T> Bytes IntToBEBytes(T const& val)
   return b;
 }
 
+template <typename T> T IntFromBEBytes(Bytes const& bytes)
+{
+  Bytes r = RevertBytes(bytes);
+  int num_bytes_to_copy = std::max(sizeof(T), r.size());
+  T result { 0 };
+  memcpy(&result, r.data(), num_bytes_to_copy);
+  return result;
+}
+
 std::string ToUpper(std::string_view str);
 
 } // namespace utils
