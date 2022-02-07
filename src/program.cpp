@@ -9,7 +9,6 @@
 #include "crypto_utils.h"
 #include "key.h"
 #include "operator_lookup.h"
-#include "types.h"
 #include "utils.h"
 #include "wallet.h"
 
