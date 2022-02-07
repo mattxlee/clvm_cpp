@@ -421,6 +421,64 @@ CLVMObjectPtr SExpFromStream(ReadStreamFunc f)
   return val_stack.Pop();
 }
 
+Bytes AtomToBytes(Bytes const& as_atom)
+{
+  uint64_t size = as_atom.size();
+  if (size == 0) {
+    return utils::ByteToBytes('\x80');
+  }
+  if (size == 1) {
+    if (as_atom[0] <= MAX_SINGLE_BYTE) {
+      return as_atom;
+    }
+  }
+  Bytes size_blob;
+  if (size < 0x40) {
+    size_blob = utils::ByteToBytes(0x80 | size);
+  } else if (size < 0x2000) {
+    size_blob.push_back(0xC0 | (size >> 8));
+    size_blob.push_back((size >> 8) & 0xff);
+  } else if (size < 0x100000) {
+    size_blob.push_back(0xe0 | (size >> 16));
+    size_blob.push_back((size >> 8) & 0xff);
+    size_blob.push_back((size >> 0) & 0xff);
+  } else if (size < 0x8000000) {
+    size_blob.push_back(0xF0 | (size >> 24));
+    size_blob.push_back((size >> 16) & 0xFF);
+    size_blob.push_back((size >> 8) & 0xFF);
+    size_blob.push_back((size >> 0) & 0xFF);
+  } else if (size < 0x400000000) {
+    size_blob.push_back(0xF8 | (size >> 32));
+    size_blob.push_back((size >> 24) & 0xFF);
+    size_blob.push_back((size >> 16) & 0xFF);
+    size_blob.push_back((size >> 8) & 0xFF);
+    size_blob.push_back((size >> 0) & 0xFF);
+  } else {
+    throw std::runtime_error("sexp too long");
+  }
+  return utils::ConnectBuffers(size_blob, as_atom);
+}
+
+Bytes SExpToStream(CLVMObjectPtr sexp)
+{
+  Bytes res;
+  ValStack todo_stack;
+  todo_stack.Push(sexp);
+
+  while (!todo_stack.IsEmpty()) {
+    CLVMObjectPtr sexp = todo_stack.Pop();
+    if (IsPair(sexp)) {
+      res.push_back(CONS_BOX_MARKER);
+      auto [first, rest] = Pair(sexp);
+      todo_stack.Push(rest);
+      todo_stack.Push(first);
+    } else {
+      res = utils::ConnectBuffers(res, AtomToBytes(Atom(sexp)));
+    }
+  }
+  return res;
+}
+
 } // namespace stream
 
 /**
@@ -545,6 +603,8 @@ Bytes32 Program::GetTreeHash() const
 {
   return tree_hash::SHA256TreeHash(sexp_);
 }
+
+Bytes Program::Serialize() const { return stream::SExpToStream(sexp_); }
 
 uint8_t msb_mask(uint8_t byte)
 {

@@ -303,6 +303,8 @@ public:
 
   Bytes32 GetTreeHash() const;
 
+  Bytes Serialize() const;
+
   std::tuple<int, CLVMObjectPtr> Run(CLVMObjectPtr args = MakeNull());
 
   Program Curry(CLVMObjectPtr args);
