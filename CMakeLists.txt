@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG=1")
 
 find_package(OpenSSL REQUIRED)
+find_package(GMP REQUIRED)
 
 include(FetchContent)
 
@@ -50,12 +51,7 @@ FetchContent_Declare(
   GIT_TAG        main
   )
 
-FetchContent_Declare(
-  gmp
-  URL https://gmplib.org/download/gmp/gmp-6.2.1.tar.lz
-  )
-
-FetchContent_MakeAvailable(googletest bip3x utf8proc toolbox bls_signature gmp)
+FetchContent_MakeAvailable(googletest bip3x utf8proc toolbox bls_signature)
 
 include_directories(
   /usr/local/include
@@ -96,6 +92,7 @@ target_include_directories(test_clvm PRIVATE
   ${googletest_SOURCE_DIR}/googletest/include
   ${bip3x_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/include
+  ${GMP_INCLUDES}
   )
 
 target_link_libraries(test_clvm
@@ -104,6 +101,7 @@ target_link_libraries(test_clvm
   utf8proc
   OpenSSL::SSL
   OpenSSL::Crypto
+  ${GMP_LIBRARIES}
   )
 
 enable_testing()
