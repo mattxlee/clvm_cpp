@@ -22,6 +22,8 @@ public:
 
   Bytes32 GetHash() const;
 
+  Cost GetAmount() const { return amount_; }
+
 private:
   Bytes32 parent_coin_info_;
   Bytes32 puzzle_hash_;
@@ -32,12 +34,36 @@ class CoinSpend
 {
 public:
   Coin coin;
-  Program puzzle_reveal;
-  Program solution;
+  mutable Program puzzle_reveal;
+  mutable Program solution;
 
-  std::vector<Coin> Additions();
+  std::vector<Coin> Additions() const;
 
   int ReservedFee();
+};
+
+class SpendBundle
+{
+public:
+  static SpendBundle Aggregate(std::vector<SpendBundle> const& spend_bundles);
+
+  SpendBundle(std::vector<CoinSpend> coin_spends, Signature sig);
+
+  std::vector<CoinSpend> const& CoinSolutions() const { return coin_spends_; }
+
+  std::vector<Coin> Additions() const;
+
+  std::vector<Coin> Removals() const;
+
+  uint64_t Fees() const;
+
+  Bytes32 Name() const;
+
+  std::vector<Coin> NotEphemeralAdditions() const;
+
+private:
+  std::vector<CoinSpend> coin_spends_;
+  Signature aggregated_signature_;
 };
 
 } // namespace chia

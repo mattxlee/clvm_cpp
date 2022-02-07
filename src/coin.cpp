@@ -1,11 +1,15 @@
 #include "coin.h"
 
+#include <algorithm>
 #include <map>
 #include <tuple>
 #include <vector>
 
+#include <schemes.hpp>
+
 #include "costs.h"
 #include "crypto_utils.h"
+#include "wallet.h"
 
 namespace chia
 {
@@ -16,7 +20,7 @@ struct ConditionOpcode {
   // the conditions below require bls12-381 signatures
 
   static uint8_t AGG_SIG_UNSAFE[1];
-  static int8_t AGG_SIG_ME[1];
+  static uint8_t AGG_SIG_ME[1];
 
   // the conditions below reserve coin amounts and have to be accounted for in
   // output totals
@@ -65,7 +69,7 @@ struct ConditionOpcode {
 };
 
 uint8_t ConditionOpcode::AGG_SIG_UNSAFE[1] = { 49 };
-int8_t ConditionOpcode::AGG_SIG_ME[1] = { 50 };
+uint8_t ConditionOpcode::AGG_SIG_ME[1] = { 50 };
 
 // the conditions below reserve coin amounts and have to be accounted for in
 // output totals
@@ -211,6 +215,38 @@ Cost fee_for_solution(Program& puzzle_reveal, Program& solution, Cost max_cost)
   return total;
 }
 
+std::vector<std::tuple<Bytes48, Bytes>> pkm_pairs_for_conditions_dict(
+    std::map<ConditionOpcode, std::vector<ConditionWithArgs>> const&
+        conditions_dict,
+    Bytes32 const& coin_name, Bytes const& additional_data)
+{
+  assert(!coin_name.empty());
+  std::vector<std::tuple<Bytes48, Bytes>> ret;
+
+  auto i
+      = conditions_dict.find(ConditionOpcode(ConditionOpcode::AGG_SIG_UNSAFE));
+
+  for (auto const& cwa : i->second) {
+    assert(cwa.vars.size() == 2);
+    assert(cwa.vars[0].size() == 48 && cwa.vars[1].size() <= 1024);
+    assert(!cwa.vars[0].empty() && !cwa.vars[1].empty());
+    ret.push_back(
+        std::make_pair(utils::bytes_cast<48>(cwa.vars[0]), cwa.vars[1]));
+  }
+
+  auto j = conditions_dict.find(ConditionOpcode(ConditionOpcode::AGG_SIG_ME));
+  for (auto const& cwa : j->second) {
+    assert(cwa.vars.size() == 2);
+    assert(cwa.vars[0].size() == 48 && cwa.vars[1].size() <= 1024);
+    assert(!cwa.vars[0].empty() && !cwa.vars[1].empty());
+    ret.push_back(std::make_pair(utils::bytes_cast<48>(cwa.vars[0]),
+        utils::ConnectBuffers(
+            cwa.vars[1], utils::bytes_cast<32>(coin_name), additional_data)));
+  }
+
+  return ret;
+}
+
 /*******************************************************************************
  *
  * class Coin
@@ -258,7 +294,7 @@ Bytes32 Coin::GetHash() const
  *
  ******************************************************************************/
 
-std::vector<Coin> CoinSpend::Additions()
+std::vector<Coin> CoinSpend::Additions() const
 {
   return additions_for_solution(
       coin.GetName(), puzzle_reveal, solution, INFINITE_COST);
@@ -268,5 +304,80 @@ int CoinSpend::ReservedFee()
 {
   return fee_for_solution(puzzle_reveal, solution, INFINITE_COST);
 }
+
+/*******************************************************************************
+ *
+ * class SpendBundle
+ *
+ ******************************************************************************/
+
+SpendBundle::SpendBundle(std::vector<CoinSpend> coin_spends, Signature sig)
+    : coin_spends_(std::move(coin_spends))
+    , aggregated_signature_(std::move(sig))
+{
+}
+
+SpendBundle SpendBundle::Aggregate(
+    std::vector<SpendBundle> const& spend_bundles)
+{
+  std::vector<CoinSpend> coin_spends;
+  std::vector<bls::G2Element> sigs;
+  for (auto const& bundle : spend_bundles) {
+    std::copy(std::begin(bundle.CoinSolutions()),
+        std::end(bundle.CoinSolutions()), std::back_inserter(coin_spends));
+    sigs.push_back(bls::G2Element::FromByteVector(
+        utils::bytes_cast<wallet::Key::SIG_LEN>(bundle.aggregated_signature_)));
+  }
+  bls::G2Element agg_sig = bls::AugSchemeMPL().Aggregate(sigs);
+  Signature sig = utils::bytes_cast<wallet::Key::SIG_LEN>(agg_sig.Serialize());
+  return SpendBundle(std::move(coin_spends), sig);
+}
+
+std::vector<Coin> SpendBundle::Additions() const
+{
+  std::vector<Coin> items;
+  for (auto const& coin_spend : coin_spends_) {
+    std::copy(std::begin(coin_spend.Additions()),
+        std::end(coin_spend.Additions()), std::back_inserter(items));
+  }
+  return items;
+}
+
+std::vector<Coin> SpendBundle::Removals() const
+{
+  std::vector<Coin> res;
+  res.reserve(coin_spends_.size());
+  std::transform(std::begin(coin_spends_), std::end(coin_spends_),
+      std::back_inserter(res),
+      [](CoinSpend const& coin_spend) -> Coin { return coin_spend.coin; });
+  return res;
+}
+
+template <typename Iter, typename Pred>
+uint64_t sum(Iter begin, Iter end, Pred pred)
+{
+  uint64_t r { 0 };
+  while (begin != end) {
+    r += pred(*begin);
+    ++begin;
+  }
+  return r;
+}
+
+uint64_t SpendBundle::Fees() const
+{
+  std::vector<Coin> removals = Removals();
+  uint64_t amount_in = sum(std::begin(removals), std::end(removals),
+      [](Coin const& coin) -> uint64_t { return coin.GetAmount(); });
+  std::vector<Coin> additions = Additions();
+  uint64_t amount_out = sum(std::begin(additions), std::end(additions),
+      [](Coin const& coin) -> uint64_t { return coin.GetAmount(); });
+  return amount_in - amount_out;
+}
+
+Bytes32 SpendBundle::Name() const {
+}
+
+std::vector<Coin> SpendBundle::NotEphemeralAdditions() const { }
 
 } // namespace chia
