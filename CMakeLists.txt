@@ -8,7 +8,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG=1")
 
 find_package(OpenSSL REQUIRED)
-find_package(GMP REQUIRED)
 
 include(FetchContent)
 
@@ -92,7 +91,6 @@ target_include_directories(test_clvm PRIVATE
   ${googletest_SOURCE_DIR}/googletest/include
   ${bip3x_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/include
-  ${GMP_INCLUDES}
   )
 
 target_link_libraries(test_clvm
@@ -101,7 +99,7 @@ target_link_libraries(test_clvm
   utf8proc
   OpenSSL::SSL
   OpenSSL::Crypto
-  ${GMP_LIBRARIES}
+  gmp
   )
 
 enable_testing()
