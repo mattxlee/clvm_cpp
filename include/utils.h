@@ -2,6 +2,7 @@
 #define CHIA_UTILS_H
 
 #include <cassert>
+#include <cstring>
 
 #include <string>
 #include <string_view>
