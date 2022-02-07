@@ -36,6 +36,7 @@ std::string NodeTypeToString(NodeType type)
   case NodeType::Atom_Str:
     return "Atom_Str";
   }
+  return "None";
 }
 
 /**
@@ -635,7 +636,7 @@ void debug_atom(std::string_view prefix, OperatorLookup const& operator_lookup,
   }
 }
 
-std::tuple<int, CLVMObjectPtr> traverse_path(
+std::tuple<Cost, CLVMObjectPtr> traverse_path(
     CLVMObjectPtr sexp, CLVMObjectPtr env)
 {
   Cost cost { PATH_LOOKUP_BASE_COST };
@@ -677,7 +678,7 @@ std::tuple<int, CLVMObjectPtr> traverse_path(
   return std::make_tuple(cost, env);
 };
 
-std::tuple<int, CLVMObjectPtr> run_program(CLVMObjectPtr program,
+std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program,
     CLVMObjectPtr args,
     OperatorLookup const& operator_lookup = OperatorLookup(), Cost max_cost = 0)
 {
@@ -793,7 +794,7 @@ std::tuple<int, CLVMObjectPtr> run_program(CLVMObjectPtr program,
 
 } // namespace run
 
-std::tuple<int, CLVMObjectPtr> Program::Run(CLVMObjectPtr args)
+std::tuple<Cost, CLVMObjectPtr> Program::Run(CLVMObjectPtr args)
 {
   return run::run_program(sexp_, args);
 }

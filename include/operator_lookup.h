@@ -41,7 +41,7 @@ public:
 
   OperatorLookup();
 
-  std::tuple<int, CLVMObjectPtr> operator()(
+  std::tuple<Cost, CLVMObjectPtr> operator()(
       Bytes const& op, CLVMObjectPtr args) const;
 
   std::string AtomToKeyword(uint8_t a) const;

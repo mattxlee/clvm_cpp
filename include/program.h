@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <stack>
+#include <stdexcept>
 
 #include "int.h"
 #include "types.h"
@@ -305,7 +306,7 @@ public:
 
   Bytes Serialize() const;
 
-  std::tuple<int, CLVMObjectPtr> Run(CLVMObjectPtr args = MakeNull());
+  std::tuple<Cost, CLVMObjectPtr> Run(CLVMObjectPtr args = MakeNull());
 
   Program Curry(CLVMObjectPtr args);
 

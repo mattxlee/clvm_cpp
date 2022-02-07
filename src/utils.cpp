@@ -1,5 +1,6 @@
 #include "utils.h"
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 
@@ -107,7 +108,8 @@ std::string ArgsToStr(std::vector<Bytes> const& args)
 
 std::string LoadHexFromFile(std::string_view file_path)
 {
-  std::ifstream in(file_path);
+  auto file_path_str = std::string(file_path);
+  std::ifstream in(file_path_str);
   if (!in.is_open()) {
     std::stringstream ss;
     ss << "cannot open file: " << file_path << " to read";

@@ -56,7 +56,7 @@ public:
   {
     offset_ = ConsumeWhiteSpace(str_, offset_);
     if (offset_ >= str_.size()) {
-      return std::make_tuple("", str_.size());
+      return std::make_tuple("", static_cast<int>(str_.size()));
     }
     char c = str_[offset_];
     if (CharIn(c, "(.)")) {

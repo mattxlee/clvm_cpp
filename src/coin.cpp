@@ -1,6 +1,7 @@
 #include "coin.h"
 
 #include <algorithm>
+#include <cassert>
 #include <map>
 #include <tuple>
 #include <vector>
@@ -375,9 +376,12 @@ uint64_t SpendBundle::Fees() const
   return amount_in - amount_out;
 }
 
-Bytes32 SpendBundle::Name() const {
-}
+Bytes32 SpendBundle::Name() const { return Bytes32(); }
 
-std::vector<Coin> SpendBundle::NotEphemeralAdditions() const { }
+std::vector<Coin> SpendBundle::NotEphemeralAdditions() const
+{
+  std::vector<Coin> res;
+  return res;
+}
 
 } // namespace chia

@@ -49,7 +49,7 @@ std::map<std::string, std::string> OP_REWRITE = {
   { ">s", "gr_bytes" },
 };
 
-std::tuple<int, CLVMObjectPtr> default_unknown_op(
+std::tuple<Cost, CLVMObjectPtr> default_unknown_op(
     Bytes const& op, CLVMObjectPtr args)
 {
   if (op.empty() || (op.size() > 2 && op[0] == 0xff && op[1] == 0xff)) {
@@ -168,7 +168,7 @@ OperatorLookup::OperatorLookup()
   APPLY_ATOM = utils::ByteToBytes(KeywordToAtom("a"));
 }
 
-std::tuple<int, CLVMObjectPtr> OperatorLookup::operator()(
+std::tuple<Cost, CLVMObjectPtr> OperatorLookup::operator()(
     Bytes const& op, CLVMObjectPtr args) const
 {
   try {
@@ -218,7 +218,10 @@ uint8_t OperatorLookup::KeywordToAtom(std::string_view keyword) const
   throw std::runtime_error("atom cannot be found by the keyword");
 }
 
-int OperatorLookup::GetCount() const { return atom_to_keywords_.size(); }
+int OperatorLookup::GetCount() const
+{
+  return static_cast<int>(atom_to_keywords_.size());
+}
 
 void OperatorLookup::AddKeyword(uint8_t atom, std::string_view keyword)
 {
@@ -228,7 +231,7 @@ void OperatorLookup::AddKeyword(uint8_t atom, std::string_view keyword)
     return;
   }
   Keywords keywords { std::string(keyword) };
-  atom_to_keywords_.emplace(std::make_tuple(atom, keywords));
+  atom_to_keywords_.emplace(std::make_pair(atom, keywords));
 }
 
 void OperatorLookup::InitKeywords()

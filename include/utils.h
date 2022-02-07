@@ -1,6 +1,8 @@
 #ifndef CHIA_UTILS_H
 #define CHIA_UTILS_H
 
+#include <cassert>
+
 #include <string>
 #include <string_view>
 
