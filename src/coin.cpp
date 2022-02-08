@@ -1,7 +1,10 @@
 #include "coin.h"
 
+#include <cassert>
+
 #include <algorithm>
 #include <cassert>
+#include <functional>
 #include <map>
 #include <tuple>
 #include <vector>
@@ -246,6 +249,51 @@ std::vector<std::tuple<Bytes48, Bytes>> pkm_pairs_for_conditions_dict(
   }
 
   return ret;
+}
+
+using SecretKeyForPublicKeyFunc
+    = std::function<bls::G2Element(bls::G1Element const&)>;
+SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends,
+    SecretKeyForPublicKeyFunc secret_key_for_public_key_f,
+    Bytes const& additional_data, Cost max_cost)
+{
+  std::vector<bls::G2Element> signatures;
+  std::vector<bls::G1Element> pk_list;
+  std::vector<Bytes> msg_list;
+  for (auto const& coin_spend : coin_spends) {
+    // Get AGG_SIG conditions
+    auto [conditions_dict, cost] = conditions_dict_for_solution(
+        coin_spend.puzzle_reveal, coin_spend.solution, max_cost);
+    if (conditions_dict.empty()) {
+      throw std::runtime_error("Sign transaction failed");
+    }
+    // Create signature
+    auto pkm_pairs = pkm_pairs_for_conditions_dict(
+        conditions_dict, coin_spend.coin.GetName(), additional_data);
+    for (auto [pk_bytes, msg] : pkm_pairs) {
+      auto pk = bls::G1Element::FromBytes(
+          bls::Bytes(pk_bytes.data(), pk_bytes.size()));
+      pk_list.push_back(pk);
+      auto secret_key = secret_key_for_public_key_f(pk);
+      if (!secret_key.IsValid()) {
+        throw std::runtime_error("no secret key for public-key");
+      }
+      auto secret_key_serialized = secret_key.Serialize();
+      auto private_key = bls::PrivateKey::FromBytes(bls::Bytes(
+          secret_key_serialized.data(), secret_key_serialized.size()));
+      assert(bls::AugSchemeMPL().SkToG1(private_key) == pk);
+      auto signature = bls::AugSchemeMPL().Sign(private_key, msg);
+      assert(bls::AugSchemeMPL().Verify(pk, msg, signature));
+      signatures.push_back(std::move(signature));
+    }
+  }
+
+  // Aggregate signatures
+  auto aggsig = bls::AugSchemeMPL().Aggregate(signatures);
+  assert(bls::AugSchemeMPL().AggregateVerify(pk_list, msg_list, aggsig));
+  Signature aggsig2
+      = utils::bytes_cast<wallet::Key::SIG_LEN>(aggsig.Serialize());
+  return SpendBundle(std::move(coin_spends), aggsig2);
 }
 
 /*******************************************************************************
