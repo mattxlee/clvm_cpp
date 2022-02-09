@@ -8,35 +8,25 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG=1")
 
 find_package(OpenSSL REQUIRED)
+find_package(unofficial-utf8proc CONFIG REQUIRED)
+find_package(GTest CONFIG REQUIRED)
+
+find_library(gmp gmp)
 
 include(FetchContent)
 
-string(TOLOWER ${CMAKE_BUILD_TYPE} BuildType)
-
-if ("${BuildType}" EQUAL "")
+if (CMAKE_BUILD_TYPE STREQUAL "")
   set(BuildType "release")
 else()
-  set(BuildType "debug")
+  string(TOLOWER ${CMAKE_BUILD_TYPE} BuildType)
 endif()
-
-FetchContent_Declare(
-  googletest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        release-1.11.0
-)
+message(STATUS "Build type: ${BuildType}")
 
 FetchContent_Declare(
   bip3x
   GIT_REPOSITORY https://github.com/edwardstock/bip3x
   GIT_TAG        2.2.0
 )
-
-FetchContent_Declare(
-  utf8proc
-  GIT_REPOSITORY https://github.com/JuliaStrings/utf8proc
-  GIT_TAG        v2.7.0
-  )
-
 
 FetchContent_Declare(
   toolbox
@@ -50,7 +40,7 @@ FetchContent_Declare(
   GIT_TAG        main
   )
 
-FetchContent_MakeAvailable(googletest bip3x utf8proc toolbox bls_signature)
+FetchContent_MakeAvailable(bip3x toolbox bls_signature)
 
 include_directories(
   /usr/local/include
@@ -74,33 +64,26 @@ file(GLOB clvm_cpp_src
   ${CMAKE_SOURCE_DIR}/src/coin.cpp
   )
 
-file(GLOB googletest_src
-  ${googletest_SOURCE_DIR}/googletest/src/gtest-all.cc
-  ${googletest_SOURCE_DIR}/googletest/src/gtest_main.cc
-  )
-
 set(test_clvm_src ${CMAKE_SOURCE_DIR}/tests/test_clvm.cpp)
 
 add_executable(test_clvm
   ${test_clvm_src}
   ${clvm_cpp_src}
   ${bls_src}
-  ${googletest_src}
   )
 target_include_directories(test_clvm PRIVATE
-  ${googletest_SOURCE_DIR}/googletest
-  ${googletest_SOURCE_DIR}/googletest/include
   ${bip3x_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/include
   )
 
-target_link_libraries(test_clvm
+target_link_libraries(test_clvm PRIVATE
   bip39
   bls
   utf8proc
   OpenSSL::SSL
   OpenSSL::Crypto
-  gmp
+  ${gmp}
+  GTest::gtest_main
   )
 
 enable_testing()
