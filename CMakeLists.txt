@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.4)
 
 project(clvm_cpp)
 
@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG=1")
+
+set(CMAKE_POLICY_DEFAULT_CMP0127 NEW)
 
 find_package(OpenSSL REQUIRED)
 find_package(unofficial-utf8proc CONFIG REQUIRED)
@@ -15,7 +17,7 @@ find_library(gmp gmp)
 
 include(FetchContent)
 
-if (CMAKE_BUILD_TYPE STREQUAL "")
+if (NOT CMAKE_BUILD_TYPE)
   set(BuildType "release")
 else()
   string(TOLOWER ${CMAKE_BUILD_TYPE} BuildType)
@@ -29,18 +31,12 @@ FetchContent_Declare(
 )
 
 FetchContent_Declare(
-  toolbox
-  GIT_REPOSITORY https://github.com/edwardstock/toolbox
-  GIT_TAG        master
-  )
-
-FetchContent_Declare(
   bls_signature
   GIT_REPOSITORY https://github.com/Chia-Network/bls-signatures
   GIT_TAG        main
   )
 
-FetchContent_MakeAvailable(bip3x toolbox bls_signature)
+FetchContent_MakeAvailable(bip3x bls_signature)
 
 include_directories(
   /usr/local/include
@@ -66,11 +62,10 @@ file(GLOB clvm_cpp_src
 
 set(test_clvm_src ${CMAKE_SOURCE_DIR}/tests/test_clvm.cpp)
 
-add_executable(test_clvm
-  ${test_clvm_src}
-  ${clvm_cpp_src}
-  ${bls_src}
-  )
+add_executable(test_clvm)
+
+target_sources(test_clvm PRIVATE ${test_clvm_src} ${clvm_cpp_src} ${bls_src})
+
 target_include_directories(test_clvm PRIVATE
   ${bip3x_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/include

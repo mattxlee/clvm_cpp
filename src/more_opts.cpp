@@ -30,7 +30,7 @@ OpResult op_sha256(CLVMObjectPtr args)
   while (!iter.IsEof()) {
     Bytes b = iter.Next();
     sha256.Add(b);
-    arg_len += b.size();
+    arg_len += static_cast<int>(b.size());
     cost += SHA256_COST_PER_ARG;
   }
   cost += arg_len * SHA256_COST_PER_ARG;
@@ -199,7 +199,7 @@ OpResult op_strlen(CLVMObjectPtr args)
     throw std::runtime_error("strlen takes exactly 1 argument");
   }
   auto a0 = Atom(First(args));
-  Int size(a0.size());
+  Int size(static_cast<long>(a0.size()));
   Cost cost = a0.size() * STRLEN_COST_PER_BYTE + STRLEN_BASE_COST;
   return MallocCost(cost, ToSExp(size));
 }
@@ -207,7 +207,7 @@ OpResult op_strlen(CLVMObjectPtr args)
 OpResult op_substr(CLVMObjectPtr args)
 {
   auto arg_list = ListBytes(args);
-  int arg_count = arg_list.size();
+  int arg_count = static_cast<int>(arg_list.size());
   if (arg_count != 2 && arg_count != 3) {
     throw std::runtime_error("substr takes exactly 2 or 3 arguments");
   }
@@ -215,7 +215,7 @@ OpResult op_substr(CLVMObjectPtr args)
   int i1 = Int(arg_list[1]).ToInt();
   int i2 { 0 };
   if (arg_count == 2) {
-    i2 = s0.size();
+    i2 = static_cast<int>(s0.size());
   } else {
     i2 = Int(arg_list[2]).ToInt();
   }

@@ -13,7 +13,7 @@ namespace chia
 {
 
 using OpFunc
-    = std::function<std::tuple<int, CLVMObjectPtr>(CLVMObjectPtr args)>;
+    = std::function<std::tuple<Cost, CLVMObjectPtr>(CLVMObjectPtr args)>;
 
 class Ops
 {

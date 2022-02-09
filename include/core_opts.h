@@ -8,7 +8,7 @@
 namespace chia
 {
 
-using OpResult = std::tuple<int, CLVMObjectPtr>;
+using OpResult = std::tuple<Cost, CLVMObjectPtr>;
 
 OpResult op_if(CLVMObjectPtr args);
 

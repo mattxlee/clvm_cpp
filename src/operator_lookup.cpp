@@ -76,11 +76,11 @@ std::tuple<Cost, CLVMObjectPtr> default_unknown_op(
     cost = MUL_BASE_COST;
     try {
       auto [ok, b, next] = ArgsNext(args);
-      int vs = b.size();
+      int vs = static_cast<int>(b.size());
       while (ok) {
         auto [ok, b, n] = ArgsNext(next);
         if (ok) {
-          int rs = b.size();
+          int rs = static_cast<int>(b.size());
           cost += MUL_COST_PER_OP;
           cost += (rs + vs) * MUL_LINEAR_COST_PER_BYTE;
           cost += (rs * vs) / MUL_SQUARE_COST_PER_BYTE_DIVIDER;
@@ -88,7 +88,7 @@ std::tuple<Cost, CLVMObjectPtr> default_unknown_op(
           next = n;
         }
       }
-    } catch (std::exception const& e) {
+    } catch (std::exception const&) {
       // TODO ignored exception should be caught
     }
   } else if (cost_function == 3) {
@@ -98,7 +98,7 @@ std::tuple<Cost, CLVMObjectPtr> default_unknown_op(
   }
 
   cost *= cost_multiplier;
-  if (cost >= (1L << 32)) {
+  if (cost >= (static_cast<uint64_t>(1) << 32)) {
     throw std::runtime_error("invalid operator");
   }
 

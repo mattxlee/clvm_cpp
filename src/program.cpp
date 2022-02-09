@@ -265,7 +265,7 @@ int ArgsLen(CLVMObjectPtr obj)
       throw std::runtime_error("requires in args");
     }
     // Next
-    len += Atom(a).size();
+    len += static_cast<int>(Atom(a).size());
     obj = r;
   }
   return len;
@@ -336,7 +336,7 @@ public:
   Bytes operator()(int size) const
   {
     Bytes res;
-    int read_size = std::min<std::size_t>(size, bytes_.size() - pos_);
+    int read_size = std::min<int>(size, static_cast<int>(bytes_.size() - pos_));
     if (read_size == 0) {
       return res;
     }
@@ -378,7 +378,7 @@ CLVMObjectPtr AtomFromStream(StreamReadFunc f, uint8_t b)
   if (size >= 0x400000000) {
     throw std::runtime_error("blob too large");
   }
-  Bytes blob = f(size);
+  Bytes blob = f(static_cast<int>(size));
   if (blob.size() != size) {
     throw std::runtime_error("bad encoding");
   }
@@ -434,25 +434,25 @@ Bytes AtomToBytes(Bytes const& as_atom)
   }
   Bytes size_blob;
   if (size < 0x40) {
-    size_blob = utils::ByteToBytes(0x80 | size);
+    size_blob = utils::ByteToBytes(static_cast<uint8_t>(0x80 | size));
   } else if (size < 0x2000) {
-    size_blob.push_back(0xC0 | (size >> 8));
-    size_blob.push_back((size >> 8) & 0xff);
+    size_blob.push_back(static_cast<uint8_t>(0xC0 | (size >> 8)));
+    size_blob.push_back(static_cast<uint8_t>((size >> 8) & 0xff));
   } else if (size < 0x100000) {
-    size_blob.push_back(0xe0 | (size >> 16));
-    size_blob.push_back((size >> 8) & 0xff);
-    size_blob.push_back((size >> 0) & 0xff);
+    size_blob.push_back(static_cast<uint8_t>(0xe0 | (size >> 16)));
+    size_blob.push_back(static_cast<uint8_t>((size >> 8) & 0xff));
+    size_blob.push_back(static_cast<uint8_t>((size >> 0) & 0xff));
   } else if (size < 0x8000000) {
-    size_blob.push_back(0xF0 | (size >> 24));
-    size_blob.push_back((size >> 16) & 0xFF);
-    size_blob.push_back((size >> 8) & 0xFF);
-    size_blob.push_back((size >> 0) & 0xFF);
+    size_blob.push_back(static_cast<uint8_t>(0xF0 | (size >> 24)));
+    size_blob.push_back(static_cast<uint8_t>((size >> 16) & 0xFF));
+    size_blob.push_back(static_cast<uint8_t>((size >> 8) & 0xFF));
+    size_blob.push_back(static_cast<uint8_t>((size >> 0) & 0xFF));
   } else if (size < 0x400000000) {
-    size_blob.push_back(0xF8 | (size >> 32));
-    size_blob.push_back((size >> 24) & 0xFF);
-    size_blob.push_back((size >> 16) & 0xFF);
-    size_blob.push_back((size >> 8) & 0xFF);
-    size_blob.push_back((size >> 0) & 0xFF);
+    size_blob.push_back(static_cast<uint8_t>(0xF8 | (size >> 32)));
+    size_blob.push_back(static_cast<uint8_t>((size >> 24) & 0xFF));
+    size_blob.push_back(static_cast<uint8_t>((size >> 16) & 0xFF));
+    size_blob.push_back(static_cast<uint8_t>((size >> 8) & 0xFF));
+    size_blob.push_back(static_cast<uint8_t>((size >> 0) & 0xFF));
   } else {
     throw std::runtime_error("sexp too long");
   }
@@ -618,7 +618,7 @@ namespace run
 {
 
 class OpStack;
-using Op = std::function<int(OpStack&, ValStack&)>;
+using Op = std::function<Cost(OpStack&, ValStack&)>;
 
 class OpStack : public Stack<Op>
 {
@@ -659,7 +659,7 @@ std::tuple<Cost, CLVMObjectPtr> traverse_path(
 
   int end_bitmask = msb_mask(b[end_byte_cursor]);
 
-  int byte_cursor = b.size() - 1;
+  int byte_cursor = static_cast<int>(b.size()) - 1;
   int bitmask = 0x01;
   while (byte_cursor > end_byte_cursor || bitmask < end_bitmask) {
     if (!IsPair(env)) {
@@ -685,7 +685,7 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program,
 
   Op swap_op, cons_op, eval_op, apply_op;
 
-  swap_op = [&apply_op](OpStack& op_stack, ValStack& val_stack) -> int {
+  swap_op = [&apply_op](OpStack& op_stack, ValStack& val_stack) -> Cost {
     auto v2 = val_stack.Pop();
     auto v1 = val_stack.Pop();
     val_stack.Push(v2);
@@ -693,7 +693,7 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program,
     return 0;
   };
 
-  cons_op = [](OpStack& op_stack, ValStack& val_stack) -> int {
+  cons_op = [](OpStack& op_stack, ValStack& val_stack) -> Cost {
     auto v2 = val_stack.Pop();
     auto v1 = val_stack.Pop();
     val_stack.Push(ToSExpPair(v2, v1));
@@ -701,7 +701,7 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program,
   };
 
   eval_op = [&operator_lookup, &apply_op, &cons_op, &eval_op, &swap_op](
-                OpStack& op_stack, ValStack& val_stack) -> int {
+                OpStack& op_stack, ValStack& val_stack) -> Cost {
     auto pair = val_stack.Pop();
     auto [sexp, args] = Pair(pair);
     if (!IsPair(sexp)) {
@@ -746,7 +746,7 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program,
   };
 
   apply_op = [&operator_lookup, &eval_op](
-                 OpStack& op_stack, ValStack& val_stack) -> int {
+                 OpStack& op_stack, ValStack& val_stack) -> Cost {
     auto operand_list = val_stack.Pop();
     auto opt = val_stack.Pop();
     if (IsPair(opt)) {
@@ -768,7 +768,6 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program,
       return APPLY_COST;
     }
 
-    // debug_atom("apply_op", operator_lookup, op[0]);
     auto [additional_cost, r] = operator_lookup(op, operand_list);
     val_stack.Push(r);
     return additional_cost;
