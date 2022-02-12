@@ -11,9 +11,12 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW)
 
 find_package(OpenSSL REQUIRED)
 find_package(unofficial-utf8proc CONFIG REQUIRED)
-find_package(GTest CONFIG REQUIRED)
+find_package(GTest CONFIG)
 
 find_library(gmp gmp)
+find_library(bls bls)
+find_library(relic_s relic_s)
+find_library(sodium sodium)
 
 include(FetchContent)
 
@@ -30,13 +33,7 @@ FetchContent_Declare(
   GIT_TAG        2.2.0
 )
 
-FetchContent_Declare(
-  bls_signature
-  GIT_REPOSITORY https://github.com/Chia-Network/bls-signatures
-  GIT_TAG        main
-  )
-
-FetchContent_MakeAvailable(bip3x bls_signature)
+FetchContent_MakeAvailable(bip3x)
 
 include_directories(
   /usr/local/include
@@ -60,26 +57,48 @@ file(GLOB clvm_cpp_src
   ${CMAKE_SOURCE_DIR}/src/coin.cpp
   )
 
-set(test_clvm_src ${CMAKE_SOURCE_DIR}/tests/test_clvm.cpp)
-
-add_executable(test_clvm)
-
-target_sources(test_clvm PRIVATE ${test_clvm_src} ${clvm_cpp_src} ${bls_src})
-
-target_include_directories(test_clvm PRIVATE
+# Library clvm_cpp
+file(GLOB clvm_include_files ${CMAKE_SOURCE_DIR}/include/*)
+add_library(clvm_cpp)
+target_sources(clvm_cpp PRIVATE ${clvm_cpp_src})
+target_include_directories(clvm_cpp PRIVATE
   ${bip3x_SOURCE_DIR}/include
   ${CMAKE_SOURCE_DIR}/include
   )
-
-target_link_libraries(test_clvm PRIVATE
+target_link_libraries(clvm_cpp PRIVATE
   bip39
-  bls
+  ${bls}
+  ${relic_s}
   utf8proc
   OpenSSL::SSL
   OpenSSL::Crypto
+  ${sodium}
   ${gmp}
-  GTest::gtest_main
   )
+install(FILES ${clvm_include_files} DESTINATION include/clvm_cpp)
+install(TARGETS clvm_cpp DESTINATION lib)
 
-enable_testing()
-add_test(NAME test_clvm COMMAND test_clvm)
+# Test project
+if (GTest_FOUND)
+  enable_testing()
+  set(test_clvm_src ${CMAKE_SOURCE_DIR}/tests/test_clvm.cpp)
+  add_executable(test_clvm)
+  target_sources(test_clvm PRIVATE ${test_clvm_src} ${clvm_cpp_src} ${bls_src})
+  target_include_directories(test_clvm PRIVATE
+    ${bip3x_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/include
+    )
+  target_link_libraries(test_clvm PRIVATE
+    bip39
+    ${bls}
+    ${relic_s}
+    utf8proc
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    ${sodium}
+    ${gmp}
+    GTest::gtest_main
+    )
+  add_test(NAME test_clvm COMMAND test_clvm)
+endif()
+

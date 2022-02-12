@@ -2,9 +2,10 @@
 
 #include <filesystem>
 #include <map>
-#include <schemes.hpp>
+#include <chiabls/schemes.hpp>
 
-#include "elements.hpp"
+#include <chiabls/elements.hpp>
+
 namespace fs = std::filesystem;
 
 #include "bech32.h"
