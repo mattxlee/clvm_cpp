@@ -10,7 +10,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG=1")
 set(CMAKE_POLICY_DEFAULT_CMP0127 NEW)
 
 find_package(OpenSSL REQUIRED)
-find_package(unofficial-utf8proc CONFIG REQUIRED)
 find_package(GTest CONFIG)
 
 find_library(gmp gmp)
@@ -33,7 +32,13 @@ FetchContent_Declare(
   GIT_TAG        2.2.0
 )
 
-FetchContent_MakeAvailable(bip3x)
+FetchContent_Declare(
+  utf8proc
+  GIT_REPOSITORY https://github.com/JuliaStrings/utf8proc.git
+  GIT_TAG        v2.7.0
+)
+
+FetchContent_MakeAvailable(bip3x utf8proc)
 
 include_directories(
   /usr/local/include
