@@ -32,18 +32,32 @@ FetchContent_Declare(
   GIT_TAG        2.2.0
 )
 
-FetchContent_Declare(
-  utf8proc
-  GIT_REPOSITORY https://github.com/JuliaStrings/utf8proc.git
-  GIT_TAG        v2.7.0
+FetchContent_MakeAvailable(bip3x)
+
+set(utf8proc_PREFIX ${CMAKE_BINARY_DIR}/third-party/utf8proc)
+
+include(ExternalProject)
+find_program(MAKE_EXE NAMES make)
+
+ExternalProject_Add(utf8proc
+  PREFIX              ${utf8proc_PREFIX}
+  URL                 https://github.com/JuliaStrings/utf8proc/archive/refs/tags/v2.7.0.tar.gz
+  URL_HASH            SHA256=4bb121e297293c0fd55f08f83afab6d35d48f0af4ecc07523ad8ec99aa2b12a1
+  CONFIGURE_COMMAND   ""
+  BUILD_IN_SOURCE     1
+  BUILD_COMMAND       ${MAKE_EXE}
+  INSTALL_COMMAND     ""
 )
 
-FetchContent_MakeAvailable(bip3x utf8proc)
+set(utf8proc_SRC_DIR ${utf8proc_PREFIX}/src/utf8proc)
 
 include_directories(
   /usr/local/include
   ${OPENSSL_INCLUDE_DIR}
+  ${utf8proc_SRC_DIR}
   )
+
+find_library(utf8proc utf8proc HINTS ${utf8proc_SRC_DIR})
 
 file(GLOB clvm_cpp_src
   ${CMAKE_SOURCE_DIR}/src/types.cpp
@@ -74,11 +88,11 @@ target_link_libraries(clvm_cpp PRIVATE
   bip39
   ${bls}
   ${relic_s}
-  utf8proc
   OpenSSL::SSL
   OpenSSL::Crypto
   ${sodium}
   ${gmp}
+  ${utf8proc}
   )
 install(FILES ${clvm_include_files} DESTINATION include/clvm_cpp)
 install(TARGETS clvm_cpp DESTINATION lib)
@@ -97,13 +111,12 @@ if (GTest_FOUND)
     bip39
     ${bls}
     ${relic_s}
-    utf8proc
     OpenSSL::SSL
     OpenSSL::Crypto
     ${sodium}
     ${gmp}
+    ${utf8proc}
     GTest::gtest_main
     )
   add_test(NAME test_clvm COMMAND test_clvm)
 endif()
-
