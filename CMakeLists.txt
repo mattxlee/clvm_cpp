@@ -79,6 +79,7 @@ file(GLOB clvm_cpp_src
 # Library clvm_cpp
 file(GLOB clvm_include_files ${CMAKE_SOURCE_DIR}/include/*)
 add_library(clvm_cpp)
+add_dependencies(clvm_cpp utf8proc)
 target_sources(clvm_cpp PRIVATE ${clvm_cpp_src})
 target_include_directories(clvm_cpp PRIVATE
   ${bip3x_SOURCE_DIR}/include
@@ -102,6 +103,7 @@ if (GTest_FOUND)
   enable_testing()
   set(test_clvm_src ${CMAKE_SOURCE_DIR}/tests/test_clvm.cpp)
   add_executable(test_clvm)
+  add_dependencies(test_clvm utf8proc)
   target_sources(test_clvm PRIVATE ${test_clvm_src} ${clvm_cpp_src} ${bls_src})
   target_include_directories(test_clvm PRIVATE
     ${bip3x_SOURCE_DIR}/include
