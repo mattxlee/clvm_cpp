@@ -129,17 +129,33 @@ private:
     Bytes result_;
 };
 
+inline void AppendBuffer(BufferConnector& conn) { }
+
+template <typename T, typename... Ts> void AppendBuffer(BufferConnector& conn, T&& buf, Ts&&... bufs)
+{
+    conn.Append(buf);
+    AppendBuffer(conn, std::forward<Ts>(bufs)...);
+}
+
 template <typename... T> Bytes ConnectBuffers(T&&... bufs)
 {
     BufferConnector conn;
-    (conn.Append(std::forward<T>(bufs)), ...);
+    AppendBuffer(conn, std::forward<T>(bufs)...);
     return conn.GetResult();
+}
+
+inline void PushBack(Bytes&) { }
+
+template <typename T, typename... Ts> void PushBack(Bytes& res, T&& val, Ts&&... vals)
+{
+    res.push_back(val);
+    PushBack(res, std::forward<Ts>(vals)...);
 }
 
 template <typename... T> Bytes SerializeBytes(T&&... vals)
 {
     Bytes res;
-    (res.push_back(std::forward<T>(vals)), ...);
+    PushBack(res, std::forward<T>(vals)...);
     return res;
 }
 

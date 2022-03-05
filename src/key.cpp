@@ -1,12 +1,14 @@
 #include "key.h"
 
 #include <chiabls/schemes.hpp>
-#include <filesystem>
-#include <map>
 
 #include <chiabls/elements.hpp>
 
-namespace fs = std::filesystem;
+#include <map>
+
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
 
 #include "bech32.h"
 #include "mnemonic.h"
@@ -112,6 +114,12 @@ std::string_view SYNTHETIC_MOD = "SYNTHETIC_MOD";
 
 class CLVMPrograms
 {
+    enum class EntryType { File, Bytes };
+    struct Entry {
+        EntryType type;
+        std::string content;
+    };
+
 public:
     static CLVMPrograms& GetInstance()
     {
@@ -126,7 +134,7 @@ public:
         Entry entry;
         entry.type = EntryType::Bytes;
         entry.content = utils::BytesToHex(bytes);
-        progs_.insert_or_assign(name.data(), std::move(entry));
+        InsertOrAssign(std::string(name), std::move(entry));
     }
 
     void SetEntry(std::string_view name, std::string_view file_path)
@@ -134,7 +142,7 @@ public:
         Entry entry;
         entry.type = EntryType::File;
         entry.content = file_path;
-        progs_.insert_or_assign(name.data(), std::move(entry));
+        InsertOrAssign(std::string(name), std::move(entry));
     }
 
     Program GetProgram(std::string_view name) const
@@ -166,12 +174,17 @@ private:
         SetEntry(SYNTHETIC_MOD, "calculate_synthetic_public_key.clvm.hex");
     }
 
+    void InsertOrAssign(std::string name, Entry entry)
+    {
+        auto i = progs_.find(name);
+        if (i != std::end(progs_)) {
+            i->second = std::move(entry);
+            return;
+        }
+        progs_.insert(std::make_pair(std::move(name), std::move(entry)));
+    }
+
 private:
-    enum class EntryType { File, Bytes };
-    struct Entry {
-        EntryType type;
-        std::string content;
-    };
     std::string prefix_ { "../clvm" };
     std::map<std::string, Entry> progs_;
 };
@@ -179,9 +192,11 @@ private:
 PublicKey calculate_synthetic_public_key(PublicKey const& public_key, Bytes32 const& hidden_puzzle_hash)
 {
     assert(!public_key.empty());
-    auto [cost, pk] = CLVMPrograms::GetInstance()
-                          .GetProgram(SYNTHETIC_MOD)
-                          .Run(ToSExpList(public_key, utils::bytes_cast<32>(hidden_puzzle_hash)));
+    Cost cost;
+    CLVMObjectPtr pk;
+    std::tie(cost, pk) = CLVMPrograms::GetInstance()
+                             .GetProgram(SYNTHETIC_MOD)
+                             .Run(ToSExpList(public_key, utils::bytes_cast<32>(hidden_puzzle_hash)));
     return utils::bytes_cast<Key::PUB_KEY_LEN>(Atom(pk));
 }
 

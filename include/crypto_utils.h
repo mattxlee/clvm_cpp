@@ -24,10 +24,18 @@ private:
     EVP_MD_CTX* ctx_ { nullptr };
 };
 
+inline void WriteBytes(SHA256&) { }
+
+template <typename T, typename... Ts> void WriteBytes(SHA256& sha, T&& bytes, Ts&&... others)
+{
+    sha.Add(std::forward<T>(bytes));
+    WriteBytes(sha, std::forward<Ts>(others)...);
+}
+
 template <typename... T> Bytes32 MakeSHA256(T&&... args)
 {
     SHA256 sha;
-    (sha.Add(std::forward<T>(args)), ...);
+    WriteBytes(sha, std::forward<T>(args)...);
     return sha.Finish();
 }
 

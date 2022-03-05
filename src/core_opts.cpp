@@ -11,7 +11,8 @@ OpResult op_if(CLVMObjectPtr args)
     if (ListLen(args) != 3) {
         throw std::runtime_error("i takes exactly 3 arguments");
     }
-    auto [first, r] = Pair(args);
+    CLVMObjectPtr first, r;
+    std::tie(first, r) = Pair(args);
     if (first->IsFalse()) {
         return std::make_tuple(IF_COST, First(Rest(r)));
     }

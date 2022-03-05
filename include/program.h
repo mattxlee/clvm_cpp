@@ -153,10 +153,18 @@ private:
     CLVMObjectPtr next_;
 };
 
+inline void BuildList(ListBuilder&) { }
+
+template <typename T, typename... Ts> void BuildList(ListBuilder& build, T&& val, Ts&&... vals)
+{
+    build.Add(ToSExp(std::forward<T>(val)));
+    BuildList(build, std::forward<Ts>(vals)...);
+}
+
 template <typename... T> CLVMObjectPtr ToSExpList(T&&... vals)
 {
     ListBuilder build;
-    (build.Add(ToSExp(std::forward<T>(vals))), ...);
+    BuildList(build, std::forward<T>(vals)...);
     return build.GetRoot();
 }
 
@@ -201,7 +209,8 @@ public:
 
     CLVMObjectPtr NextCLVMObj()
     {
-        auto [a, n] = Pair(args_);
+        CLVMObjectPtr a, n;
+        std::tie(a, n) = Pair(args_);
         args_ = n;
         return a;
     }

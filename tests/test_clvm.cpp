@@ -163,7 +163,8 @@ int calculate_number(std::string_view s)
 {
     auto f = chia::Assemble(s);
     chia::Program prog(f);
-    auto [cost, r] = prog.Run();
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run();
     EXPECT_EQ(r->GetNodeType(), chia::NodeType::Atom_Int);
     return chia::ToInt(r).ToInt();
 }
@@ -172,7 +173,8 @@ bool calculate_bool(std::string_view s)
 {
     auto f = chia::Assemble(s);
     chia::Program prog(f);
-    auto [cost, r] = prog.Run();
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run();
     return !chia::IsNull(r);
 }
 
@@ -182,7 +184,8 @@ TEST(CLVM_RunProgram, Tuple)
 {
     auto f = chia::Assemble("(q (2 . 3))");
     chia::Program prog(f);
-    auto [cost, r] = prog.Run();
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run();
     EXPECT_TRUE(chia::ListP(r));
     chia::ArgsIter i(r);
     EXPECT_TRUE(!i.IsEof());
@@ -196,7 +199,8 @@ TEST(CLVM_RunProgram, List)
 {
     auto f = chia::Assemble("(q (1 2 3))");
     chia::Program prog(f);
-    auto [cost, r] = prog.Run();
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run();
     EXPECT_TRUE(chia::ListP(r));
     chia::ArgsIter i(r);
     auto list = i.NextCLVMObj();
@@ -218,7 +222,8 @@ TEST(CLVM_RunProgram, C)
 {
     auto f = chia::Assemble("(c (q . 70) (q . (80 90 100)))");
     chia::Program prog(f);
-    auto [cost, r] = prog.Run();
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run();
     EXPECT_TRUE(chia::ListP(r));
     chia::ArgsIter i(r);
     EXPECT_EQ(i.NextInt().ToInt(), 70);
@@ -231,7 +236,8 @@ TEST(CLVM_RunProgram, R)
 {
     auto f = chia::Assemble("(r (q . (80 90 100)))");
     chia::Program prog(f);
-    auto [cost, r] = prog.Run();
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run();
     EXPECT_TRUE(chia::ListP(r));
     chia::ArgsIter i(r);
     EXPECT_EQ(i.NextInt().ToInt(), 90);
@@ -271,7 +277,8 @@ TEST(CLVM_RunProgram, Environment)
 {
     auto f = chia::Assemble("1");
     chia::Program prog(f);
-    auto [cost, r] = prog.Run(chia::Assemble("(\"this\" \"is the\" \"environement\")"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("(\"this\" \"is the\" \"environement\")"));
     EXPECT_TRUE(chia::ListP(r));
     chia::ArgsIter i(r);
     EXPECT_EQ(chia::ToString(i.NextCLVMObj()), "this");
@@ -283,7 +290,8 @@ TEST(CLVM_RunProgram, Env_Complex)
 {
     auto f = chia::Assemble("(f (f (r 1)))");
     chia::Program prog(f);
-    auto [cost, r] = prog.Run(chia::Assemble("((70 80) (90 100) (110 120))"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("((70 80) (90 100) (110 120))"));
     EXPECT_EQ(r->GetNodeType(), chia::NodeType::Atom_Int);
     EXPECT_EQ(chia::ToInt(r).ToInt(), 90);
 }
@@ -292,7 +300,8 @@ TEST(CLVM_RunProgram, Env_Complex2)
 {
     auto f = chia::Assemble("(f (f (r 1)))");
     chia::Program prog(f);
-    auto [cost, r] = prog.Run(chia::Assemble("((70 80) ((91 92 93 94 95) 100) (110 120))"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("((70 80) ((91 92 93 94 95) 100) (110 120))"));
     EXPECT_TRUE(chia::ListP(r));
     chia::ArgsIter i(r);
     EXPECT_EQ(i.NextInt().ToInt(), 91);
@@ -305,21 +314,24 @@ TEST(CLVM_RunProgram, Env_Complex2)
 TEST(CLVM_RunProgram, Env_Complex3)
 {
     chia::Program prog(chia::Assemble("(+ (f 1) (q . 5))"));
-    auto [cost, r] = prog.Run(chia::Assemble("(10)"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("(10)"));
     EXPECT_EQ(chia::ToInt(r).ToInt(), 15);
 }
 
 TEST(CLVM_RunProgram, Env_Complex4)
 {
     chia::Program prog(chia::Assemble("(* (f 1) (f 1))"));
-    auto [cost, r] = prog.Run(chia::Assemble("(10)"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("(10)"));
     EXPECT_EQ(chia::ToInt(r).ToInt(), 100);
 }
 
 TEST(CLVM_RunProgram, Env_ThroughInt1)
 {
     chia::Program prog(chia::Assemble("1"));
-    auto [cost, r] = prog.Run(chia::Assemble("(\"example\" \"data\" \"for\" \"test\")"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("(\"example\" \"data\" \"for\" \"test\")"));
     chia::ArgsIter i(r);
     EXPECT_EQ(i.NextStr(), "example");
     EXPECT_EQ(i.NextStr(), "data");
@@ -330,14 +342,16 @@ TEST(CLVM_RunProgram, Env_ThroughInt1)
 TEST(CLVM_RunProgram, Env_ThroughInt2)
 {
     chia::Program prog(chia::Assemble("2"));
-    auto [cost, r] = prog.Run(chia::Assemble("(\"example\" \"data\" \"for\" \"test\")"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("(\"example\" \"data\" \"for\" \"test\")"));
     EXPECT_EQ(chia::ToString(r), "example");
 }
 
 TEST(CLVM_RunProgram, Env_ThroughInt3)
 {
     chia::Program prog(chia::Assemble("3"));
-    auto [cost, r] = prog.Run(chia::Assemble("(\"example\" \"data\" \"for\" \"test\")"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("(\"example\" \"data\" \"for\" \"test\")"));
     chia::ArgsIter i(r);
     EXPECT_EQ(i.NextStr(), "data");
     EXPECT_EQ(i.NextStr(), "for");
@@ -347,28 +361,32 @@ TEST(CLVM_RunProgram, Env_ThroughInt3)
 TEST(CLVM_RunProgram, Env_ThroughInt5)
 {
     chia::Program prog(chia::Assemble("5"));
-    auto [cost, r] = prog.Run(chia::Assemble("(\"example\" \"data\" \"for\" \"test\")"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("(\"example\" \"data\" \"for\" \"test\")"));
     EXPECT_EQ(chia::ToString(r), "data");
 }
 
 TEST(CLVM_RunProgram, Env_ThroughInt_Complex4)
 {
     chia::Program prog(chia::Assemble("4"));
-    auto [cost, r] = prog.Run(chia::Assemble("((\"deeper\" \"example\") \"data\" \"for\" \"test\")"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("((\"deeper\" \"example\") \"data\" \"for\" \"test\")"));
     EXPECT_EQ(chia::ToString(r), "deeper");
 }
 
 TEST(CLVM_RunProgram, Env_ThroughInt_Complex5)
 {
     chia::Program prog(chia::Assemble("5"));
-    auto [cost, r] = prog.Run(chia::Assemble("((\"deeper\" \"example\") \"data\" \"for\" \"test\")"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("((\"deeper\" \"example\") \"data\" \"for\" \"test\")"));
     EXPECT_EQ(chia::ToString(r), "data");
 }
 
 TEST(CLVM_RunProgram, Env_ThroughInt_Complex6)
 {
     chia::Program prog(chia::Assemble("6"));
-    auto [cost, r] = prog.Run(chia::Assemble("((\"deeper\" \"example\") \"data\" \"for\" \"test\")"));
+    chia::CLVMObjectPtr r;
+    std::tie(std::ignore, r) = prog.Run(chia::Assemble("((\"deeper\" \"example\") \"data\" \"for\" \"test\")"));
     chia::ArgsIter i(r);
     EXPECT_EQ(i.NextStr(), "example");
 }

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.4)
 
 project(clvm_cpp)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG=1")
@@ -11,6 +11,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW)
 
 find_package(OpenSSL REQUIRED)
 find_package(GTest CONFIG)
+find_package(Boost REQUIRED filesystem)
 
 find_library(gmp gmp)
 find_library(bls bls)
@@ -20,7 +21,7 @@ find_library(sodium sodium)
 include(FetchContent)
 
 if (NOT CMAKE_BUILD_TYPE)
-  set(BuildType "release")
+ set(BuildType "release")
 else()
   string(TOLOWER ${CMAKE_BUILD_TYPE} BuildType)
 endif()
@@ -94,6 +95,7 @@ target_link_libraries(clvm_cpp PRIVATE
   ${sodium}
   ${gmp}
   ${utf8proc}
+  Boost::filesystem
   )
 install(FILES ${clvm_include_files} DESTINATION include/clvm_cpp)
 install(TARGETS clvm_cpp DESTINATION lib)
@@ -119,6 +121,7 @@ if (GTest_FOUND)
     ${gmp}
     ${utf8proc}
     GTest::gtest_main
+    Boost::filesystem
     )
   add_test(NAME test_clvm COMMAND test_clvm)
 endif()

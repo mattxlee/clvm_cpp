@@ -1,8 +1,9 @@
 #include "assemble.h"
 
-#include <optional>
 #include <string>
 #include <tuple>
+
+#include <boost/optional.hpp>
 
 #include "operator_lookup.h"
 #include "program.h"
@@ -79,7 +80,9 @@ public:
                 throw std::runtime_error("unterminated string starting");
             }
         }
-        auto [token, end_offset] = ConsumeUntilWhiteSpace(str_, offset_);
+        std::string token;
+        int end_offset;
+        std::tie(token, end_offset) = ConsumeUntilWhiteSpace(str_, offset_);
         int off { offset_ };
         offset_ = end_offset;
         return std::make_tuple(token, off);
@@ -135,7 +138,15 @@ public:
 
     void Add(std::string_view type_name) { types_.push_back(ToType(type_name)); }
 
-    template <typename... T> Type(T&&... vals) { (Add(std::forward<T>(vals)), ...); }
+    void AddTypes() { }
+
+    template <typename T, typename... Ts> void AddTypes(T&& val, Ts&&... others)
+    {
+        types_.push_back(ToType(std::forward<T>(val)));
+        AddTypes(std::forward<Ts>(others)...);
+    }
+
+    template <typename... T> Type(T&&... vals) { AddTypes(std::forward<T>(vals)...); }
 
     bool Available(Int const& type) const
     {
@@ -153,7 +164,7 @@ private:
 
 CLVMObjectPtr ir_as_atom(CLVMObjectPtr ir_sexp);
 
-template <typename Type, typename Val> CLVMObjectPtr ir_new(Type&& type, Val&& val, std::optional<int> offset = {})
+template <typename Type, typename Val> CLVMObjectPtr ir_new(Type&& type, Val&& val, boost::optional<int> offset = {})
 {
     CLVMObjectPtr first;
     if (offset) {
@@ -164,7 +175,7 @@ template <typename Type, typename Val> CLVMObjectPtr ir_new(Type&& type, Val&& v
     return ToSExpPair(first, std::forward<Val>(val));
 }
 
-CLVMObjectPtr ir_cons(CLVMObjectPtr first, CLVMObjectPtr rest, std::optional<int> offset)
+CLVMObjectPtr ir_cons(CLVMObjectPtr first, CLVMObjectPtr rest, boost::optional<int> offset)
 {
     if (!first) {
         throw std::runtime_error("cons null on first place");
@@ -242,7 +253,7 @@ CLVMObjectPtr ir_as_atom(CLVMObjectPtr ir_sexp)
 
 CLVMObjectPtr ir_symbol(std::string_view symbol) { return ToSExpPair(SYMBOL, symbol); }
 
-std::optional<std::string> ir_as_symbol(CLVMObjectPtr ir_sexp)
+boost::optional<std::string> ir_as_symbol(CLVMObjectPtr ir_sexp)
 {
     if (ListP(ir_sexp) && ir_type(ir_sexp) == SYMBOL) {
         auto atom = std::static_pointer_cast<CLVMObject_Atom>(ir_as_sexp(ir_sexp));
@@ -257,7 +268,8 @@ bool is_ir(CLVMObjectPtr sexp)
         return false;
     }
 
-    auto [type_sexp, val_sexp] = Pair(sexp);
+    CLVMObjectPtr type_sexp, val_sexp;
+    std::tie(type_sexp, val_sexp) = Pair(sexp);
     auto the_type = Int(Atom(type_sexp));
     if (!types::Type::GetInstance().Available(the_type)) {
         return false;
@@ -278,7 +290,9 @@ bool is_ir(CLVMObjectPtr sexp)
 
 std::tuple<std::string, int> next_cons_token(stream::TokenStream& stream)
 {
-    auto [token, offset] = stream.Next();
+    std::string token;
+    int offset;
+    std::tie(token, offset) = stream.Next();
     if (token.empty()) {
         throw std::runtime_error("missing )");
     }
@@ -362,7 +376,9 @@ CLVMObjectPtr tokenize_cons(std::string_view token, int offset, stream::TokenStr
 CLVMObjectPtr tokenize_sexp(std::string_view token, int offset, stream::TokenStream& stream)
 {
     if (token == "(") {
-        auto [token, offset] = next_cons_token(stream);
+        std::string token;
+        int offset;
+        std::tie(token, offset) = next_cons_token(stream);
         return tokenize_cons(token, offset, stream);
     }
 
@@ -405,7 +421,8 @@ CLVMObjectPtr assemble_from_ir(CLVMObjectPtr ir_sexp)
     auto first = ir_first(ir_sexp);
     keyword_opt = ir_as_symbol(first);
     if (keyword_opt) {
-        if (auto keyword = *keyword_opt; keyword == "q") {
+        auto keyword = *keyword_opt;
+        if (keyword == "q") {
             // TODO note that any symbol is legal after this point
         }
     }
@@ -418,7 +435,9 @@ CLVMObjectPtr assemble_from_ir(CLVMObjectPtr ir_sexp)
 CLVMObjectPtr read_ir(std::string_view str)
 {
     stream::TokenStream s(str);
-    auto [token, offset] = s.Next();
+    std::string token;
+    int offset;
+    std::tie(token, offset) = s.Next();
     while (!token.empty()) {
         return tokenize_sexp(token, offset, s);
     }

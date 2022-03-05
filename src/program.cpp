@@ -247,7 +247,8 @@ int ArgsLen(CLVMObjectPtr obj)
 {
     int len { 0 };
     while (obj->GetNodeType() == NodeType::List) {
-        auto [a, r] = Pair(obj);
+        CLVMObjectPtr a, r;
+        std::tie(a, r) = Pair(obj);
         if (!IsAtom(a)) {
             throw std::runtime_error("requires in args");
         }
@@ -263,7 +264,8 @@ std::tuple<bool, Bytes, CLVMObjectPtr> ArgsNext(CLVMObjectPtr obj)
     if (obj->GetNodeType() != NodeType::List) {
         return std::make_tuple(false, Bytes(), CLVMObjectPtr());
     }
-    auto [b, next] = Pair(obj);
+    CLVMObjectPtr b, next;
+    std::tie(b, next) = Pair(obj);
     Bytes bytes = Atom(b);
     return std::make_tuple(true, bytes, next);
 }
@@ -456,7 +458,8 @@ Bytes SExpToStream(CLVMObjectPtr sexp)
         CLVMObjectPtr sexp = todo_stack.Pop();
         if (IsPair(sexp)) {
             res.push_back(CONS_BOX_MARKER);
-            auto [first, rest] = Pair(sexp);
+            CLVMObjectPtr first, rest;
+            std::tie(first, rest) = Pair(sexp);
             todo_stack.Push(rest);
             todo_stack.Push(first);
         } else {
@@ -504,7 +507,8 @@ Bytes32 SHA256TreeHash(CLVMObjectPtr sexp, std::vector<Bytes> const& precalculat
     Op handle_sexp = [&handle_sexp, &handle_pair, &roll, &precalculated](ValStack& sexp_stack, OpStack& op_stack) {
         auto sexp = sexp_stack.Pop();
         if (IsPair(sexp)) {
-            auto [p0, p1] = Pair(sexp);
+            CLVMObjectPtr p0, p1;
+            std::tie(p0, p1) = Pair(sexp);
             sexp_stack.Push(p0);
             sexp_stack.Push(p1);
             op_stack.Push(handle_pair);
@@ -642,7 +646,8 @@ std::tuple<Cost, CLVMObjectPtr> traverse_path(CLVMObjectPtr sexp, CLVMObjectPtr 
         if (!IsPair(env)) {
             throw std::runtime_error("path into atom {env}");
         }
-        auto [first, rest] = Pair(env);
+        CLVMObjectPtr first, rest;
+        std::tie(first, rest) = Pair(env);
         env = (b[byte_cursor] & bitmask) ? rest : first;
         cost += PATH_LOOKUP_COST_PER_LEG;
         bitmask <<= 1;
@@ -679,16 +684,21 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program, CLVMObjectPtr
     eval_op
         = [&operator_lookup, &apply_op, &cons_op, &eval_op, &swap_op](OpStack& op_stack, ValStack& val_stack) -> Cost {
         auto pair = val_stack.Pop();
-        auto [sexp, args] = Pair(pair);
+        CLVMObjectPtr sexp, args;
+        std::tie(sexp, args) = Pair(pair);
         if (!IsPair(sexp)) {
-            auto [cost, r] = traverse_path(sexp, args);
+            Cost cost;
+            CLVMObjectPtr r;
+            std::tie(cost, r) = traverse_path(sexp, args);
             val_stack.Push(r);
             return cost;
         }
 
-        auto [opt, sexp_rest] = Pair(sexp);
+        CLVMObjectPtr opt, sexp_rest;
+        std::tie(opt, sexp_rest) = Pair(sexp);
         if (IsPair(opt)) {
-            auto [new_opt, must_be_nil] = Pair(opt);
+            CLVMObjectPtr new_opt, must_be_nil;
+            std::tie(new_opt, must_be_nil) = Pair(opt);
             if (IsPair(new_opt) || !IsNull(must_be_nil)) {
                 throw std::runtime_error("syntax X must be lone atom");
             }
@@ -709,7 +719,8 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program, CLVMObjectPtr
         op_stack.Push(apply_op);
         val_stack.Push(opt);
         while (!IsNull(operand_list)) {
-            auto [_, r] = Pair(operand_list);
+            CLVMObjectPtr _, r;
+            std::tie(_, r) = Pair(operand_list);
             val_stack.Push(ToSExpPair(_, args));
             op_stack.Push(cons_op);
             op_stack.Push(eval_op);
@@ -733,7 +744,8 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program, CLVMObjectPtr
             if (ListLen(operand_list) != 2) {
                 throw std::runtime_error("apply requires exactly 2 parameters");
             }
-            auto [new_program, r] = Pair(operand_list);
+            CLVMObjectPtr new_program, r;
+            std::tie(new_program, r) = Pair(operand_list);
             auto r_first = First(r);
             if (!IsPair(r_first)) {
                 throw std::runtime_error("argument of eval_op is not a pair");
@@ -743,7 +755,9 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program, CLVMObjectPtr
             return APPLY_COST;
         }
 
-        auto [additional_cost, r] = operator_lookup(op, operand_list);
+        Cost additional_cost;
+        CLVMObjectPtr r;
+        std::tie(additional_cost, r) = operator_lookup(op, operand_list);
         val_stack.Push(r);
         return additional_cost;
     };
@@ -780,7 +794,9 @@ Program Program::Curry(CLVMObjectPtr args)
 {
     auto curry_program = Assemble(CURRY_OBJ_CODE);
     auto bind_args = ToSExpPair(sexp_, ToSExpList(args));
-    auto [cost, sexp] = run::run_program(curry_program, bind_args);
+    Cost cost;
+    CLVMObjectPtr sexp;
+    std::tie(cost, sexp) = run::run_program(curry_program, bind_args);
     return Program(sexp);
 }
 

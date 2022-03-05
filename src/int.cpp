@@ -111,7 +111,9 @@ Int::Int(long val)
 Bytes Int::ToBytes(bool* neg) const
 {
     std::string hex = impl_->mpz.get_str(16);
-    auto [r, neg2] = strip_sign(hex);
+    std::string r;
+    bool neg2;
+    std::tie(r, neg2) = strip_sign(hex);
     if (neg) {
         *neg = neg2;
     }

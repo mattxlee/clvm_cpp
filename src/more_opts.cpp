@@ -104,10 +104,13 @@ OpResult op_divmod(CLVMObjectPtr args)
     if (ints.size() != 2) {
         throw std::runtime_error("invalid length of args");
     }
-    auto [i0, l0] = ints[0];
-    auto [i1, l1] = ints[1];
+    Int i0, i1;
+    int l0, l1;
+    std::tie(i0, l0) = ints[0];
+    std::tie(i1, l1) = ints[1];
     cost += (l0 + l1) * DIVMOD_COST_PER_BYTE;
-    auto [q, r] = divmod(i0, i1);
+    Int q, r;
+    std::tie(q, r) = divmod(i0, i1);
     auto q1 = ToSExp(q);
     auto r1 = ToSExp(r);
     cost += (Atom(q1).size() + Atom(r1).size()) * MALLOC_COST_PER_BYTE;
@@ -121,13 +124,16 @@ OpResult op_div(CLVMObjectPtr args)
     if (ints.size() != 2) {
         throw std::runtime_error("the number of arguments must equals to 2");
     }
-    auto [i0, l0] = ints[0];
-    auto [i1, l1] = ints[1];
+    Int i0, i1;
+    int l0, l1;
+    std::tie(i0, l0) = ints[0];
+    std::tie(i1, l1) = ints[1];
     if (i1 == Int(0)) {
         throw std::runtime_error("div with 0");
     }
     cost += (l0 + l1) * DIV_COST_PER_BYTE;
-    auto [q, r] = divmod(i0, i1);
+    Int q, r;
+    std::tie(q, r) = divmod(i0, i1);
     if (q == Int(-1) && r != Int(0)) {
         ++q;
     }
@@ -137,8 +143,10 @@ OpResult op_div(CLVMObjectPtr args)
 OpResult op_gr(CLVMObjectPtr args)
 {
     auto ints = ListInts(args);
-    auto [i0, l0] = ints[0];
-    auto [i1, l1] = ints[1];
+    Int i0, i1;
+    int l0, l1;
+    std::tie(i0, l0) = ints[0];
+    std::tie(i1, l1) = ints[1];
     if (ints.size() != 2) {
         throw std::runtime_error("the number of args must equals to 2");
     }
@@ -243,8 +251,10 @@ OpResult op_concat(CLVMObjectPtr args)
 OpResult op_ash(CLVMObjectPtr args)
 {
     auto arg_list = ListInts(args);
-    auto [bi0, l0] = arg_list[0];
-    auto [bi1, l1] = arg_list[1];
+    Int bi0, bi1;
+    int l0, l1;
+    std::tie(bi0, l0) = arg_list[0];
+    std::tie(bi1, l1) = arg_list[1];
     if (l1 > 4) {
         throw std::runtime_error("ash requires int32 args (with no leading zeros)");
     }
@@ -267,7 +277,9 @@ OpResult op_ash(CLVMObjectPtr args)
 OpResult op_lsh(CLVMObjectPtr args)
 {
     auto arg_list = ListInts(args);
-    auto [bi1, l1] = arg_list[1];
+    Int bi1;
+    int l1;
+    std::tie(bi1, l1) = arg_list[1];
     auto i1 = bi1.ToInt();
     if (l1 > 4) {
         throw std::runtime_error("ash requires int32 args (with no leading zeros)");

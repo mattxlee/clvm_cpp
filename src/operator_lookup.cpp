@@ -74,10 +74,14 @@ std::tuple<Cost, CLVMObjectPtr> default_unknown_op(Bytes const& op, CLVMObjectPt
     } else if (cost_function == 2) {
         cost = MUL_BASE_COST;
         try {
-            auto [ok, b, next] = ArgsNext(args);
+            bool ok;
+            Bytes b;
+            CLVMObjectPtr next;
+            std::tie(ok, b, next) = ArgsNext(args);
             int vs = static_cast<int>(b.size());
             while (ok) {
-                auto [ok, b, n] = ArgsNext(next);
+                CLVMObjectPtr n;
+                std::tie(ok, b, n) = ArgsNext(next);
                 if (ok) {
                     int rs = static_cast<int>(b.size());
                     cost += MUL_COST_PER_OP;
@@ -201,11 +205,11 @@ OperatorLookup::Keywords OperatorLookup::AtomToKeywords(uint8_t a) const
 
 uint8_t OperatorLookup::KeywordToAtom(std::string_view keyword) const
 {
-    auto i
-        = std::find_if(std::begin(atom_to_keywords_), std::end(atom_to_keywords_), [keyword](auto const& val) -> bool {
-              auto i = std::find(std::begin(val.second), std::end(val.second), keyword);
-              return i != std::end(val.second);
-          });
+    auto i = std::find_if(std::begin(atom_to_keywords_), std::end(atom_to_keywords_),
+        [keyword](std::pair<uint8_t, chia::OperatorLookup::Keywords> const& val) -> bool {
+            auto i = std::find(std::begin(val.second), std::end(val.second), keyword);
+            return i != std::end(val.second);
+        });
     if (i != std::end(atom_to_keywords_)) {
         return i->first;
     }

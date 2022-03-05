@@ -143,7 +143,9 @@ std::vector<ConditionWithArgs> parse_sexp_to_conditions(CLVMObjectPtr sexp)
 std::tuple<std::vector<ConditionWithArgs>, uint64_t> conditions_for_solution(
     Program& puzzle_reveal, Program& solution, int max_cost)
 {
-    auto [cost, r] = puzzle_reveal.Run(solution.GetSExp());
+    Cost cost;
+    CLVMObjectPtr r;
+    std::tie(cost, r) = puzzle_reveal.Run(solution.GetSExp());
     auto results = parse_sexp_to_conditions(r);
     return std::make_tuple(results, cost);
 }
@@ -183,19 +185,25 @@ std::vector<Coin> created_outputs_for_conditions_dict(
 std::tuple<std::map<ConditionOpcode, std::vector<ConditionWithArgs>>, Cost> conditions_dict_for_solution(
     Program& puzzle_reveal, Program& solution, Cost max_cost)
 {
-    auto [results, cost] = conditions_for_solution(puzzle_reveal, solution, max_cost);
+    std::vector<ConditionWithArgs> results;
+    Cost cost;
+    std::tie(results, cost) = conditions_for_solution(puzzle_reveal, solution, max_cost);
     return std::make_tuple(conditions_by_opcode(results), cost);
 }
 
 std::vector<Coin> additions_for_solution(Bytes32 coin_name, Program& puzzle_reveal, Program& solution, Cost max_cost)
 {
-    auto [dic, cost] = conditions_dict_for_solution(puzzle_reveal, solution, max_cost);
+    std::map<chia::ConditionOpcode, std::vector<chia::ConditionWithArgs>> dic;
+    Cost cost;
+    std::tie(dic, cost) = conditions_dict_for_solution(puzzle_reveal, solution, max_cost);
     return created_outputs_for_conditions_dict(dic, coin_name);
 }
 
 Cost fee_for_solution(Program& puzzle_reveal, Program& solution, Cost max_cost)
 {
-    auto [dic, cost] = conditions_dict_for_solution(puzzle_reveal, solution, max_cost);
+    std::map<chia::ConditionOpcode, std::vector<chia::ConditionWithArgs>> dic;
+    Cost cost;
+    std::tie(dic, cost) = conditions_dict_for_solution(puzzle_reveal, solution, max_cost);
     if (dic.empty()) {
         return 0;
     }
@@ -248,14 +256,18 @@ SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPub
     std::vector<Bytes> msg_list;
     for (auto const& coin_spend : coin_spends) {
         // Get AGG_SIG conditions
-        auto [conditions_dict, cost]
+        std::map<chia::ConditionOpcode, std::vector<chia::ConditionWithArgs>> conditions_dict;
+        Cost cost;
+        std::tie(conditions_dict, cost)
             = conditions_dict_for_solution(coin_spend.puzzle_reveal, coin_spend.solution, max_cost);
         if (conditions_dict.empty()) {
             throw std::runtime_error("Sign transaction failed");
         }
         // Create signature
         auto pkm_pairs = pkm_pairs_for_conditions_dict(conditions_dict, coin_spend.coin.GetName(), additional_data);
-        for (auto [pk_bytes, msg] : pkm_pairs) {
+        for (std::pair<Bytes48, Bytes> const& p : pkm_pairs) {
+            Bytes48 const& pk_bytes = p.first;
+            Bytes const& msg = p.second;
             auto pk = bls::G1Element::FromBytes(bls::Bytes(pk_bytes.data(), pk_bytes.size()));
             pk_list.push_back(pk);
             auto secret_key = secret_key_for_public_key_f(pk);
