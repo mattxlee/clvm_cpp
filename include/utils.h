@@ -17,26 +17,25 @@ namespace utils
 
 template <int LEN> Bytes bytes_cast(std::array<uint8_t, LEN> const& rhs)
 {
-  Bytes bytes(LEN, '\0');
-  memcpy(bytes.data(), rhs.data(), LEN);
-  return bytes;
+    Bytes bytes(LEN, '\0');
+    memcpy(bytes.data(), rhs.data(), LEN);
+    return bytes;
 }
 
 template <int LEN> std::array<uint8_t, LEN> bytes_cast(Bytes const& rhs)
 {
-  assert(rhs.size() >= LEN);
+    assert(rhs.size() >= LEN);
 
-  std::array<uint8_t, LEN> res;
-  memcpy(res.data(), rhs.data(), LEN);
-  return res;
+    std::array<uint8_t, LEN> res;
+    memcpy(res.data(), rhs.data(), LEN);
+    return res;
 }
 
-template <typename Container>
-Container ConnectContainers(Container const& lhs, Container const& rhs)
+template <typename Container> Container ConnectContainers(Container const& lhs, Container const& rhs)
 {
-  Container res = lhs;
-  std::copy(std::begin(rhs), std::end(rhs), std::back_inserter(res));
-  return res;
+    Container res = lhs;
+    std::copy(std::begin(rhs), std::end(rhs), std::back_inserter(res));
+    return res;
 }
 
 Bytes StrToBytes(std::string_view str);
@@ -122,45 +121,45 @@ std::vector<Int> BytesToInts(Bytes const& bytes);
 class BufferConnector
 {
 public:
-  void Append(Bytes const& rhs);
+    void Append(Bytes const& rhs);
 
-  Bytes const& GetResult() const;
+    Bytes const& GetResult() const;
 
 private:
-  Bytes result_;
+    Bytes result_;
 };
 
 template <typename... T> Bytes ConnectBuffers(T&&... bufs)
 {
-  BufferConnector conn;
-  (conn.Append(std::forward<T>(bufs)), ...);
-  return conn.GetResult();
+    BufferConnector conn;
+    (conn.Append(std::forward<T>(bufs)), ...);
+    return conn.GetResult();
 }
 
 template <typename... T> Bytes SerializeBytes(T&&... vals)
 {
-  Bytes res;
-  (res.push_back(std::forward<T>(vals)), ...);
-  return res;
+    Bytes res;
+    (res.push_back(std::forward<T>(vals)), ...);
+    return res;
 }
 
 Bytes RevertBytes(Bytes const& in);
 
 template <typename T> Bytes IntToBEBytes(T const& val)
 {
-  Bytes b(sizeof(val));
-  memcpy(b.data(), &val, sizeof(val));
-  b = RevertBytes(b);
-  return b;
+    Bytes b(sizeof(val));
+    memcpy(b.data(), &val, sizeof(val));
+    b = RevertBytes(b);
+    return b;
 }
 
 template <typename T> T IntFromBEBytes(Bytes const& bytes)
 {
-  Bytes r = RevertBytes(bytes);
-  int num_bytes_to_copy = std::max(sizeof(T), r.size());
-  T result { 0 };
-  memcpy(&result, r.data(), num_bytes_to_copy);
-  return result;
+    Bytes r = RevertBytes(bytes);
+    int num_bytes_to_copy = std::max(sizeof(T), r.size());
+    T result { 0 };
+    memcpy(&result, r.data(), num_bytes_to_copy);
+    return result;
 }
 
 std::string ToUpper(std::string_view str);

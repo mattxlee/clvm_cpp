@@ -14,72 +14,72 @@ struct Impl;
 class Int
 {
 public:
-  static bool IsValidNumberStr(std::string_view s);
+    static bool IsValidNumberStr(std::string_view s);
 
-  Int();
+    Int();
 
-  ~Int();
+    ~Int();
 
-  Int(Int const& rhs);
+    Int(Int const& rhs);
 
-  /// Parse an integer from a string
-  Int(std::string_view s, int base);
+    /// Parse an integer from a string
+    Int(std::string_view s, int base);
 
-  explicit Int(Bytes const& s, bool neg = false);
+    explicit Int(Bytes const& s, bool neg = false);
 
-  explicit Int(long val);
+    explicit Int(long val);
 
-  Bytes ToBytes(bool* neg = nullptr) const;
+    Bytes ToBytes(bool* neg = nullptr) const;
 
-  int NumBytes() const;
+    int NumBytes() const;
 
-  long ToInt() const;
+    long ToInt() const;
 
-  unsigned long ToUInt() const;
+    unsigned long ToUInt() const;
 
-  Int Abs() const;
+    Int Abs() const;
 
-  Int& operator=(Int const& rhs);
+    Int& operator=(Int const& rhs);
 
-  Int operator-(Int const& rhs) const;
-  Int operator+(Int const& rhs) const;
-  Int operator*(Int const& rhs) const;
-  Int operator/(Int const& rhs) const;
-  Int operator%(Int const& rhs) const;
-  Int operator^(Int const& rhs) const;
-  Int operator&(Int const& rhs) const;
-  Int operator|(Int const& rhs) const;
-  Int operator<<(int rhs) const;
-  Int operator>>(int rhs) const;
+    Int operator-(Int const& rhs) const;
+    Int operator+(Int const& rhs) const;
+    Int operator*(Int const& rhs) const;
+    Int operator/(Int const& rhs) const;
+    Int operator%(Int const& rhs) const;
+    Int operator^(Int const& rhs) const;
+    Int operator&(Int const& rhs) const;
+    Int operator|(Int const& rhs) const;
+    Int operator<<(int rhs) const;
+    Int operator>>(int rhs) const;
 
-  Int& operator+=(Int const& rhs);
-  Int& operator-=(Int const& rhs);
-  Int& operator*=(Int const& rhs);
-  Int& operator/=(Int const& rhs);
-  Int& operator%=(Int const& rhs);
-  Int& operator^=(Int const& rhs);
-  Int& operator&=(Int const& rhs);
-  Int& operator|=(Int const& rhs);
-  Int& operator<<=(int rhs);
-  Int& operator>>=(int rhs);
+    Int& operator+=(Int const& rhs);
+    Int& operator-=(Int const& rhs);
+    Int& operator*=(Int const& rhs);
+    Int& operator/=(Int const& rhs);
+    Int& operator%=(Int const& rhs);
+    Int& operator^=(Int const& rhs);
+    Int& operator&=(Int const& rhs);
+    Int& operator|=(Int const& rhs);
+    Int& operator<<=(int rhs);
+    Int& operator>>=(int rhs);
 
-  Int operator++(int);
-  Int& operator++();
+    Int operator++(int);
+    Int& operator++();
 
-  Int operator--(int);
-  Int& operator--();
+    Int operator--(int);
+    Int& operator--();
 
-  Int operator~() const;
+    Int operator~() const;
 
-  friend bool operator==(Int const& lhs, Int const& rhs);
-  friend bool operator!=(Int const& lhs, Int const& rhs);
-  friend bool operator<(Int const& lhs, Int const& rhs);
-  friend bool operator<=(Int const& lhs, Int const& rhs);
-  friend bool operator>(Int const& lhs, Int const& rhs);
-  friend bool operator>=(Int const& lhs, Int const& rhs);
+    friend bool operator==(Int const& lhs, Int const& rhs);
+    friend bool operator!=(Int const& lhs, Int const& rhs);
+    friend bool operator<(Int const& lhs, Int const& rhs);
+    friend bool operator<=(Int const& lhs, Int const& rhs);
+    friend bool operator>(Int const& lhs, Int const& rhs);
+    friend bool operator>=(Int const& lhs, Int const& rhs);
 
 private:
-  std::unique_ptr<Impl> impl_;
+    std::unique_ptr<Impl> impl_;
 };
 
 bool operator==(Int const& lhs, Int const& rhs);

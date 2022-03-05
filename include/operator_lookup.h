@@ -12,53 +12,51 @@
 namespace chia
 {
 
-using OpFunc
-    = std::function<std::tuple<Cost, CLVMObjectPtr>(CLVMObjectPtr args)>;
+using OpFunc = std::function<std::tuple<Cost, CLVMObjectPtr>(CLVMObjectPtr args)>;
 
 class Ops
 {
 public:
-  static Ops& GetInstance();
+    static Ops& GetInstance();
 
-  void Assign(std::string_view op_name, OpFunc f);
+    void Assign(std::string_view op_name, OpFunc f);
 
-  OpFunc Query(std::string_view op_name);
-
-private:
-  Ops();
+    OpFunc Query(std::string_view op_name);
 
 private:
-  std::map<std::string, OpFunc> ops_;
+    Ops();
+
+private:
+    std::map<std::string, OpFunc> ops_;
 };
 
 class OperatorLookup
 {
 public:
-  using Keywords = std::vector<std::string>;
+    using Keywords = std::vector<std::string>;
 
-  Bytes QUOTE_ATOM;
-  Bytes APPLY_ATOM;
+    Bytes QUOTE_ATOM;
+    Bytes APPLY_ATOM;
 
-  OperatorLookup();
+    OperatorLookup();
 
-  std::tuple<Cost, CLVMObjectPtr> operator()(
-      Bytes const& op, CLVMObjectPtr args) const;
+    std::tuple<Cost, CLVMObjectPtr> operator()(Bytes const& op, CLVMObjectPtr args) const;
 
-  std::string AtomToKeyword(uint8_t a) const;
+    std::string AtomToKeyword(uint8_t a) const;
 
-  Keywords AtomToKeywords(uint8_t a) const;
+    Keywords AtomToKeywords(uint8_t a) const;
 
-  uint8_t KeywordToAtom(std::string_view keyword) const;
+    uint8_t KeywordToAtom(std::string_view keyword) const;
 
-  int GetCount() const;
-
-private:
-  void AddKeyword(uint8_t atom, std::string_view keyword);
-
-  void InitKeywords();
+    int GetCount() const;
 
 private:
-  std::map<uint8_t, Keywords> atom_to_keywords_;
+    void AddKeyword(uint8_t atom, std::string_view keyword);
+
+    void InitKeywords();
+
+private:
+    std::map<uint8_t, Keywords> atom_to_keywords_;
 };
 
 } // namespace chia
