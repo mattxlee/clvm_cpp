@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <algorithm>
 
 #include "assemble.h"
 #include "costs.h"
@@ -61,7 +62,7 @@ CLVMObject_Atom::CLVMObject_Atom(Bytes bytes)
 {
 }
 
-CLVMObject_Atom::CLVMObject_Atom(std::string_view str)
+CLVMObject_Atom::CLVMObject_Atom(std::string str)
     : CLVMObject(NodeType::Atom_Str)
 {
     bytes_.resize(str.size());
@@ -562,19 +563,19 @@ Program Program::ImportFromBytes(Bytes const& bytes)
     return prog;
 }
 
-Program Program::ImportFromHex(std::string_view hex)
+Program Program::ImportFromHex(std::string hex)
 {
     Bytes prog_bytes = utils::BytesFromHex(hex);
     return ImportFromBytes(prog_bytes);
 }
 
-Program Program::ImportFromCompiledFile(std::string_view file_path)
+Program Program::ImportFromCompiledFile(std::string file_path)
 {
     std::string hex = utils::LoadHexFromFile(file_path);
     return ImportFromHex(hex);
 }
 
-Program Program::ImportFromAssemble(std::string_view str)
+Program Program::ImportFromAssemble(std::string str)
 {
     Program prog;
     prog.sexp_ = Assemble(str);
@@ -608,7 +609,7 @@ class OpStack : public Stack<Op>
 {
 };
 
-void debug_atom(std::string_view prefix, OperatorLookup const& operator_lookup, uint8_t atom)
+void debug_atom(std::string prefix, OperatorLookup const& operator_lookup, uint8_t atom)
 {
     try {
         std::string keyword = operator_lookup.AtomToKeyword(atom);
@@ -784,11 +785,11 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program, CLVMObjectPtr
 
 std::tuple<Cost, CLVMObjectPtr> Program::Run(CLVMObjectPtr args) { return run::run_program(sexp_, args); }
 
-std::string_view CURRY_OBJ_CODE = "(a (q #a 4 (c 2 (c 5 (c 7 0)))) (c (q (c (q "
-                                  ". 2) (c (c (q . 1) 5) (c (a 6 "
-                                  "(c 2 (c 11 (q 1)))) 0))) #a (i 5 (q 4 (q . "
-                                  "4) (c (c (q . 1) 9) (c (a 6 (c "
-                                  "2 (c 13 (c 11 0)))) 0))) (q . 11)) 1) 1))";
+std::string CURRY_OBJ_CODE = "(a (q #a 4 (c 2 (c 5 (c 7 0)))) (c (q (c (q "
+                             ". 2) (c (c (q . 1) 5) (c (a 6 "
+                             "(c 2 (c 11 (q 1)))) 0))) #a (i 5 (q 4 (q . "
+                             "4) (c (c (q . 1) 9) (c (a 6 (c "
+                             "2 (c 13 (c 11 0)))) 0))) (q . 11)) 1) 1))";
 
 Program Program::Curry(CLVMObjectPtr args)
 {

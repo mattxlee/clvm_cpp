@@ -1,5 +1,5 @@
 #include <fstream>
-#include <string_view>
+#include <string>
 
 #include "gtest/gtest.h"
 
@@ -45,11 +45,11 @@ TEST(Utilities, IntBigEndianConvertion)
     EXPECT_EQ(chia::Int(chia::utils::SerializeBytes(0x01, 0x02)).ToInt(), 0x0102);
 }
 
-std::string_view const s0 = "../clvm/calculate_synthetic_public_key.clvm.hex";
-std::string_view const s0_treehash = "../clvm/calculate_synthetic_public_key.clvm.hex.sha256tree";
+std::string const s0 = "../clvm/calculate_synthetic_public_key.clvm.hex";
+std::string const s0_treehash = "../clvm/calculate_synthetic_public_key.clvm.hex.sha256tree";
 
-std::string_view const s1 = "../clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex";
-std::string_view const s1_treehash = "../clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex.sha256tree";
+std::string const s1 = "../clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex";
+std::string const s1_treehash = "../clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex.sha256tree";
 
 TEST(CLVM_SHA256_treehash, LoadAndVerify_s0)
 {
@@ -159,7 +159,7 @@ TEST(CLVM_Mnemonic, WordsList)
     EXPECT_EQ(str, "hello world");
 }
 
-int calculate_number(std::string_view s)
+int calculate_number(std::string s)
 {
     auto f = chia::Assemble(s);
     chia::Program prog(f);
@@ -169,7 +169,7 @@ int calculate_number(std::string_view s)
     return chia::ToInt(r).ToInt();
 }
 
-bool calculate_bool(std::string_view s)
+bool calculate_bool(std::string s)
 {
     auto f = chia::Assemble(s);
     chia::Program prog(f);

@@ -17,7 +17,7 @@ namespace chia
 class OperatorLookup;
 
 using Cost = uint64_t;
-static std::string_view DEFAULT_HIDDEN_PUZZLE = "ff0980";
+static std::string DEFAULT_HIDDEN_PUZZLE = "ff0980";
 
 enum class NodeType : int { None, Atom_Bytes, Atom_Str, Atom_Int, Atom_G1Element, List, Tuple };
 
@@ -50,7 +50,7 @@ public:
 
     explicit CLVMObject_Atom(Bytes bytes);
 
-    explicit CLVMObject_Atom(std::string_view str);
+    explicit CLVMObject_Atom(std::string str);
 
     explicit CLVMObject_Atom(long i);
 
@@ -287,11 +287,11 @@ class Program
 public:
     static Program ImportFromBytes(Bytes const& bytes);
 
-    static Program ImportFromHex(std::string_view hex);
+    static Program ImportFromHex(std::string hex);
 
-    static Program ImportFromCompiledFile(std::string_view file_path);
+    static Program ImportFromCompiledFile(std::string file_path);
 
-    static Program ImportFromAssemble(std::string_view str);
+    static Program ImportFromAssemble(std::string str);
 
     explicit Program(CLVMObjectPtr sexp);
 

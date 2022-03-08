@@ -24,14 +24,14 @@ Bytes CopyMnemonicResultToBytes(bip3x::Bip39Mnemonic::MnemonicResult const& res)
     return bytes;
 }
 
-bip3x::Bip39Mnemonic::MnemonicResult WordsToMnemonicResult(Mnemonic::Words const& words, std::string_view lang)
+bip3x::Bip39Mnemonic::MnemonicResult WordsToMnemonicResult(Mnemonic::Words const& words, std::string lang)
 {
     std::string str = Mnemonic::WordsToString(words);
     bip3x::bytes_data bytes = bip3x::Bip39Mnemonic::decodeMnemonic(str.data(), lang.data());
     return bip3x::Bip39Mnemonic::encodeBytes(bytes.data(), lang.data());
 }
 
-std::string NormalizeString(std::string_view str)
+std::string NormalizeString(std::string str)
 {
     auto sz = reinterpret_cast<char const*>(utf8proc_NFKD(reinterpret_cast<uint8_t const*>(str.data())));
     return sz;
@@ -39,7 +39,7 @@ std::string NormalizeString(std::string_view str)
 
 } // namespace utils
 
-Mnemonic Mnemonic::GenerateNew(std::string_view lang)
+Mnemonic Mnemonic::GenerateNew(std::string lang)
 {
     bip3x::Bip39Mnemonic::MnemonicResult res = bip3x::Bip39Mnemonic::generate(lang.data());
     return Mnemonic(res.words, lang);
@@ -54,7 +54,7 @@ std::string Mnemonic::WordsToString(Mnemonic::Words const& words)
     return ss.str().substr(1);
 }
 
-Mnemonic::Words Mnemonic::StringToWords(std::string_view str)
+Mnemonic::Words Mnemonic::StringToWords(std::string str)
 {
     int i { 0 }, last { 0 };
     Mnemonic::Words res;
@@ -73,14 +73,14 @@ Mnemonic::Words Mnemonic::StringToWords(std::string_view str)
     return res;
 }
 
-Mnemonic::Mnemonic(Words words, std::string_view lang)
+Mnemonic::Mnemonic(Words words, std::string lang)
     : words_(std::move(words))
 {
     bip3x::Bip39Mnemonic::MnemonicResult res = utils::WordsToMnemonicResult(words_, lang);
     bytes_ = utils::CopyMnemonicResultToBytes(res);
 }
 
-Mnemonic::Mnemonic(std::string_view words, std::string_view lang)
+Mnemonic::Mnemonic(std::string words, std::string lang)
     : Mnemonic(StringToWords(words), lang)
 {
 }
@@ -105,7 +105,7 @@ Mnemonic::Words Mnemonic::GetWords() const { return words_; }
  *   assert len(seed) == 64
  *   return seed
  */
-Bytes64 Mnemonic::GetSeed(std::string_view passphrase) const
+Bytes64 Mnemonic::GetSeed(std::string passphrase) const
 {
     std::string salt = utils::NormalizeString(std::string("mnemonic") + passphrase.data());
     std::string mnemonic = utils::NormalizeString(WordsToString(words_));

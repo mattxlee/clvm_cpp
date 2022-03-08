@@ -65,7 +65,7 @@ Key::Key(PrivateKey priv_key)
 {
 }
 
-Key::Key(Mnemonic const& mnemonic, std::string_view passphrase)
+Key::Key(Mnemonic const& mnemonic, std::string passphrase)
 {
     Bytes64 seed = mnemonic.GetSeed(passphrase);
     priv_key_ = utils::bytes_cast<PRIV_KEY_LEN>(bls::AugSchemeMPL().KeyGen(utils::bytes_cast<64>(seed)).Serialize());
@@ -108,9 +108,9 @@ Key Key::DerivePath(std::vector<uint32_t> const& paths) const
 namespace puzzle
 {
 
-std::string_view DEFAULT_HIDDEN_PUZZLE = "DEFAULT_HIDDEN_PUZZLE ";
-std::string_view MOD = "MOD";
-std::string_view SYNTHETIC_MOD = "SYNTHETIC_MOD";
+std::string DEFAULT_HIDDEN_PUZZLE = "DEFAULT_HIDDEN_PUZZLE ";
+std::string MOD = "MOD";
+std::string SYNTHETIC_MOD = "SYNTHETIC_MOD";
 
 class CLVMPrograms
 {
@@ -127,9 +127,9 @@ public:
         return instance;
     }
 
-    void SetPrefix(std::string_view new_prefix) { prefix_ = new_prefix; }
+    void SetPrefix(std::string new_prefix) { prefix_ = new_prefix; }
 
-    void SetEntry(std::string_view name, Bytes const& bytes)
+    void SetEntry(std::string name, Bytes const& bytes)
     {
         Entry entry;
         entry.type = EntryType::Bytes;
@@ -137,7 +137,7 @@ public:
         InsertOrAssign(std::string(name), std::move(entry));
     }
 
-    void SetEntry(std::string_view name, std::string_view file_path)
+    void SetEntry(std::string name, std::string file_path)
     {
         Entry entry;
         entry.type = EntryType::File;
@@ -145,7 +145,7 @@ public:
         InsertOrAssign(std::string(name), std::move(entry));
     }
 
-    Program GetProgram(std::string_view name) const
+    Program GetProgram(std::string name) const
     {
         auto i = progs_.find(name.data());
         if (i == std::end(progs_)) {

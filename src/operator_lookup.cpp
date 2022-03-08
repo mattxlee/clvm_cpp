@@ -1,6 +1,7 @@
 #include "operator_lookup.h"
 
 #include <iostream>
+#include <algorithm>
 
 #include "core_opts.h"
 #include "costs.h"
@@ -11,7 +12,7 @@
 namespace chia
 {
 
-static std::string_view KEYWORDS =
+static std::string KEYWORDS =
     // core opcodes 0x01-x08
     ". q a i c f r l x "
 
@@ -114,9 +115,9 @@ Ops& Ops::GetInstance()
     return instance;
 }
 
-void Ops::Assign(std::string_view op_name, OpFunc f) { ops_[op_name.data()] = std::move(f); }
+void Ops::Assign(std::string op_name, OpFunc f) { ops_[op_name.data()] = std::move(f); }
 
-OpFunc Ops::Query(std::string_view op_name)
+OpFunc Ops::Query(std::string op_name)
 {
     auto i = ops_.find(op_name.data());
     if (i == std::end(ops_)) {
@@ -203,7 +204,7 @@ OperatorLookup::Keywords OperatorLookup::AtomToKeywords(uint8_t a) const
     throw std::runtime_error("keyword cannot be found by the atom");
 }
 
-uint8_t OperatorLookup::KeywordToAtom(std::string_view keyword) const
+uint8_t OperatorLookup::KeywordToAtom(std::string keyword) const
 {
     auto i = std::find_if(std::begin(atom_to_keywords_), std::end(atom_to_keywords_),
         [keyword](std::pair<uint8_t, chia::OperatorLookup::Keywords> const& val) -> bool {
@@ -218,7 +219,7 @@ uint8_t OperatorLookup::KeywordToAtom(std::string_view keyword) const
 
 int OperatorLookup::GetCount() const { return static_cast<int>(atom_to_keywords_.size()); }
 
-void OperatorLookup::AddKeyword(uint8_t atom, std::string_view keyword)
+void OperatorLookup::AddKeyword(uint8_t atom, std::string keyword)
 {
     auto i = atom_to_keywords_.find(atom);
     if (i != std::end(atom_to_keywords_)) {

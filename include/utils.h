@@ -5,7 +5,6 @@
 #include <cstring>
 
 #include <string>
-#include <string_view>
 
 #include "int.h"
 #include "types.h"
@@ -38,7 +37,7 @@ template <typename Container> Container ConnectContainers(Container const& lhs, 
     return res;
 }
 
-Bytes StrToBytes(std::string_view str);
+Bytes StrToBytes(std::string str);
 
 /**
  * Convert 4-bit byte to hex character
@@ -75,7 +74,7 @@ std::string BytesToHex(Bytes const& bytes);
  *
  * @return The converted byte array
  */
-Bytes BytesFromHex(std::string_view hex);
+Bytes BytesFromHex(std::string hex);
 
 /**
  * Convert byte array list to the string represents the arguments to a chialisp
@@ -94,7 +93,7 @@ std::string ArgsToStr(std::vector<Bytes> const& args);
  *
  * @return Hex string
  */
-std::string LoadHexFromFile(std::string_view file_path);
+std::string LoadHexFromFile(std::string file_path);
 
 /**
  * Convert a byte to an byte vector which contains 1 byte
@@ -178,7 +177,7 @@ template <typename T> T IntFromBEBytes(Bytes const& bytes)
     return result;
 }
 
-std::string ToUpper(std::string_view str);
+std::string ToUpper(std::string str);
 
 } // namespace utils
 } // namespace chia

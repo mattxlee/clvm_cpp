@@ -1,7 +1,7 @@
 #ifndef CHIA_KEY_H
 #define CHIA_KEY_H
 
-#include <string_view>
+#include <string>
 
 #include "types.h"
 
@@ -49,7 +49,7 @@ public:
     explicit Key(PrivateKey priv_key);
 
     /// Create a new key will be generated from the mnemonic
-    Key(Mnemonic const& mnemonic, std::string_view passphrase);
+    Key(Mnemonic const& mnemonic, std::string passphrase);
 
     /// Return `true` when the key is empty
     bool IsEmpty() const;

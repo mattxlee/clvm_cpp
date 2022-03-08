@@ -2,7 +2,7 @@
 #define CHIA_INT_H
 
 #include <memory>
-#include <string_view>
+#include <string>
 
 #include "types.h"
 
@@ -14,7 +14,7 @@ struct Impl;
 class Int
 {
 public:
-    static bool IsValidNumberStr(std::string_view s);
+    static bool IsValidNumberStr(std::string s);
 
     Int();
 
@@ -23,7 +23,7 @@ public:
     Int(Int const& rhs);
 
     /// Parse an integer from a string
-    Int(std::string_view s, int base);
+    Int(std::string s, int base);
 
     explicit Int(Bytes const& s, bool neg = false);
 

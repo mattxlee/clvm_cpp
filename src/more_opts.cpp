@@ -301,7 +301,7 @@ OpResult op_lsh(CLVMObjectPtr args)
 
 using BinOpFunc = std::function<Int(Int, Int)>;
 
-OpResult binop_reduction(std::string_view op_name, Int initial_value, CLVMObjectPtr args, BinOpFunc op_f)
+OpResult binop_reduction(std::string op_name, Int initial_value, CLVMObjectPtr args, BinOpFunc op_f)
 {
     Int total { initial_value };
     int arg_size { 0 };

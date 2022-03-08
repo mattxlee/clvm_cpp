@@ -9,19 +9,19 @@ namespace chia
 namespace wallet
 {
 
-Wallet::Wallet(std::string_view passphrase)
+Wallet::Wallet(std::string passphrase)
     : mnemonic_(Mnemonic::GenerateNew())
     , passphrase_(passphrase)
 {
 }
 
-Wallet::Wallet(Mnemonic mnemonic, std::string_view passphrase)
+Wallet::Wallet(Mnemonic mnemonic, std::string passphrase)
     : mnemonic_(std::move(mnemonic))
     , passphrase_(passphrase)
 {
 }
 
-Wallet::Wallet(std::string_view words, std::string_view passphrase)
+Wallet::Wallet(std::string words, std::string passphrase)
     : mnemonic_(words)
     , passphrase_(passphrase)
 {

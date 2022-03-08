@@ -27,6 +27,8 @@ else()
 endif()
 message(STATUS "Build type: ${BuildType}")
 
+set(ENABLE_BIP39_JNI OFF CACHE INTERNAL "")
+
 FetchContent_Declare(
   bip3x
   GIT_REPOSITORY https://github.com/edwardstock/bip3x

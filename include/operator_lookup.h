@@ -4,7 +4,6 @@
 #include <functional>
 #include <map>
 #include <string>
-#include <string_view>
 #include <tuple>
 
 #include "program.h"
@@ -19,9 +18,9 @@ class Ops
 public:
     static Ops& GetInstance();
 
-    void Assign(std::string_view op_name, OpFunc f);
+    void Assign(std::string op_name, OpFunc f);
 
-    OpFunc Query(std::string_view op_name);
+    OpFunc Query(std::string op_name);
 
 private:
     Ops();
@@ -46,12 +45,12 @@ public:
 
     Keywords AtomToKeywords(uint8_t a) const;
 
-    uint8_t KeywordToAtom(std::string_view keyword) const;
+    uint8_t KeywordToAtom(std::string keyword) const;
 
     int GetCount() const;
 
 private:
-    void AddKeyword(uint8_t atom, std::string_view keyword);
+    void AddKeyword(uint8_t atom, std::string keyword);
 
     void InitKeywords();
 

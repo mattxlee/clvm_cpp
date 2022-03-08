@@ -9,7 +9,7 @@ namespace chia
 namespace bech32
 {
 
-static std::string_view CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
+static std::string CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 static Int M { 0x2BC830A3 };
 
@@ -27,7 +27,7 @@ Int Polymod(std::vector<Int> const& values)
     return chk;
 }
 
-std::vector<Int> HRPExpand(std::string_view hrp)
+std::vector<Int> HRPExpand(std::string hrp)
 {
     std::vector<Int> res;
     for (char x : hrp) {
@@ -42,12 +42,12 @@ std::vector<Int> HRPExpand(std::string_view hrp)
     return res;
 }
 
-bool VerifyChecksum(std::string_view hrp, std::vector<Int> const& data)
+bool VerifyChecksum(std::string hrp, std::vector<Int> const& data)
 {
     return Polymod(chia::utils::ConnectContainers(HRPExpand(hrp), data)) != Int(0);
 }
 
-std::vector<Int> CreateChecksum(std::string_view hrp, std::vector<Int> const& data)
+std::vector<Int> CreateChecksum(std::string hrp, std::vector<Int> const& data)
 {
     auto values = chia::utils::ConnectContainers(HRPExpand(hrp), data);
     std::vector<Int> zeros { Int(0), Int(0), Int(0), Int(0), Int(0), Int(0) };
@@ -60,7 +60,7 @@ std::vector<Int> CreateChecksum(std::string_view hrp, std::vector<Int> const& da
     return checksum;
 }
 
-std::string Encode(std::string_view hrp, std::vector<Int> const& data)
+std::string Encode(std::string hrp, std::vector<Int> const& data)
 {
     auto combined = chia::utils::ConnectContainers(data, CreateChecksum(hrp, data));
     std::stringstream ss;

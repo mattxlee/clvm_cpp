@@ -2,7 +2,6 @@
 #define CHIA_WALLET_H
 
 #include <string>
-#include <string_view>
 
 #include "key.h"
 #include "mnemonic.h"
@@ -17,13 +16,13 @@ class Wallet
 {
 public:
     /// Create a new empty wallet object
-    explicit Wallet(std::string_view passphrase);
+    explicit Wallet(std::string passphrase);
 
     /// Create a wallet object by importing a mnemonic
-    Wallet(Mnemonic mnemonic, std::string_view passphrase);
+    Wallet(Mnemonic mnemonic, std::string passphrase);
 
     /// Create a wallet object from a passphrase words
-    Wallet(std::string_view words, std::string_view passphrase);
+    Wallet(std::string words, std::string passphrase);
 
     /// Get mnemonic object
     Mnemonic const& GetMnemonic() const { return mnemonic_; }

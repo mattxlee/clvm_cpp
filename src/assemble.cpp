@@ -27,7 +27,7 @@ namespace chia
 namespace stream
 {
 
-bool CharIn(char ch, std::string_view s)
+bool CharIn(char ch, std::string s)
 {
     for (char c : s) {
         if (c == ch) {
@@ -48,7 +48,7 @@ std::string CharToStr(char ch)
 class TokenStream
 {
 public:
-    explicit TokenStream(std::string_view s)
+    explicit TokenStream(std::string s)
         : str_(s)
     {
     }
@@ -89,7 +89,7 @@ public:
     }
 
 private:
-    static int ConsumeWhiteSpace(std::string_view s, int offset)
+    static int ConsumeWhiteSpace(std::string s, int offset)
     {
         while (1) {
             while (offset < s.size() && std::isspace(s[offset])) {
@@ -105,7 +105,7 @@ private:
         return offset;
     }
 
-    static std::tuple<std::string, int> ConsumeUntilWhiteSpace(std::string_view s, int offset)
+    static std::tuple<std::string, int> ConsumeUntilWhiteSpace(std::string s, int offset)
     {
         int start { offset };
         while (offset < s.size() && !std::isspace(s[offset]) && s[offset] != ')') {
@@ -116,7 +116,7 @@ private:
 
 private:
     int offset_ { 0 };
-    std::string_view str_;
+    std::string str_;
 };
 
 } // namespace stream
@@ -134,9 +134,9 @@ public:
         return instance;
     }
 
-    static Int ToType(std::string_view type_name) { return Int(utils::StrToBytes(type_name)); }
+    static Int ToType(std::string type_name) { return Int(utils::StrToBytes(type_name)); }
 
-    void Add(std::string_view type_name) { types_.push_back(ToType(type_name)); }
+    void Add(std::string type_name) { types_.push_back(ToType(type_name)); }
 
     void AddTypes() { }
 
@@ -154,7 +154,7 @@ public:
         return i != std::end(types_);
     }
 
-    Int GetType(std::string_view type_name) const { return ToType(type_name); }
+    Int GetType(std::string type_name) const { return ToType(type_name); }
 
 private:
     std::vector<Int> types_;
@@ -251,7 +251,7 @@ CLVMObjectPtr ir_as_atom(CLVMObjectPtr ir_sexp)
     return Rest(ir_sexp);
 }
 
-CLVMObjectPtr ir_symbol(std::string_view symbol) { return ToSExpPair(SYMBOL, symbol); }
+CLVMObjectPtr ir_symbol(std::string symbol) { return ToSExpPair(SYMBOL, symbol); }
 
 boost::optional<std::string> ir_as_symbol(CLVMObjectPtr ir_sexp)
 {
@@ -299,7 +299,7 @@ std::tuple<std::string, int> next_cons_token(stream::TokenStream& stream)
     return std::make_tuple(token, offset);
 }
 
-CLVMObjectPtr tokenize_int(std::string_view token, int offset)
+CLVMObjectPtr tokenize_int(std::string token, int offset)
 {
     if (Int::IsValidNumberStr(token)) {
         return ir_new(INT, Int(token, 0), offset);
@@ -307,7 +307,7 @@ CLVMObjectPtr tokenize_int(std::string_view token, int offset)
     return {};
 }
 
-CLVMObjectPtr tokenize_hex(std::string_view token, int offset)
+CLVMObjectPtr tokenize_hex(std::string token, int offset)
 {
     if (utils::ToUpper(token.substr(0, 2)) == "0X") {
         std::string hex { token.substr(2) };
@@ -323,7 +323,7 @@ CLVMObjectPtr tokenize_hex(std::string_view token, int offset)
     return {};
 }
 
-CLVMObjectPtr tokenize_quotes(std::string_view token, int offset)
+CLVMObjectPtr tokenize_quotes(std::string token, int offset)
 {
     if (token.size() < 2) {
         return {};
@@ -336,11 +336,11 @@ CLVMObjectPtr tokenize_quotes(std::string_view token, int offset)
     return ir_new(q_type, token.substr(1, token.size() - 2), offset);
 }
 
-CLVMObjectPtr tokenize_symbol(std::string_view token, int offset) { return ir_new(SYMBOL, token, offset); }
+CLVMObjectPtr tokenize_symbol(std::string token, int offset) { return ir_new(SYMBOL, token, offset); }
 
-CLVMObjectPtr tokenize_sexp(std::string_view token, int offset, stream::TokenStream& stream);
+CLVMObjectPtr tokenize_sexp(std::string token, int offset, stream::TokenStream& stream);
 
-CLVMObjectPtr tokenize_cons(std::string_view token, int offset, stream::TokenStream& stream)
+CLVMObjectPtr tokenize_cons(std::string token, int offset, stream::TokenStream& stream)
 {
     if (token == ")") {
         return ir_new(NIL, MakeNull(), offset);
@@ -373,7 +373,7 @@ CLVMObjectPtr tokenize_cons(std::string_view token, int offset, stream::TokenStr
     return ir_cons(first_sexp, rest_sexp, initial_offset);
 }
 
-CLVMObjectPtr tokenize_sexp(std::string_view token, int offset, stream::TokenStream& stream)
+CLVMObjectPtr tokenize_sexp(std::string token, int offset, stream::TokenStream& stream)
 {
     if (token == "(") {
         std::string token;
@@ -432,7 +432,7 @@ CLVMObjectPtr assemble_from_ir(CLVMObjectPtr ir_sexp)
     return ToSExpPair(sexp_1, sexp_2);
 }
 
-CLVMObjectPtr read_ir(std::string_view str)
+CLVMObjectPtr read_ir(std::string str)
 {
     stream::TokenStream s(str);
     std::string token;
@@ -444,7 +444,7 @@ CLVMObjectPtr read_ir(std::string_view str)
     throw std::runtime_error("unexpected end of stream");
 }
 
-CLVMObjectPtr Assemble(std::string_view str)
+CLVMObjectPtr Assemble(std::string str)
 {
     auto symbols = read_ir(str);
     return assemble_from_ir(symbols);

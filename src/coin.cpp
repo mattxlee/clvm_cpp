@@ -265,9 +265,10 @@ SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPub
         }
         // Create signature
         auto pkm_pairs = pkm_pairs_for_conditions_dict(conditions_dict, coin_spend.coin.GetName(), additional_data);
-        for (std::pair<Bytes48, Bytes> const& p : pkm_pairs) {
-            Bytes48 const& pk_bytes = p.first;
-            Bytes const& msg = p.second;
+        for (std::tuple<Bytes48, Bytes> const& p : pkm_pairs) {
+            Bytes48 pk_bytes;
+            Bytes msg;
+            std::tie(pk_bytes, msg) = p;
             auto pk = bls::G1Element::FromBytes(bls::Bytes(pk_bytes.data(), pk_bytes.size()));
             pk_list.push_back(pk);
             auto secret_key = secret_key_for_public_key_f(pk);

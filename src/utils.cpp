@@ -9,7 +9,7 @@ namespace chia
 namespace utils
 {
 
-Bytes StrToBytes(std::string_view str)
+Bytes StrToBytes(std::string str)
 {
     Bytes b;
     b.resize(str.size());
@@ -42,7 +42,7 @@ std::string ByteToHex(uint8_t byte)
     return hex;
 }
 
-uint8_t ByteFromHex(std::string_view hex, int* consumed)
+uint8_t ByteFromHex(std::string hex, int* consumed)
 {
     if (hex.empty()) {
         if (consumed) {
@@ -72,7 +72,7 @@ std::string BytesToHex(Bytes const& bytes)
     return ss.str();
 }
 
-Bytes BytesFromHex(std::string_view hex)
+Bytes BytesFromHex(std::string hex)
 {
     Bytes res;
     int consumed;
@@ -104,7 +104,7 @@ std::string ArgsToStr(std::vector<Bytes> const& args)
     return ss.str();
 }
 
-std::string LoadHexFromFile(std::string_view file_path)
+std::string LoadHexFromFile(std::string file_path)
 {
     auto file_path_str = std::string(file_path);
     std::ifstream in(file_path_str);
@@ -163,7 +163,7 @@ Bytes RevertBytes(Bytes const& in)
     return b;
 }
 
-std::string ToUpper(std::string_view str)
+std::string ToUpper(std::string str)
 {
     std::string res;
     std::transform(std::begin(str), std::end(str), std::back_inserter(res), [](char ch) { return std::toupper(ch); });

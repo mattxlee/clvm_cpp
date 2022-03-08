@@ -13,7 +13,7 @@ bool is_valid_int_char(char ch) { return ch >= '0' && ch <= '9'; }
 
 bool is_valid_hex_char(char ch) { return ch >= 'a' && ch <= 'f' || ch >= 'A' && ch <= 'F'; }
 
-bool check_valid_hex_string(std::string_view s)
+bool check_valid_hex_string(std::string s)
 {
     if (s.empty()) {
         return false;
@@ -26,7 +26,7 @@ bool check_valid_hex_string(std::string_view s)
     return true;
 }
 
-bool check_valid_int_string(std::string_view s)
+bool check_valid_int_string(std::string s)
 {
     if (s.empty()) {
         return false;
@@ -39,7 +39,7 @@ bool check_valid_int_string(std::string_view s)
     return true;
 }
 
-bool check_valid_int(std::string_view s)
+bool check_valid_int(std::string s)
 {
     if (s.empty()) {
         return false;
@@ -59,7 +59,7 @@ bool check_valid_int(std::string_view s)
     return check_valid_int_string(s);
 }
 
-std::tuple<std::string, bool> strip_sign(std::string_view s)
+std::tuple<std::string, bool> strip_sign(std::string s)
 {
     if (s.empty()) {
         return std::make_tuple("", false);
@@ -76,7 +76,7 @@ struct Impl {
     mpz_class mpz;
 };
 
-bool Int::IsValidNumberStr(std::string_view s) { return check_valid_int(s); }
+bool Int::IsValidNumberStr(std::string s) { return check_valid_int(s); }
 
 std::unique_ptr<Impl> create_impl_from_mpz(mpz_class mpz) { return std::unique_ptr<Impl>(new Impl({ mpz })); }
 
@@ -89,7 +89,7 @@ Int::Int(Int const& rhs)
 {
 }
 
-Int::Int(std::string_view s, int base) { impl_.reset(new Impl { mpz_class(std::string(s), base) }); }
+Int::Int(std::string s, int base) { impl_.reset(new Impl { mpz_class(std::string(s), base) }); }
 
 Int::Int(Bytes const& s, bool neg)
 {
