@@ -28,6 +28,7 @@ endif()
 message(STATUS "Build type: ${BuildType}")
 
 set(ENABLE_BIP39_JNI OFF CACHE INTERNAL "")
+set(ENABLE_BIP39_C OFF CACHE INTERNAL "")
 
 FetchContent_Declare(
     bip3x
