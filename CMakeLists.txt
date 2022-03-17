@@ -7,10 +7,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0 -DDEBUG=1")
 
+option(ENABLE_TEST "compile test")
+
 set(CMAKE_POLICY_DEFAULT_CMP0127 NEW)
 
 find_package(OpenSSL REQUIRED)
-find_package(GTest CONFIG)
 find_package(Boost REQUIRED filesystem)
 
 find_library(gmp gmp)
@@ -110,7 +111,8 @@ install(FILES ${clvm_include_files} DESTINATION include/clvm_cpp)
 install(TARGETS clvm_cpp DESTINATION lib)
 
 # Test project
-if (GTest_FOUND)
+if (ENABLE_TEST)
+    find_package(GTest REQUIRED)
     enable_testing()
     set(test_clvm_src ${CMAKE_SOURCE_DIR}/tests/test_clvm.cpp)
     add_executable(test_clvm)
