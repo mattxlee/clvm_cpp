@@ -9,7 +9,7 @@
 #include <tuple>
 #include <vector>
 
-#include <chiabls/schemes.hpp>
+#include <schemes.hpp>
 
 #include "costs.h"
 #include "crypto_utils.h"

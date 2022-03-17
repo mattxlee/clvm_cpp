@@ -1,8 +1,7 @@
 #include "key.h"
 
-#include <chiabls/schemes.hpp>
-
-#include <chiabls/elements.hpp>
+#include <schemes.hpp>
+#include <elements.hpp>
 
 #include <map>
 
