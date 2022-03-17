@@ -64,6 +64,8 @@ set(utf8proc_SRC_DIR ${utf8proc_PREFIX}/src/utf8proc)
 
 include_directories(
     /usr/local/include
+    include
+    ${bip3x_SOURCE_DIR}/include
     ${OPENSSL_INCLUDE_DIR}
     ${utf8proc_SRC_DIR}
     )
@@ -71,31 +73,27 @@ include_directories(
 find_library(utf8proc utf8proc HINTS ${utf8proc_SRC_DIR})
 
 file(GLOB clvm_cpp_src
-    ${CMAKE_SOURCE_DIR}/src/types.cpp
-    ${CMAKE_SOURCE_DIR}/src/bech32.cpp
-    ${CMAKE_SOURCE_DIR}/src/crypto_utils.cpp
-    ${CMAKE_SOURCE_DIR}/src/key.cpp
-    ${CMAKE_SOURCE_DIR}/src/mnemonic.cpp
-    ${CMAKE_SOURCE_DIR}/src/program.cpp
-    ${CMAKE_SOURCE_DIR}/src/utils.cpp
-    ${CMAKE_SOURCE_DIR}/src/wallet.cpp
-    ${CMAKE_SOURCE_DIR}/src/operator_lookup.cpp
-    ${CMAKE_SOURCE_DIR}/src/core_opts.cpp
-    ${CMAKE_SOURCE_DIR}/src/more_opts.cpp
-    ${CMAKE_SOURCE_DIR}/src/int.cpp
-    ${CMAKE_SOURCE_DIR}/src/assemble.cpp
-    ${CMAKE_SOURCE_DIR}/src/coin.cpp
+    src/types.cpp
+    src/bech32.cpp
+    src/crypto_utils.cpp
+    src/key.cpp
+    src/mnemonic.cpp
+    src/program.cpp
+    src/utils.cpp
+    src/wallet.cpp
+    src/operator_lookup.cpp
+    src/core_opts.cpp
+    src/more_opts.cpp
+    src/int.cpp
+    src/assemble.cpp
+    src/coin.cpp
     )
 
 # Library clvm_cpp
-file(GLOB clvm_include_files ${CMAKE_SOURCE_DIR}/include/*)
+file(GLOB clvm_include_files include/*)
 add_library(clvm_cpp)
 add_dependencies(clvm_cpp utf8proc)
 target_sources(clvm_cpp PRIVATE ${clvm_cpp_src})
-target_include_directories(clvm_cpp PRIVATE
-    ${bip3x_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include
-    )
 target_link_libraries(clvm_cpp PRIVATE
     bip39
     bls
@@ -114,14 +112,10 @@ install(TARGETS clvm_cpp DESTINATION lib)
 if (ENABLE_TEST)
     find_package(GTest REQUIRED)
     enable_testing()
-    set(test_clvm_src ${CMAKE_SOURCE_DIR}/tests/test_clvm.cpp)
+    set(test_clvm_src tests/test_clvm.cpp)
     add_executable(test_clvm)
     add_dependencies(test_clvm utf8proc)
     target_sources(test_clvm PRIVATE ${test_clvm_src} ${clvm_cpp_src} ${bls_src})
-    target_include_directories(test_clvm PRIVATE
-        ${bip3x_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/include
-        )
     target_link_libraries(test_clvm PRIVATE
         bip39
         bls
