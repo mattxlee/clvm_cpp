@@ -33,6 +33,14 @@ public:
     /// Get `Key` object that is according the index
     Key GetKey(uint32_t index) const;
 
+    Key GetFarmerKey(uint32_t index) const;
+
+    Key GetPoolKey(uint32_t index) const;
+
+    Key GetLocalKey(uint32_t index) const;
+
+    Key GetBackupKey(uint32_t index) const;
+
     /// Get main-key which is generated directly from mnemonic
     Key GetMainKey() const;
 

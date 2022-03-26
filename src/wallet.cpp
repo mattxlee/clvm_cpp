@@ -35,6 +35,30 @@ Key Wallet::GetKey(uint32_t index) const
     return key.DerivePath({ 12381, 8444, 2, index });
 }
 
+Key Wallet::GetFarmerKey(uint32_t index) const
+{
+    Key key(mnemonic_, passphrase_);
+    return key.DerivePath({ 12381, 8444, 0, index });
+}
+
+Key Wallet::GetPoolKey(uint32_t index) const
+{
+    Key key(mnemonic_, passphrase_);
+    return key.DerivePath({ 12381, 8444, 1, index });
+}
+
+Key Wallet::GetLocalKey(uint32_t index) const
+{
+    Key key(mnemonic_, passphrase_);
+    return key.DerivePath({ 12381, 8444, 3, index });
+}
+
+Key Wallet::GetBackupKey(uint32_t index) const
+{
+    Key key(mnemonic_, passphrase_);
+    return key.DerivePath({ 12381, 8444, 4, index });
+}
+
 Key Wallet::GetMainKey() const { return Key(mnemonic_, passphrase_); }
 
 } // namespace wallet
