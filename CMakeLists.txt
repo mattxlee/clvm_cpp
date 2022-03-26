@@ -15,7 +15,7 @@ find_package(OpenSSL REQUIRED)
 find_package(Boost REQUIRED filesystem)
 
 find_library(gmp gmp)
-find_library(bls bls)
+
 find_library(relic_s relic_s)
 find_library(sodium sodium)
 
@@ -30,6 +30,10 @@ message(STATUS "Build type: ${BuildType}")
 
 set(ENABLE_BIP39_JNI OFF CACHE INTERNAL "")
 set(ENABLE_BIP39_C OFF CACHE INTERNAL "")
+
+set(BUILD_BLS_PYTHON_BINDINGS "0")
+set(BUILD_BLS_TESTS "0")
+set(BUILD_BLS_BENCHMARKS "0")
 
 FetchContent_Declare(
     bip3x
