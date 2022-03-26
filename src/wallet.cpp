@@ -9,6 +9,25 @@ namespace chia
 namespace wallet
 {
 
+Key Wallet::GetKey(Key const& master_sk, uint32_t index) { return master_sk.DerivePath({ 12381, 8444, 2, index }); }
+
+Key Wallet::GetFarmerKey(Key const& master_sk, uint32_t index)
+{
+    return master_sk.DerivePath({ 12381, 8444, 0, index });
+}
+
+Key Wallet::GetPoolKey(Key const& master_sk, uint32_t index) { return master_sk.DerivePath({ 12381, 8444, 1, index }); }
+
+Key Wallet::GetLocalKey(Key const& master_sk, uint32_t index)
+{
+    return master_sk.DerivePath({ 12381, 8444, 3, index });
+}
+
+Key Wallet::GetBackupKey(Key const& master_sk, uint32_t index)
+{
+    return master_sk.DerivePath({ 12381, 8444, 4, index });
+}
+
 Wallet::Wallet(std::string passphrase)
     : mnemonic_(Mnemonic::GenerateNew())
     , passphrase_(passphrase)
@@ -32,31 +51,31 @@ Address Wallet::GetAddress(int index) const { return GetKey(index).GetAddress();
 Key Wallet::GetKey(uint32_t index) const
 {
     Key key(mnemonic_, passphrase_);
-    return key.DerivePath({ 12381, 8444, 2, index });
+    return GetKey(key, index);
 }
 
 Key Wallet::GetFarmerKey(uint32_t index) const
 {
     Key key(mnemonic_, passphrase_);
-    return key.DerivePath({ 12381, 8444, 0, index });
+    return GetFarmerKey(key, index);
 }
 
 Key Wallet::GetPoolKey(uint32_t index) const
 {
     Key key(mnemonic_, passphrase_);
-    return key.DerivePath({ 12381, 8444, 1, index });
+    return GetPoolKey(key, index);
 }
 
 Key Wallet::GetLocalKey(uint32_t index) const
 {
     Key key(mnemonic_, passphrase_);
-    return key.DerivePath({ 12381, 8444, 3, index });
+    return GetLocalKey(key, index);
 }
 
 Key Wallet::GetBackupKey(uint32_t index) const
 {
     Key key(mnemonic_, passphrase_);
-    return key.DerivePath({ 12381, 8444, 4, index });
+    return GetBackupKey(key, index);
 }
 
 Key Wallet::GetMainKey() const { return Key(mnemonic_, passphrase_); }
