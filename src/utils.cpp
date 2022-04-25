@@ -133,7 +133,13 @@ Bytes SubBytes(Bytes const& bytes, int start, int count)
 {
     Bytes res;
     int i { 0 };
-    for (auto beg = std::begin(bytes) + start; beg != std::end(bytes) && i < count; ++beg, ++i) {
+    int n;
+    if (count == 0) {
+        n = bytes.size() - start;
+    } else {
+        n = count;
+    }
+    for (auto beg = std::begin(bytes) + start; beg != std::end(bytes) && i < n; ++beg, ++i) {
         res.push_back(*beg);
     }
     return res;
