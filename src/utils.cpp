@@ -131,17 +131,14 @@ Bytes ByteToBytes(uint8_t b)
 
 Bytes SubBytes(Bytes const& bytes, int start, int count)
 {
-    Bytes res;
-    int i { 0 };
     int n;
     if (count == 0) {
         n = bytes.size() - start;
     } else {
         n = count;
     }
-    for (auto beg = std::begin(bytes) + start; beg != std::end(bytes) && i < n; ++beg, ++i) {
-        res.push_back(*beg);
-    }
+    Bytes res(n);
+    memcpy(res.data(), bytes.data() + start, n);
     return res;
 }
 
