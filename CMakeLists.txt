@@ -31,9 +31,9 @@ message(STATUS "Build type: ${BuildType}")
 set(ENABLE_BIP39_JNI OFF CACHE INTERNAL "")
 set(ENABLE_BIP39_C OFF CACHE INTERNAL "")
 
-set(BUILD_BLS_PYTHON_BINDINGS "0")
-set(BUILD_BLS_TESTS "0")
-set(BUILD_BLS_BENCHMARKS "0")
+set(BUILD_BLS_PYTHON_BINDINGS "0" CACHE STRING "disable bls python bindings")
+set(BUILD_BLS_TESTS "0" CACHE STRING "disable bls tests")
+set(BUILD_BLS_BENCHMARKS "0" CACHE STRING "disable bls benchmarks")
 
 FetchContent_Declare(
     bip3x
@@ -95,7 +95,7 @@ file(GLOB clvm_cpp_src
 
 # Library clvm_cpp
 file(GLOB clvm_include_files include/*)
-add_library(clvm_cpp)
+add_library(clvm_cpp STATIC)
 add_dependencies(clvm_cpp utf8proc)
 target_sources(clvm_cpp PRIVATE ${clvm_cpp_src})
 target_link_libraries(clvm_cpp PRIVATE
