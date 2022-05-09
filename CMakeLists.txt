@@ -114,7 +114,7 @@ install(TARGETS clvm_cpp DESTINATION lib)
 
 # Test project
 if (ENABLE_TEST)
-    find_package(GTest REQUIRED)
+    find_package(GTest CONFIG REQUIRED)
     enable_testing()
     set(test_clvm_src tests/test_clvm.cpp)
     add_executable(test_clvm)
@@ -129,6 +129,7 @@ if (ENABLE_TEST)
         ${sodium}
         ${gmp}
         ${utf8proc}
+        GTest::gtest
         GTest::gtest_main
         Boost::filesystem
         )
