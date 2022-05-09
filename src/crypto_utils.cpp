@@ -7,7 +7,9 @@ namespace crypto_utils
 
 void _C(int ret)
 {
-    // TODO throw error when an error occurs from inside the calculation
+    if (ret == 0) {
+        throw std::runtime_error("error occurs when calling EVP functions");
+    }
 }
 
 SHA256::SHA256()
@@ -15,6 +17,8 @@ SHA256::SHA256()
 {
     _C(EVP_DigestInit(ctx_, EVP_sha256()));
 }
+
+SHA256::~SHA256() { EVP_MD_CTX_destroy(ctx_); }
 
 void SHA256::Add(Bytes const& bytes) { _C(EVP_DigestUpdate(ctx_, bytes.data(), bytes.size())); }
 

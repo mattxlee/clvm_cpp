@@ -31,10 +31,12 @@ bip3x::Bip39Mnemonic::MnemonicResult WordsToMnemonicResult(Mnemonic::Words const
     return bip3x::Bip39Mnemonic::encodeBytes(bytes.data(), lang.data());
 }
 
-std::string NormalizeString(std::string str)
+std::string NormalizeString(std::string const& str)
 {
-    auto sz = reinterpret_cast<char const*>(utf8proc_NFKD(reinterpret_cast<uint8_t const*>(str.data())));
-    return sz;
+    uint8_t* chars = utf8proc_NFKD(reinterpret_cast<uint8_t const*>(str.data()));
+    std::string res(reinterpret_cast<char const*>(chars));
+    free(chars);
+    return res;
 }
 
 } // namespace utils

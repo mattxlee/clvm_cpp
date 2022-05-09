@@ -16,6 +16,8 @@ class SHA256
 public:
     SHA256();
 
+    ~SHA256();
+
     void Add(Bytes const& bytes);
 
     Bytes32 Finish();
