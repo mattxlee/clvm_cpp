@@ -1,4 +1,5 @@
-build
-.cache
-.vscode
+build/
+.cache/
+.vscode/
+.ccls-cache/
 compile_flags.txt
