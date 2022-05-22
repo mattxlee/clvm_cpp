@@ -1,5 +1,7 @@
 #include "crypto_utils.h"
 
+#include <stdexcept>
+
 namespace chia
 {
 namespace crypto_utils

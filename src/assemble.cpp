@@ -2,6 +2,7 @@
 
 #include <string>
 #include <tuple>
+#include <algorithm>
 
 #include <boost/optional.hpp>
 
