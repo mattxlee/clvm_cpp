@@ -49,32 +49,14 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(bip3x bls)
 
-set(utf8proc_PREFIX ${CMAKE_BINARY_DIR}/third-party/utf8proc)
-
-include(ExternalProject)
-find_program(MAKE_EXE NAMES make)
-
-ExternalProject_Add(utf8proc
-    PREFIX              ${utf8proc_PREFIX}
-    URL                 https://github.com/JuliaStrings/utf8proc/archive/refs/tags/v2.7.0.tar.gz
-    URL_HASH            SHA256=4bb121e297293c0fd55f08f83afab6d35d48f0af4ecc07523ad8ec99aa2b12a1
-    CONFIGURE_COMMAND   ""
-    BUILD_IN_SOURCE     1
-    BUILD_COMMAND       ${MAKE_EXE}
-    INSTALL_COMMAND     ""
-    )
-
-set(utf8proc_SRC_DIR ${utf8proc_PREFIX}/src/utf8proc)
+find_package(unofficial-utf8proc CONFIG REQUIRED)
 
 include_directories(
     /usr/local/include
     include
     ${bip3x_SOURCE_DIR}/include
     ${OPENSSL_INCLUDE_DIR}
-    ${utf8proc_SRC_DIR}
     )
-
-find_library(utf8proc utf8proc HINTS ${utf8proc_SRC_DIR})
 
 file(GLOB clvm_cpp_src
     src/types.cpp
@@ -96,7 +78,6 @@ file(GLOB clvm_cpp_src
 # Library clvm_cpp
 file(GLOB clvm_include_files include/*)
 add_library(clvm_cpp STATIC)
-add_dependencies(clvm_cpp utf8proc)
 target_sources(clvm_cpp PRIVATE ${clvm_cpp_src})
 target_link_libraries(clvm_cpp PRIVATE
     bip39
@@ -106,7 +87,7 @@ target_link_libraries(clvm_cpp PRIVATE
     OpenSSL::Crypto
     unofficial-sodium:sodium
     ${gmp}
-    ${utf8proc}
+    utf8proc
     Boost::filesystem
     )
 install(FILES ${clvm_include_files} DESTINATION include/clvm_cpp)
@@ -118,7 +99,6 @@ if (ENABLE_TEST)
     enable_testing()
     set(test_clvm_src tests/test_clvm.cpp)
     add_executable(test_clvm)
-    add_dependencies(test_clvm utf8proc)
     target_sources(test_clvm PRIVATE ${test_clvm_src} ${clvm_cpp_src} ${bls_src})
     target_link_libraries(test_clvm PRIVATE
         bip39
