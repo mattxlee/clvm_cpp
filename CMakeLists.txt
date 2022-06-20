@@ -17,7 +17,7 @@ find_package(Boost REQUIRED filesystem)
 find_library(gmp gmp)
 
 find_library(relic_s relic_s)
-find_library(sodium sodium)
+find_package(unofficial-sodium CONFIG REQUIRED)
 
 include(FetchContent)
 
@@ -104,7 +104,7 @@ target_link_libraries(clvm_cpp PRIVATE
     relic_s
     OpenSSL::SSL
     OpenSSL::Crypto
-    ${sodium}
+    unofficial-sodium:sodium
     ${gmp}
     ${utf8proc}
     Boost::filesystem
@@ -126,7 +126,7 @@ if (ENABLE_TEST)
         relic_s
         OpenSSL::SSL
         OpenSSL::Crypto
-        ${sodium}
+        unofficial-sodium:sodium
         ${gmp}
         ${utf8proc}
         GTest::gtest
