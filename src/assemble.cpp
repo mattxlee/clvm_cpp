@@ -1,5 +1,7 @@
 #include "assemble.h"
 
+#include <cctype>
+
 #include <string>
 #include <tuple>
 #include <algorithm>
