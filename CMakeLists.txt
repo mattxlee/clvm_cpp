@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.4)
 
 project(clvm_cpp)
 
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
+
+include(${CMAKE_BINARY_DIR}/conan_paths.cmake)
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 
@@ -17,7 +22,7 @@ find_package(Boost REQUIRED filesystem)
 find_library(gmp gmp)
 
 find_library(relic_s relic_s)
-find_package(unofficial-sodium CONFIG REQUIRED)
+find_package(libsodium REQUIRED)
 
 include(FetchContent)
 
@@ -49,7 +54,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(bip3x bls)
 
-find_package(unofficial-utf8proc CONFIG REQUIRED)
+find_package(utf8proc REQUIRED)
 
 include_directories(
     /usr/local/include
@@ -85,7 +90,7 @@ target_link_libraries(clvm_cpp PRIVATE
     relic_s
     OpenSSL::SSL
     OpenSSL::Crypto
-    unofficial-sodium:sodium
+    libsodium:sodium
     ${gmp}
     utf8proc
     Boost::filesystem
@@ -106,7 +111,7 @@ if (ENABLE_TEST)
         relic_s
         OpenSSL::SSL
         OpenSSL::Crypto
-        unofficial-sodium:sodium
+        libsodium:sodium
         ${gmp}
         ${utf8proc}
         GTest::gtest
