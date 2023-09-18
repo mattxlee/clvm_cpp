@@ -4,25 +4,23 @@
 
 ### Tools to be installed before compiling the source
 
-* Conan
-
-* CMake version 3.1 or higher
-
-### Libraries should be installed before the compiling
-
-* OpenSSL - Install OpenSSL by using the package manager on your system.
-
-* GMP - Install GMP manually with `./configure --enable-cxx`.
-
-### Prepare
-
-* Create the build dir under the project root `mkdir build`.
-
-* Switch into the build dir and run command `cmake .. -DCMAKE_BUILD_TYPE=Debug`.
+* CMake version 3.5 or higher
 
 ### Build
 
-* Run command `make` under the build dir.
+This library uses Vcpkg to manage all external libraries. Vcpkg is added as a submodule into current repository. You need to initialize it before the compiling procedure.
+
+Following the steps to initialize the repo.
+
+```bash
+git clone https://github.com/mattxlee/clvm_cpp && cd clvm_cpp && git submodule update --init && cd vcpkg && ./bootstrap-vcpkg.sh
+```
+
+After the initialization of Vcpkg, initialize make script and start the building procedure.
+
+```bash
+cd .. && mkdir build && cd build && cmake .. -DBUILD_TEST=1 && make
+```
 
 ## Test cases
 
