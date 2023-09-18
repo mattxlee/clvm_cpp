@@ -5,12 +5,13 @@
 
 #include <map>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
+namespace fs = std::filesystem;
 
-namespace fs = boost::filesystem;
+#include <mnemonic.h>
+#include <toolbox.h>
 
 #include "bech32.h"
-#include "mnemonic.h"
 #include "program.h"
 #include "utils.h"
 
@@ -64,10 +65,11 @@ Key::Key(PrivateKey priv_key)
 {
 }
 
-Key::Key(Mnemonic const& mnemonic, std::string passphrase)
+Key::Key(bip39::Mnemonic const& mnemonic, std::string passphrase)
 {
-    Bytes64 seed = mnemonic.GetSeed(passphrase);
-    priv_key_ = utils::bytes_cast<PRIV_KEY_LEN>(bls::AugSchemeMPL().KeyGen(utils::bytes_cast<64>(seed)).Serialize());
+    auto seed = mnemonic.CreateSeed(passphrase);
+    auto seed_bytes = utils::BytesToHex(seed);
+    priv_key_ = utils::bytes_cast<PRIV_KEY_LEN>(bls::AugSchemeMPL().KeyGen(seed).Serialize());
 }
 
 bool Key::IsEmpty() const { return priv_key_.empty(); }

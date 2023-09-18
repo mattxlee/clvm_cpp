@@ -3,14 +3,14 @@
 
 #include <string>
 
+#include <mnemonic.h>
+
 #include "types.h"
 
 namespace chia
 {
 namespace wallet
 {
-
-class Mnemonic;
 
 class PubKey
 {
@@ -49,7 +49,7 @@ public:
     explicit Key(PrivateKey priv_key);
 
     /// Create a new key will be generated from the mnemonic
-    Key(Mnemonic const& mnemonic, std::string passphrase);
+    Key(bip39::Mnemonic const& mnemonic, std::string passphrase);
 
     /// Return `true` when the key is empty
     bool IsEmpty() const;

@@ -5,8 +5,7 @@
 #include <string>
 #include <tuple>
 #include <algorithm>
-
-#include <boost/optional.hpp>
+#include <optional>
 
 #include "operator_lookup.h"
 #include "program.h"
@@ -167,7 +166,7 @@ private:
 
 CLVMObjectPtr ir_as_atom(CLVMObjectPtr ir_sexp);
 
-template <typename Type, typename Val> CLVMObjectPtr ir_new(Type&& type, Val&& val, boost::optional<int> offset = {})
+template <typename Type, typename Val> CLVMObjectPtr ir_new(Type&& type, Val&& val, std::optional<int> offset = {})
 {
     CLVMObjectPtr first;
     if (offset) {
@@ -178,7 +177,7 @@ template <typename Type, typename Val> CLVMObjectPtr ir_new(Type&& type, Val&& v
     return ToSExpPair(first, std::forward<Val>(val));
 }
 
-CLVMObjectPtr ir_cons(CLVMObjectPtr first, CLVMObjectPtr rest, boost::optional<int> offset)
+CLVMObjectPtr ir_cons(CLVMObjectPtr first, CLVMObjectPtr rest, std::optional<int> offset)
 {
     if (!first) {
         throw std::runtime_error("cons null on first place");
@@ -256,7 +255,7 @@ CLVMObjectPtr ir_as_atom(CLVMObjectPtr ir_sexp)
 
 CLVMObjectPtr ir_symbol(std::string symbol) { return ToSExpPair(SYMBOL, symbol); }
 
-boost::optional<std::string> ir_as_symbol(CLVMObjectPtr ir_sexp)
+std::optional<std::string> ir_as_symbol(CLVMObjectPtr ir_sexp)
 {
     if (ListP(ir_sexp) && ir_type(ir_sexp) == SYMBOL) {
         auto atom = std::static_pointer_cast<CLVMObject_Atom>(ir_as_sexp(ir_sexp));

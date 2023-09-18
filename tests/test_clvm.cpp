@@ -1,12 +1,14 @@
 #include <fstream>
 #include <string>
 
+#include <mnemonic.h>
+#include <toolbox.h>
+
 #include "gtest/gtest.h"
 
 #include "assemble.h"
 #include "int.h"
 #include "key.h"
-#include "mnemonic.h"
 #include "operator_lookup.h"
 #include "program.h"
 #include "types.h"
@@ -146,17 +148,6 @@ TEST(CLVM, OperatorLookup)
     chia::OperatorLookup ol;
     EXPECT_EQ(ol.KeywordToAtom("q"), 0x01);
     EXPECT_EQ(ol.KeywordToAtom("add"), 0x10);
-}
-
-TEST(CLVM_Mnemonic, WordsList)
-{
-    auto words = chia::wallet::Mnemonic::StringToWords("hello world");
-    EXPECT_EQ(words.size(), 2);
-    EXPECT_EQ(words[0], "hello");
-    EXPECT_EQ(words[1], "world");
-
-    std::string str = chia::wallet::Mnemonic::WordsToString(words);
-    EXPECT_EQ(str, "hello world");
 }
 
 int calculate_number(std::string s)
@@ -410,9 +401,10 @@ TEST(CLVM_RunProgram, Env_ThroughInt_Complex6)
 
 TEST(CLVM_Key, Verify)
 {
-    chia::wallet::Mnemonic mnemonic("return village first merit biology slim leaf assume link physical silk "
-                                    "identify material peanut keen settle logic absorb better famous exit "
-                                    "glove tower inhale");
+    auto word_list = bip39::ParseWords("return village first merit biology slim leaf assume link physical silk identify material peanut keen settle logic absorb better famous exit glove tower inhale");
+    EXPECT_EQ(word_list.size(), 24);
+
+    bip39::Mnemonic mnemonic(word_list, "english");
 
     chia::wallet::Wallet wallet(mnemonic, "");
     chia::wallet::Key key = wallet.GetMainKey();

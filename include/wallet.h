@@ -3,8 +3,9 @@
 
 #include <string>
 
+#include <mnemonic.h>
+
 #include "key.h"
-#include "mnemonic.h"
 #include "types.h"
 
 namespace chia
@@ -29,13 +30,13 @@ public:
     explicit Wallet(std::string passphrase);
 
     /// Create a wallet object by importing a mnemonic
-    Wallet(Mnemonic mnemonic, std::string passphrase);
+    Wallet(bip39::Mnemonic mnemonic, std::string passphrase);
 
     /// Create a wallet object from a passphrase words
     Wallet(std::string words, std::string passphrase);
 
     /// Get mnemonic object
-    Mnemonic const& GetMnemonic() const { return mnemonic_; }
+    bip39::Mnemonic const& GetMnemonic() const { return mnemonic_; }
 
     /// Get address by index
     Address GetAddress(int index) const;
@@ -55,7 +56,7 @@ public:
     Key GetMainKey() const;
 
 private:
-    Mnemonic mnemonic_;
+    bip39::Mnemonic mnemonic_;
     std::string passphrase_;
 };
 

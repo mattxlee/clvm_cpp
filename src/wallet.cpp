@@ -1,5 +1,8 @@
 #include "wallet.h"
 
+#include <random.h>
+#include <toolbox.h>
+
 #include "bech32.h"
 #include "program.h"
 #include "utils.h"
@@ -29,19 +32,19 @@ Key Wallet::GetBackupKey(Key const& master_sk, uint32_t index)
 }
 
 Wallet::Wallet(std::string passphrase)
-    : mnemonic_(Mnemonic::GenerateNew())
+    : mnemonic_(bip39::Mnemonic(bip39::RandomBytes(32).Random(), "english"))
     , passphrase_(passphrase)
 {
 }
 
-Wallet::Wallet(Mnemonic mnemonic, std::string passphrase)
+Wallet::Wallet(bip39::Mnemonic mnemonic, std::string passphrase)
     : mnemonic_(std::move(mnemonic))
     , passphrase_(passphrase)
 {
 }
 
 Wallet::Wallet(std::string words, std::string passphrase)
-    : mnemonic_(words)
+    : mnemonic_(bip39::ParseWords(words), "english")
     , passphrase_(passphrase)
 {
 }

@@ -3,3 +3,4 @@ build/
 .vscode/
 .ccls-cache/
 compile_flags.txt
+vcpkg_installed/
