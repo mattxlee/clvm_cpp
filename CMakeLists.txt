@@ -82,10 +82,7 @@ if (BUILD_TEST)
     target_include_directories(test_clvm PRIVATE ${bip39_cpp_SOURCE_DIR}/include)
     target_link_libraries(test_clvm PRIVATE
         bls
-        OpenSSL::SSL
-        OpenSSL::Crypto
-        utf8proc
-        bip39_cpp
+        clvm_cpp
         GTest::gtest
         GTest::gtest_main
     )
