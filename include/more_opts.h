@@ -3,7 +3,6 @@
 
 #include "core_opts.h"
 #include "program.h"
-#include "types.h"
 
 namespace chia
 {

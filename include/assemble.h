@@ -4,7 +4,6 @@
 #include <string>
 
 #include "program.h"
-#include "types.h"
 
 namespace chia
 {

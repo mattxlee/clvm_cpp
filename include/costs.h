@@ -1,6 +1,8 @@
 #ifndef CHIA_COSTS_H
 #define CHIA_COSTS_H
 
+#include <cstdint>
+
 namespace chia
 {
 

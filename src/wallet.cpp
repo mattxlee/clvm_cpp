@@ -3,10 +3,6 @@
 #include <random.h>
 #include <toolbox.h>
 
-#include "bech32.h"
-#include "program.h"
-#include "utils.h"
-
 namespace chia
 {
 namespace wallet

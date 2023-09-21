@@ -13,7 +13,8 @@
 
 #include "costs.h"
 #include "crypto_utils.h"
-#include "wallet.h"
+#include "utils.h"
+#include "key.h"
 
 namespace chia
 {

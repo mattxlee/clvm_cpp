@@ -9,7 +9,6 @@
 
 #include "int.h"
 #include "types.h"
-#include "utils.h"
 
 namespace chia
 {

@@ -11,7 +11,6 @@
 #include "key.h"
 #include "operator_lookup.h"
 #include "utils.h"
-#include "wallet.h"
 
 namespace chia
 {

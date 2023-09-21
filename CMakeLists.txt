@@ -41,7 +41,6 @@ include_directories(
 )
 
 file(GLOB clvm_cpp_src
-    src/types.cpp
     src/bech32.cpp
     src/crypto_utils.cpp
     src/key.cpp
