@@ -3,6 +3,7 @@
         "utf8proc",
         "openssl",
         "gmp",
-        "gtest"
+        "gtest",
+        "cxxopts"
     ]
 }

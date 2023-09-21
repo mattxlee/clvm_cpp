@@ -8,6 +8,7 @@ project(clvm_cpp)
 set(CMAKE_CXX_STANDARD 17)
 
 option(BUILD_TEST "Generate test binaries" OFF)
+option(BUILD_TOOL "Generate tool binary file" OFF)
 
 find_package(OpenSSL REQUIRED)
 find_package(unofficial-utf8proc CONFIG REQUIRED)
@@ -87,4 +88,12 @@ if (BUILD_TEST)
         GTest::gtest_main
     )
     add_test(NAME test_clvm COMMAND test_clvm)
+endif()
+
+# Tool binary
+if(BUILD_TOOL)
+    find_package(cxxopts CONFIG REQUIRED)
+    file(GLOB chiatool_srcs ${CMAKE_CURRENT_SOURCE_DIR}/tool/*.cpp)
+    add_executable(chiatool ${chiatool_srcs})
+    target_link_libraries(chiatool PRIVATE cxxopts::cxxopts clvm_cpp)
 endif()
