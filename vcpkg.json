@@ -4,6 +4,7 @@
         "openssl",
         "gmp",
         "gtest",
-        "cxxopts"
+        "cxxopts",
+        "jsoncpp"
     ]
 }

@@ -28,7 +28,7 @@ Key Wallet::GetBackupKey(Key const& master_sk, uint32_t index)
 }
 
 Wallet::Wallet(std::string passphrase)
-    : mnemonic_(bip39::Mnemonic(bip39::RandomBytes(32).Random(), "english"))
+    : mnemonic_(bip39::Mnemonic(bip39::RandomBytes(32).Random()))
     , passphrase_(passphrase)
 {
 }

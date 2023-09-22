@@ -1,16 +1,31 @@
 #include <iostream>
 
+#include <fstream>
+#include <sstream>
+
 #include <string>
 #include <string_view>
 
 #include <vector>
 #include <map>
+#include <memory>
+
+#include <filesystem>
+namespace fs = std::filesystem;
 
 #include <cxxopts.hpp>
+
+#include <json/json.h>
+
+#include <mnemonic.h>
+#include <random.h>
+#include <toolbox.h>
 
 struct Args {
     bool wallet_new;
     std::string wallet_path;
+    int wallet_num_sentences;
+    bool wallet_overwrite;
 };
 
 class AbstractCommandHandler {
@@ -54,21 +69,133 @@ private:
     std::map<std::string, std::unique_ptr<AbstractCommandHandler>> handlers_;
 };
 
+namespace utils {
+
+std::string ReadFromFile(std::string_view filepath)
+{
+    std::ifstream in(filepath);
+    if (!in.is_open()) {
+        throw std::runtime_error("Cannot open file to read");
+    }
+    in.seekg(0, std::ios::end);
+    auto len = in.tellg();
+    in.seekg(0, std::ios::beg);
+    auto p = std::shared_ptr<char>(new char[len], [](char* p) {
+        delete[] p;
+    });
+    in.read(p.get(), len);
+    return std::string(p.get(), p.get() + len);
+}
+
+void WriteToFile(std::string_view filepath, std::string_view data)
+{
+    std::ofstream out(filepath);
+    if (!out.is_open()) {
+        throw std::runtime_error("Cannot open file to write");
+    }
+    out.write(data.data(), data.size());
+}
+
+};
+
+class WalletFile {
+public:
+    explicit WalletFile(std::string filepath)
+        : filepath_(std::move(filepath))
+    {
+    }
+
+    ~WalletFile()
+    {
+    }
+
+    void ReadFromFile()
+    {
+        FromJsonString(utils::ReadFromFile(filepath_));
+    }
+
+    void WriteToFile(std::string const& lang)
+    {
+        utils::WriteToFile(filepath_, ToJsonString(lang));
+    }
+
+    std::string ToJsonString(std::string const& lang) const
+    {
+        Json::Value value;
+        if (mnemonic_) {
+            value["mnemonic"] = GetMnemonicSentences();
+            value["n"] = static_cast<Json::UInt64>(mnemonic_->GetWordList(lang).size());
+        }
+        return value.toStyledString();
+    }
+
+    void FromJsonString(std::string_view str)
+    {
+        Json::CharReaderBuilder builder;
+        std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+        Json::Value value;
+        std::string errs;
+        if (!reader->parse(std::cbegin(str), std::cend(str), &value, &errs)) {
+            throw std::runtime_error("Cannot parse the string into json");
+        }
+        if (!value.isMember("mnemonic")) {
+            throw std::runtime_error("Field `mnemonic` is required from `wallet.json`");
+        }
+        SetMnemonicSentences(value["mnemonic"].asString(), "english");
+    }
+
+    void GenerateNew(int num_sentences, std::string_view lang = "english")
+    {
+        if (!bip39::Mnemonic::IsValidNumMnemonicSentences(num_sentences)) {
+            throw std::runtime_error("Invalid number of sentences");
+        }
+        int num_bytes = bip39::Mnemonic::GetEntBitsByNumMnemonicSentences(num_sentences) / 8;
+        bip39::RandomBytes r(num_bytes);
+        mnemonic_ = std::make_unique<bip39::Mnemonic>(r.Random());
+    }
+
+    void SetMnemonicSentences(std::string sentences, std::string_view lang = "english")
+    {
+        mnemonic_ = std::make_unique<bip39::Mnemonic>(bip39::ParseWords(sentences, bip39::GetDelimiterByLang(lang)), std::string(lang));
+    }
+
+    std::string GetMnemonicSentences(std::string_view lang = "english") const
+    {
+        if (mnemonic_ == nullptr) {
+            throw std::runtime_error("Wallet has no secret key generated, mnemonic sentences won't be returned");
+        }
+        return bip39::GenerateWords(mnemonic_->GetWordList(std::string(lang)), bip39::GetDelimiterByLang(lang));
+    }
+
+private:
+    std::string filepath_;
+    std::unique_ptr<bip39::Mnemonic> mnemonic_;
+};
+
 class CommandHandler_Wallet : public AbstractCommandHandler {
 public:
     Args ParseArgs(cxxopts::ParseResult const& result) const override
     {
         Args args;
         args.wallet_new = result.count("new") > 0;
-        if (result.count("path") == 0) {
-            throw std::runtime_error("arg `path` is required");
-        }
         args.wallet_path = result["path"].as<std::string>();
+        args.wallet_num_sentences = result["num-sentences"].as<int>();
+        args.wallet_overwrite = result.count("overwrite");
         return args;
     }
 
     virtual int Run(Args const& args) const override
     {
+        WalletFile wallet_file(args.wallet_path);
+        if (args.wallet_new) {
+            if (fs::is_regular_file(args.wallet_path) && fs::exists(args.wallet_path) && !args.wallet_overwrite) {
+                throw std::runtime_error("To generate a new wallet, please ensure the output file doesn't exist");
+            }
+            wallet_file.GenerateNew(args.wallet_num_sentences);
+            wallet_file.WriteToFile("english");
+        } else {
+            wallet_file.ReadFromFile();
+        }
         return 0;
     }
 };
@@ -93,6 +220,8 @@ int main(int argc, char const* argv[])
     opts.add_options("wallet")
         ("new", "Generate a new mnemonic sentences")
         ("path", "The wallet file path content type is json", cxxopts::value<std::string>()->default_value("./wallet.json"))
+        ("overwrite", "Only work with `--new` overwrite the existing wallet file when it already exists")
+        ("num-sentences,n", "The number of sentences", cxxopts::value<int>()->default_value("24"))
         ;
     opts.parse_positional("command");
     cxxopts::ParseResult result = opts.parse(argc, argv);
