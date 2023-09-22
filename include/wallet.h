@@ -39,7 +39,7 @@ public:
     bip39::Mnemonic const& GetMnemonic() const { return mnemonic_; }
 
     /// Get address by index
-    Address GetAddress(int index) const;
+    Address GetAddress(int index, bool testnet = false) const;
 
     /// Get `Key` object that is according the index
     Key GetKey(uint32_t index) const;

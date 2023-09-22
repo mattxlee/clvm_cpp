@@ -226,10 +226,10 @@ Program puzzle_for_pk(PublicKey const& public_key)
 
 } // namespace puzzle
 
-Address Key::GetAddress() const
+Address Key::GetAddress(std::string_view prefix) const
 {
     auto puzzle_hash = puzzle::puzzle_for_pk(GetPublicKey()).GetTreeHash();
-    return bech32::Encode("xch", bech32::ConvertBits(utils::BytesToInts(utils::bytes_cast<32>(puzzle_hash)), 8, 5));
+    return bech32::Encode(prefix.data(), bech32::ConvertBits(utils::BytesToInts(utils::bytes_cast<32>(puzzle_hash)), 8, 5));
 }
 
 } // namespace wallet

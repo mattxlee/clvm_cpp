@@ -45,7 +45,7 @@ Wallet::Wallet(std::string words, std::string passphrase)
 {
 }
 
-Address Wallet::GetAddress(int index) const { return GetKey(index).GetAddress(); }
+Address Wallet::GetAddress(int index, bool testnet) const { return GetKey(index).GetAddress(testnet ? "txch" : "xch"); }
 
 Key Wallet::GetKey(uint32_t index) const
 {

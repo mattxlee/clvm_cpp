@@ -2,6 +2,7 @@
 #define CHIA_KEY_H
 
 #include <string>
+#include <string_view>
 
 #include <mnemonic.h>
 
@@ -70,7 +71,7 @@ public:
     Key DerivePath(std::vector<uint32_t> const& paths) const;
 
     /// Calculate the address from public key
-    Address GetAddress() const;
+    Address GetAddress(std::string_view prefix = "xch") const;
 
 private:
     PrivateKey priv_key_;
