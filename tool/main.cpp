@@ -228,8 +228,8 @@ int main(int argc, char const* argv[])
     opts.add_options("wallet")
         ("new", "Generate a new mnemonic sentences")
         ("path", "The wallet file path content type is json", cxxopts::value<std::string>()->default_value("./wallet.json"))
-        ("overwrite", "Only work with `--new` overwrite the existing wallet file when it already exists")
-        ("num-sentences,n", "The number of sentences", cxxopts::value<int>()->default_value("24"))
+        ("overwrite", "Only work with `--new` overwrite the existing wallet file when it already exists, otherwise the argument will be ignored")
+        ("num-sentences,n", "The number of sentences for generating new wallet, (valid numbers: 12, 15, 18, 21, 24)", cxxopts::value<int>()->default_value("24"))
         ;
     opts.parse_positional("command");
     cxxopts::ParseResult result = opts.parse(argc, argv);
