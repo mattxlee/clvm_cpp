@@ -25,10 +25,13 @@ namespace fs = std::filesystem;
 #include "wallet.h"
 
 struct Args {
+    // wallet
     bool wallet_new;
     std::string wallet_path;
     int wallet_num_sentences;
     bool wallet_overwrite;
+    // query
+    std::string query_address;
 };
 
 class AbstractCommandHandler {
@@ -192,7 +195,7 @@ public:
         return args;
     }
 
-    virtual int Run(Args const& args) const override
+    int Run(Args const& args) const override
     {
         WalletFile wallet_file(args.wallet_path);
         if (args.wallet_new) {
@@ -208,17 +211,35 @@ public:
     }
 };
 
+class CommandHandler_Query : public AbstractCommandHandler {
+public:
+    Args ParseArgs(cxxopts::ParseResult const& result) const override
+    {
+        Args args;
+        args.query_address = result["address"].as<std::string>();
+        return args;
+    }
+
+    int Run(Args const& args) const override
+    {
+        // TODO invoke RPC command from chia full node, query the balance for provided address
+        return 0;
+    }
+};
+
 int main(int argc, char const* argv[])
 {
     CommandExecutor cmd_exec;
     cmd_exec.RegisterCommand<CommandHandler_Wallet>("wallet");
+    cmd_exec.RegisterCommand<CommandHandler_Query>("query");
 
     auto cmd_names = cmd_exec.GetRegisteredCommands();
     std::stringstream ss_cmd_names;
-    ss_cmd_names << "chiatool <command> [arguments...], main command name (available commands: " << cmd_names.front() << ")";
+    ss_cmd_names << "chiatool <command> [arguments...], main command name (available commands: " << cmd_names.front();
     for (auto i = std::cbegin(cmd_names) + 1; i != cend(cmd_names); ++i) {
         ss_cmd_names << ", " << *i;
     }
+    ss_cmd_names << ")";
 
     cxxopts::Options opts("Chia tool", "Chia tool to work with generating account, making signature");
     opts.add_options()
@@ -230,6 +251,9 @@ int main(int argc, char const* argv[])
         ("path", "The wallet file path content type is json", cxxopts::value<std::string>()->default_value("./wallet.json"))
         ("overwrite", "Only work with `--new` overwrite the existing wallet file when it already exists, otherwise the argument will be ignored")
         ("num-sentences,n", "The number of sentences for generating new wallet, (valid numbers: 12, 15, 18, 21, 24)", cxxopts::value<int>()->default_value("24"))
+        ;
+    opts.add_options("query")
+        ("address", "Query balance of the address", cxxopts::value<std::string>())
         ;
     opts.parse_positional("command");
     cxxopts::ParseResult result = opts.parse(argc, argv);
