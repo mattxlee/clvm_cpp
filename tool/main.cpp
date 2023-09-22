@@ -21,6 +21,9 @@ namespace fs = std::filesystem;
 #include <random.h>
 #include <toolbox.h>
 
+#include "utils.h"
+#include "wallet.h"
+
 struct Args {
     bool wallet_new;
     std::string wallet_path;
@@ -125,6 +128,11 @@ public:
         if (mnemonic_) {
             value["mnemonic"] = GetMnemonicSentences();
             value["n"] = static_cast<Json::UInt64>(mnemonic_->GetWordList(lang).size());
+            value["entropy"] = chia::utils::BytesToHex(mnemonic_->GetEntropyData());
+            value["seed"] = chia::utils::BytesToHex(mnemonic_->CreateSeed(""));
+            // Create account, public-key and private-key
+            chia::wallet::Wallet wallet(*mnemonic_, "");
+            value["primaryAddress"] = wallet.GetAddress(0, true);
         }
         return value.toStyledString();
     }
