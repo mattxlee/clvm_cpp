@@ -14,6 +14,7 @@
 #include "types.h"
 #include "utils.h"
 #include "wallet.h"
+#include "bech32.h"
 
 TEST(Utilities, ByteToBytes)
 {
@@ -45,6 +46,14 @@ TEST(Utilities, Bytes)
 TEST(Utilities, IntBigEndianConvertion)
 {
     EXPECT_EQ(chia::Int(chia::utils::SerializeBytes(0x01, 0x02)).ToInt(), 0x0102);
+}
+
+TEST(Utilities, Strip)
+{
+    char const* SZ_SOURCE = "  abcdefghijklmnopq      ";
+    EXPECT_EQ(chia::bech32::Strip(SZ_SOURCE), "abcdefghijklmnopq");
+    EXPECT_EQ(chia::bech32::Strip("abc"), "abc");
+    EXPECT_EQ(chia::bech32::Strip(""), "");
 }
 
 std::string const s0 = "../clvm/calculate_synthetic_public_key.clvm.hex";

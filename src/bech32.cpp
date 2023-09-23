@@ -71,6 +71,15 @@ std::string Encode(std::string hrp, std::vector<Int> const& data)
     return ss.str();
 }
 
+std::string Strip(std::string_view str, char strip_ch)
+{
+    auto a = str.find_first_not_of(strip_ch);
+    auto first = (a == std::string::npos) ? std::cbegin(str) : std::cbegin(str) + a;
+    auto b = str.find_last_not_of(strip_ch);
+    auto last = (b == std::string::npos) ? std::cend(str) : std::cbegin(str) + b + 1;
+    return std::string(first, last);
+}
+
 std::vector<Int> ConvertBits(std::vector<Int> const& data, int frombits, int tobits, bool pad)
 {
     Int acc { 0 }, bits { 0 };
