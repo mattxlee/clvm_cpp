@@ -5,6 +5,7 @@
         "gmp",
         "gtest",
         "cxxopts",
-        "jsoncpp"
+        "jsoncpp",
+        "curl"
     ]
 }

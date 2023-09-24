@@ -17,6 +17,8 @@ namespace fs = std::filesystem;
 
 #include <json/json.h>
 
+#include <curl/curl.h>
+
 #include <mnemonic.h>
 #include <random.h>
 #include <toolbox.h>
@@ -209,6 +211,74 @@ public:
         }
         return 0;
     }
+};
+
+class RPCClient {
+public:
+    RPCClient(std::string url, uint16_t port, std::string cert_path, std::string key_path)
+        : url_(std::move(url))
+        , cert_path_(std::move(cert_path))
+        , key_path_(std::move(key_path))
+    {
+        curl_ = curl_easy_init();
+        curl_easy_setopt(curl_, CURLOPT_PORT, port);
+        curl_easy_setopt(curl_, CURLOPT_CAINFO, cert_path_.c_str());
+        curl_easy_setopt(curl_, CURLOPT_SSH_PRIVATE_KEYFILE, key_path_.c_str());
+    }
+
+    ~RPCClient()
+    {
+        curl_easy_cleanup(curl_);
+    }
+
+    std::string Invoke(std::string_view method, std::string_view upload_data)
+    {
+        std::string url(url_);
+        url += "/";
+        url += method;
+        curl_easy_setopt(curl_, CURLOPT_URL, url.c_str());
+        uploading_data_ = upload_data.data();
+        uploading_total_ = upload_data.size();
+        uploading_offset_ = 0;
+        curl_easy_setopt(curl_, CURLOPT_READDATA, this);
+        curl_easy_setopt(curl_, CURLOPT_READFUNCTION, &RPCClient::read_callback);
+        downloading_ss_.str("");
+        downloading_ss_.clear();
+        curl_easy_setopt(curl_, CURLOPT_WRITEDATA, this);
+        curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, &RPCClient::write_callback);
+        CURLcode code = curl_easy_perform(curl_);
+        if (code != CURLE_OK) {
+            char const* errs = curl_easy_strerror(code);
+            throw std::runtime_error(errs);
+        }
+        return downloading_ss_.str();
+    }
+
+private:
+    static size_t read_callback(char* buffer, size_t size, size_t nitems, void* userdata)
+    {
+        RPCClient* self = reinterpret_cast<RPCClient*>(userdata);
+        int n = std::min<int>(size * nitems, self->uploading_total_ - self->uploading_offset_);
+        memcpy(buffer, self->uploading_data_ + self->uploading_offset_, n);
+        self->uploading_offset_ += n;
+        return n;
+    }
+
+    static size_t write_callback(char* ptr, size_t size, size_t nmemb, void* userdata)
+    {
+        RPCClient* self = reinterpret_cast<RPCClient*>(userdata);
+        self->downloading_ss_ << std::string_view(ptr, size * nmemb);
+        return size * nmemb;
+    }
+
+    CURL* curl_;
+    std::string url_;
+    std::string cert_path_;
+    std::string key_path_;
+    char const* uploading_data_;
+    int uploading_total_;
+    int uploading_offset_;
+    std::stringstream downloading_ss_;
 };
 
 class CommandHandler_Query : public AbstractCommandHandler {
