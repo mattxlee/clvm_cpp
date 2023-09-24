@@ -13,6 +13,20 @@ static std::string CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l";
 
 static Int M { 0x2BC830A3 };
 
+bool CharInCHARSET(char ch)
+{
+    return CHARSET.find(ch) != std::string::npos;
+}
+
+uint8_t ByteFromCHARSET(char ch)
+{
+    auto pos = CHARSET.find(ch);
+    if (pos == std::string::npos) {
+        throw std::runtime_error("Invalid character, it cannot be found from CHARSET");
+    }
+    return static_cast<uint8_t>(pos);
+}
+
 Int Polymod(std::vector<Int> const& values)
 {
     Int generator[] = { Int(0x3B6A57B2), Int(0x26508E6D), Int(0x1EA119FA), Int(0x3D4233DD), Int(0x2A1462B3) };
@@ -27,7 +41,7 @@ Int Polymod(std::vector<Int> const& values)
     return chk;
 }
 
-std::vector<Int> HRPExpand(std::string hrp)
+std::vector<Int> HRPExpand(std::string_view hrp)
 {
     std::vector<Int> res;
     for (char x : hrp) {
@@ -42,12 +56,12 @@ std::vector<Int> HRPExpand(std::string hrp)
     return res;
 }
 
-bool VerifyChecksum(std::string hrp, std::vector<Int> const& data)
+bool VerifyChecksum(std::string_view hrp, std::vector<Int> const& data)
 {
     return Polymod(chia::utils::ConnectContainers(HRPExpand(hrp), data)) != Int(0);
 }
 
-std::vector<Int> CreateChecksum(std::string hrp, std::vector<Int> const& data)
+std::vector<Int> CreateChecksum(std::string_view hrp, std::vector<Int> const& data)
 {
     auto values = chia::utils::ConnectContainers(HRPExpand(hrp), data);
     std::vector<Int> zeros { Int(0), Int(0), Int(0), Int(0), Int(0), Int(0) };
@@ -60,7 +74,7 @@ std::vector<Int> CreateChecksum(std::string hrp, std::vector<Int> const& data)
     return checksum;
 }
 
-std::string Encode(std::string hrp, std::vector<Int> const& data)
+std::string Encode(std::string_view hrp, std::vector<Int> const& data)
 {
     auto combined = chia::utils::ConnectContainers(data, CreateChecksum(hrp, data));
     std::stringstream ss;
@@ -78,6 +92,37 @@ std::string Strip(std::string_view str, char strip_ch)
     auto b = str.find_last_not_of(strip_ch);
     auto last = (b == std::string::npos) ? std::cend(str) : std::cbegin(str) + b + 1;
     return std::string(first, last);
+}
+
+std::pair<std::string, Bytes> Decode(std::string_view bech_in, int max_length)
+{
+    std::string bech = Strip(bech_in);
+    for (auto ch : bech) {
+        if (ch < 33 || ch > 126) {
+            return std::make_pair("", Bytes{});
+        }
+    }
+    if (chia::utils::ToLower(bech) != bech || chia::utils::ToUpper(bech) != bech) {
+        return std::make_pair("", Bytes{});
+    }
+    auto pos = bech.find_last_of("1");
+    if (pos == std::string::npos || pos < 1 || pos + 7 > bech.size() || bech.size() > max_length) {
+        return std::make_pair("", Bytes{});
+    }
+    for (auto i = std::cbegin(bech) + pos + 1; i != std::cend(bech); ++i) {
+        if (!CharInCHARSET(*i)) {
+            return std::make_pair("", Bytes{});
+        }
+    }
+    std::string hrp = bech.substr(0, pos);
+    Bytes data;
+    for (auto i = std::cbegin(bech) + pos + 1; i != std::cend(bech); ++i) {
+        data.push_back(ByteFromCHARSET(*i));
+    }
+    if (!VerifyChecksum(hrp, utils::BytesToInts(data))) {
+        return std::make_pair("", Bytes{});
+    }
+    return std::make_pair(hrp, data);
 }
 
 std::vector<Int> ConvertBits(std::vector<Int> const& data, int frombits, int tobits, bool pad)
@@ -105,6 +150,23 @@ std::vector<Int> ConvertBits(std::vector<Int> const& data, int frombits, int tob
         }
     }
     return ret;
+}
+
+std::string EncodePuzzleHash(Bytes const& puzzle_hash, std::string_view prefix)
+{
+    return Encode(prefix, ConvertBits(utils::BytesToInts(puzzle_hash), 8, 5));
+}
+
+std::vector<Int> DecodePuzzleHash(std::string_view address)
+{
+    std::string hrp;
+    Bytes data;
+    std::tie(hrp, data) = Decode(address);
+    if (data.empty()) {
+        throw std::runtime_error("Invalid address");
+    }
+    std::vector<Int> decoded = ConvertBits(utils::BytesToInts(data), 5, 8, false);
+    return decoded;
 }
 
 } // namespace bech32
