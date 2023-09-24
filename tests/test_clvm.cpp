@@ -422,9 +422,18 @@ TEST(CLVM_Key, Verify)
     EXPECT_EQ(chia::utils::BytesFromHex("5829ad7349855dbec352bb5564833938092afe642dee4eb4aa194c8878c23b20"), pk);
 
     auto pubk = chia::utils::bytes_cast<chia::wallet::Key::PUB_KEY_LEN>(key.GetPublicKey());
-    EXPECT_EQ(chia::utils::BytesFromHex("adce14eef36f77e00bdf2ce7c54d7e3687fcc2e90b6e6a6ec3163fe7ae4cb4"
-                                        "49fc840b6f6d0a7bf49abb94415900a920"),
-        pubk);
+    EXPECT_EQ(chia::utils::BytesFromHex("adce14eef36f77e00bdf2ce7c54d7e3687fcc2e90b6e6a6ec3163fe7ae4cb449fc840b6f6d0a7bf49abb94415900a920"), pubk);
 
+    auto pk_bytes = chia::utils::bytes_cast<chia::wallet::Key::PUB_KEY_LEN>(wallet.GetKey(2).GetPublicKey());
     EXPECT_EQ(wallet.GetAddress(2), "xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5");
+}
+
+TEST(CLVM_Address, ConvertPuzzleHash)
+{
+    char const* SZ_PUBLIC_KEY = "aea444ca6508d64855735a89491679daec4303e104d62b83d0e4d4c5280edd2b2480740031f68b374e4cd5d4aa6544e7";
+    char const* SZ_ADDRESS = "xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5";
+    chia::Bytes pk = chia::utils::BytesFromHex(SZ_PUBLIC_KEY);
+    auto puzzle_hash = chia::PublicKeyToPuzzleHash(pk);
+    std::string address = chia::bech32::EncodePuzzleHash(puzzle_hash, "xch");
+    EXPECT_EQ(address, SZ_ADDRESS);
 }

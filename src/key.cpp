@@ -233,4 +233,11 @@ Address Key::GetAddress(std::string_view prefix) const
 }
 
 } // namespace wallet
+
+std::vector<Int> PublicKeyToPuzzleHash(Bytes const& pk)
+{
+    auto puzzle_hash = wallet::puzzle::puzzle_for_pk(utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(pk)).GetTreeHash();
+    return utils::BytesToInts(utils::bytes_cast<32>(puzzle_hash));
+}
+
 } // namespace chia

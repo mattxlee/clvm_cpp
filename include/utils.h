@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include <string>
+#include <vector>
 
 #include "int.h"
 #include "types.h"
@@ -115,7 +116,23 @@ Bytes ByteToBytes(uint8_t b);
  */
 Bytes SubBytes(Bytes const& bytes, int start, int count = 0);
 
+/**
+ * @brief Convert bytes to ints
+ *
+ * @param bytes the source array
+ *
+ * @return ints
+ */
 std::vector<Int> BytesToInts(Bytes const& bytes);
+
+/**
+ * @brief Convert ints to bytes
+ *
+ * @param ints the source array
+ *
+ * @return bytes
+ */
+Bytes IntsToBytes(std::vector<Int> const& ints);
 
 class BufferConnector
 {

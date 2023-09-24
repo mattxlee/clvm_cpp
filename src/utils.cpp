@@ -151,6 +151,19 @@ std::vector<Int> BytesToInts(Bytes const& bytes)
     return res;
 }
 
+Bytes IntsToBytes(std::vector<Int> const& ints)
+{
+    Bytes res;
+    res.resize(ints.size());
+    std::transform(std::cbegin(ints), std::cend(ints), std::begin(res), [](Int const& val) -> uint8_t {
+        if (val.ToInt() > 0xff || val.ToInt() < 0) {
+            throw std::runtime_error("The source ints is not be able to convert to bytes, value of elements is out of range");
+        }
+        return val.ToInt();
+    });
+    return res;
+}
+
 void BufferConnector::Append(Bytes const& rhs)
 {
     std::size_t p = result_.size();

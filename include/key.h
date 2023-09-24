@@ -6,6 +6,7 @@
 
 #include <mnemonic.h>
 
+#include "int.h"
 #include "types.h"
 
 namespace chia
@@ -78,6 +79,8 @@ private:
 };
 
 } // namespace wallet
+
+std::vector<Int> PublicKeyToPuzzleHash(Bytes const& pk);
 
 } // namespace chia
 

@@ -152,9 +152,9 @@ std::vector<Int> ConvertBits(std::vector<Int> const& data, int frombits, int tob
     return ret;
 }
 
-std::string EncodePuzzleHash(Bytes const& puzzle_hash, std::string_view prefix)
+std::string EncodePuzzleHash(std::vector<Int> const& puzzle_hash, std::string_view prefix)
 {
-    return Encode(prefix, ConvertBits(utils::BytesToInts(puzzle_hash), 8, 5));
+    return Encode(prefix, ConvertBits(puzzle_hash, 8, 5));
 }
 
 std::vector<Int> DecodePuzzleHash(std::string_view address)

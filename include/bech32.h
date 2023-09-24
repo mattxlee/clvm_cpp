@@ -28,7 +28,7 @@ std::pair<std::string, Bytes> Decode(std::string_view bech_in, int max_length = 
 
 std::vector<Int> ConvertBits(std::vector<Int> const& data, int frombits, int tobits, bool pad = true);
 
-std::string EncodePuzzleHash(Bytes const& puzzle_hash, std::string_view prefix);
+std::string EncodePuzzleHash(std::vector<Int> const& puzzle_hash, std::string_view prefix);
 
 std::vector<Int> DecodePuzzleHash(std::string_view address);
 
