@@ -174,5 +174,12 @@ std::string ToUpper(std::string str)
     return res;
 }
 
+std::string ToLower(std::string str)
+{
+    std::string res;
+    std::transform(std::begin(str), std::end(str), std::back_inserter(res), [](char ch) { return std::tolower(ch); });
+    return res;
+}
+
 } // namespace utils
 } // namespace chia

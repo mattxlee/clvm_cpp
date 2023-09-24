@@ -179,6 +179,8 @@ template <typename T> T IntFromBEBytes(Bytes const& bytes)
 
 std::string ToUpper(std::string str);
 
+std::string ToLower(std::string str);
+
 } // namespace utils
 } // namespace chia
 
