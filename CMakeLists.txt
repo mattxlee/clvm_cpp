@@ -93,7 +93,7 @@ endif()
 # Tool binary
 if(BUILD_TOOL)
     find_package(cxxopts CONFIG REQUIRED)
-    find_package(JsonCpp CONFIG REQUIRED)
+    find_package(jsoncpp CONFIG REQUIRED)
     find_package(CURL CONFIG REQUIRED)
     file(GLOB chiatool_srcs ${CMAKE_CURRENT_SOURCE_DIR}/tool/*.cpp)
     add_executable(chiatool ${chiatool_srcs})
