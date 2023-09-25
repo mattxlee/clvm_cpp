@@ -24,7 +24,7 @@ std::string Strip(std::string_view str, char strip_ch = ' ');
 
 std::string Encode(std::string_view hrp, std::vector<Int> const& data);
 
-std::pair<std::string, Bytes> Decode(std::string_view bech_in, int max_length = 90);
+std::pair<std::string, std::vector<Int>> Decode(std::string_view bech_in, int max_length = 90);
 
 std::vector<Int> ConvertBits(std::vector<Int> const& data, int frombits, int tobits, bool pad = true);
 

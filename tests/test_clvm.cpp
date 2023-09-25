@@ -436,4 +436,7 @@ TEST(CLVM_Address, ConvertPuzzleHash)
     auto puzzle_hash = chia::PublicKeyToPuzzleHash(pk);
     std::string address = chia::bech32::EncodePuzzleHash(puzzle_hash, "xch");
     EXPECT_EQ(address, SZ_ADDRESS);
+    auto decoded_puzzle_hash = chia::bech32::DecodePuzzleHash(address);
+    EXPECT_EQ(decoded_puzzle_hash.size(), puzzle_hash.size());
+    EXPECT_EQ(chia::utils::IntsToBytes(decoded_puzzle_hash), chia::utils::IntsToBytes(puzzle_hash));
 }

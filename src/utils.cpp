@@ -145,16 +145,14 @@ Bytes SubBytes(Bytes const& bytes, int start, int count)
 
 std::vector<Int> BytesToInts(Bytes const& bytes)
 {
-    std::vector<Int> res;
-    res.resize(bytes.size());
+    std::vector<Int> res(bytes.size());
     std::transform(std::begin(bytes), std::end(bytes), std::begin(res), [](uint8_t val) -> Int { return Int(val); });
     return res;
 }
 
 Bytes IntsToBytes(std::vector<Int> const& ints)
 {
-    Bytes res;
-    res.resize(ints.size());
+    Bytes res(ints.size());
     std::transform(std::cbegin(ints), std::cend(ints), std::begin(res), [](Int const& val) -> uint8_t {
         if (val.ToInt() > 0xff || val.ToInt() < 0) {
             throw std::runtime_error("The source ints is not be able to convert to bytes, value of elements is out of range");

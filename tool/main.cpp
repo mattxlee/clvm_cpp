@@ -225,10 +225,21 @@ public:
         , cert_path_(std::move(cert_path))
         , key_path_(std::move(key_path))
     {
+        if (!fs::exists(cert_path_)) {
+            throw std::runtime_error("cert doesn't exist");
+        }
+        if (!fs::exists(key_path_)) {
+            throw std::runtime_error("key doesn't exist");
+        }
         curl_ = curl_easy_init();
+        // curl_easy_setopt(curl_, CURLOPT_VERBOSE, 1L);
+        curl_easy_setopt(curl_, CURLOPT_SSL_VERIFYPEER, 0L);
+        curl_easy_setopt(curl_, CURLOPT_SSL_VERIFYHOST, 0L);
+        curl_easy_setopt(curl_, CURLOPT_SSL_VERIFYSTATUS, 0L);
         curl_easy_setopt(curl_, CURLOPT_PORT, port);
-        curl_easy_setopt(curl_, CURLOPT_CAINFO, cert_path_.c_str());
-        curl_easy_setopt(curl_, CURLOPT_SSH_PRIVATE_KEYFILE, key_path_.c_str());
+        curl_easy_setopt(curl_, CURLOPT_USE_SSL, 1L);
+        curl_easy_setopt(curl_, CURLOPT_SSLCERT, cert_path_.c_str());
+        curl_easy_setopt(curl_, CURLOPT_SSLKEY, key_path_.c_str());
     }
 
     ~RPCClient()
@@ -236,7 +247,7 @@ public:
         curl_easy_cleanup(curl_);
     }
 
-    std::string Invoke(std::string_view method, std::string_view upload_data)
+    std::string Invoke(std::string_view method, std::string_view upload_data, bool post = true)
     {
         std::string url(url_);
         url += "/";
@@ -254,6 +265,10 @@ public:
         // prepare headers
         curl_slist* headers = curl_slist_append(nullptr, "Content-Type: application/json");
         curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, headers);
+        if (post) {
+            curl_easy_setopt(curl_, CURLOPT_POST, 1L);
+        }
+        curl_easy_setopt(curl_, CURLOPT_PROXY, 0L);
         CURLcode code = curl_easy_perform(curl_);
         curl_slist_free_all(headers);
         if (code != CURLE_OK) {
@@ -324,7 +339,7 @@ public:
         if (!res_val.isMember("success") || !res_val["success"].asBool()) {
             throw std::runtime_error("RPC service is not succeed");
         }
-        if (!res_val.isMember("coin_records") || !res_val.isArray()) {
+        if (!res_val.isMember("coin_records") || !res_val["coin_records"].isArray()) {
             throw std::runtime_error("Cannot find key `coin_records` or its type isn't array");
         }
         Json::Value records = res_val["coin_records"];
@@ -335,7 +350,7 @@ public:
             }
             if (!rec["spent"].asBool()) {
                 auto const& coin = rec["coin"];
-                amount += coin.asUInt64();
+                amount += coin["amount"].asUInt64();
             }
         }
         std::cout << "Balance: " << amount << std::endl;
@@ -370,10 +385,10 @@ int main(int argc, char const* argv[])
         ;
     opts.add_options("query")
         ("address", "Query balance of the address", cxxopts::value<std::string>())
-        ("rpc-url", "The RPC url to establish connection", cxxopts::value<std::string>())
-        ("rpc-port", "The port number of the RPC service", cxxopts::value<uint16_t>())
-        ("cert", "Path to the certificate file", cxxopts::value<std::string>())
-        ("key", "Path to the key file", cxxopts::value<std::string>())
+        ("rpc-url", "The RPC url to establish connection", cxxopts::value<std::string>()->default_value("https://localhost"))
+        ("rpc-port", "The port number of the RPC service", cxxopts::value<uint16_t>()->default_value("8555"))
+        ("cert", "Path to the certificate file", cxxopts::value<std::string>()->default_value("/home/matthew/.chia/testnet10/config/ssl/full_node/private_full_node.crt"))
+        ("key", "Path to the key file", cxxopts::value<std::string>()->default_value("/home/matthew/.chia/testnet10/config/ssl/full_node/private_full_node.key"))
         ;
     opts.parse_positional("command");
     cxxopts::ParseResult result = opts.parse(argc, argv);

@@ -94,33 +94,34 @@ std::string Strip(std::string_view str, char strip_ch)
     return std::string(first, last);
 }
 
-std::pair<std::string, Bytes> Decode(std::string_view bech_in, int max_length)
+std::pair<std::string, std::vector<Int>> Decode(std::string_view bech_in, int max_length)
 {
     std::string bech = Strip(bech_in);
     for (auto ch : bech) {
         if (ch < 33 || ch > 126) {
-            return std::make_pair("", Bytes{});
+            return std::make_pair("", std::vector<Int>{});
         }
     }
-    if (chia::utils::ToLower(bech) != bech || chia::utils::ToUpper(bech) != bech) {
-        return std::make_pair("", Bytes{});
+    if (chia::utils::ToLower(bech) != bech && chia::utils::ToUpper(bech) != bech) {
+        return std::make_pair("", std::vector<Int>{});
     }
+    bech = utils::ToLower(bech);
     auto pos = bech.find_last_of("1");
     if (pos == std::string::npos || pos < 1 || pos + 7 > bech.size() || bech.size() > max_length) {
-        return std::make_pair("", Bytes{});
+        return std::make_pair("", std::vector<Int>{});
     }
     for (auto i = std::cbegin(bech) + pos + 1; i != std::cend(bech); ++i) {
         if (!CharInCHARSET(*i)) {
-            return std::make_pair("", Bytes{});
+            return std::make_pair("", std::vector<Int>{});
         }
     }
     std::string hrp = bech.substr(0, pos);
-    Bytes data;
+    std::vector<Int> data;
     for (auto i = std::cbegin(bech) + pos + 1; i != std::cend(bech); ++i) {
-        data.push_back(ByteFromCHARSET(*i));
+        data.push_back(Int(static_cast<uint32_t>(ByteFromCHARSET(*i))));
     }
-    if (!VerifyChecksum(hrp, utils::BytesToInts(data))) {
-        return std::make_pair("", Bytes{});
+    if (!VerifyChecksum(hrp, data)) {
+        return std::make_pair("", std::vector<Int>{});
     }
     return std::make_pair(hrp, data);
 }
@@ -160,12 +161,13 @@ std::string EncodePuzzleHash(std::vector<Int> const& puzzle_hash, std::string_vi
 std::vector<Int> DecodePuzzleHash(std::string_view address)
 {
     std::string hrp;
-    Bytes data;
+    std::vector<Int> data;
     std::tie(hrp, data) = Decode(address);
     if (data.empty()) {
         throw std::runtime_error("Invalid address");
     }
-    std::vector<Int> decoded = ConvertBits(utils::BytesToInts(data), 5, 8, false);
+    std::vector<Int> decoded = ConvertBits(data, 5, 8, false);
+    decoded.resize(32);
     return decoded;
 }
 
