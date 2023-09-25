@@ -86,7 +86,7 @@ namespace utils {
 
 std::string ReadFromFile(std::string_view filepath)
 {
-    std::ifstream in(filepath);
+    std::ifstream in(filepath.data());
     if (!in.is_open()) {
         throw std::runtime_error("Cannot open file to read");
     }
@@ -102,7 +102,7 @@ std::string ReadFromFile(std::string_view filepath)
 
 void WriteToFile(std::string_view filepath, std::string_view data)
 {
-    std::ofstream out(filepath);
+    std::ofstream out(filepath.data());
     if (!out.is_open()) {
         throw std::runtime_error("Cannot open file to write");
     }
