@@ -25,6 +25,7 @@ namespace fs = std::filesystem;
 
 #include "utils.h"
 #include "wallet.h"
+#include "bech32.h"
 
 struct Args {
     // wallet
@@ -34,6 +35,10 @@ struct Args {
     bool wallet_overwrite;
     // query
     std::string query_address;
+    std::string query_rpc_url;
+    uint16_t query_rpc_port;
+    std::string query_key_path;
+    std::string query_cert_path;
 };
 
 class AbstractCommandHandler {
@@ -246,7 +251,11 @@ public:
         downloading_ss_.clear();
         curl_easy_setopt(curl_, CURLOPT_WRITEDATA, this);
         curl_easy_setopt(curl_, CURLOPT_WRITEFUNCTION, &RPCClient::write_callback);
+        // prepare headers
+        curl_slist* headers = curl_slist_append(nullptr, "Content-Type: application/json");
+        curl_easy_setopt(curl_, CURLOPT_HTTPHEADER, headers);
         CURLcode code = curl_easy_perform(curl_);
+        curl_slist_free_all(headers);
         if (code != CURLE_OK) {
             char const* errs = curl_easy_strerror(code);
             throw std::runtime_error(errs);
@@ -287,12 +296,49 @@ public:
     {
         Args args;
         args.query_address = result["address"].as<std::string>();
+        args.query_rpc_url = result["rpc-url"].as<std::string>();
+        args.query_rpc_port = result["rpc-port"].as<uint16_t>();
+        args.query_cert_path = result["cert"].as<std::string>();
+        args.query_key_path = result["key"].as<std::string>();
         return args;
     }
 
     int Run(Args const& args) const override
     {
-        // TODO invoke RPC command from chia full node, query the balance for provided address
+        // Convert address to puzzle_hash
+        auto puzzle_hash = chia::bech32::DecodePuzzleHash(args.query_address);
+        Json::Value val;
+        val["puzzle_hash"] = chia::utils::BytesToHex(chia::utils::IntsToBytes(puzzle_hash));
+        val["include_spent_coins"] = false;
+        // Start RPC call
+        RPCClient client(args.query_rpc_url, args.query_rpc_port, args.query_cert_path, args.query_key_path);
+        std::string res = client.Invoke("get_coin_records_by_puzzle_hash", val.toStyledString());
+        // Analyze the json from RPC server
+        Json::Value res_val;
+        std::string errs;
+        Json::CharReaderBuilder builder;
+        std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+        if (!reader->parse(res.c_str(), res.c_str() + res.size(), &res_val, &errs)) {
+            throw std::runtime_error("Invalid json string is received from RPC service");
+        }
+        if (!res_val.isMember("success") || !res_val["success"].asBool()) {
+            throw std::runtime_error("RPC service is not succeed");
+        }
+        if (!res_val.isMember("coin_records") || !res_val.isArray()) {
+            throw std::runtime_error("Cannot find key `coin_records` or its type isn't array");
+        }
+        Json::Value records = res_val["coin_records"];
+        uint64_t amount{0};
+        for (auto const& rec : records) {
+            if (!rec.isMember("coin") || !rec.isMember("spent")) {
+                throw std::runtime_error("Coin record: `coin` cannot be found");
+            }
+            if (!rec["spent"].asBool()) {
+                auto const& coin = rec["coin"];
+                amount += coin.asUInt64();
+            }
+        }
+        std::cout << "Balance: " << amount << std::endl;
         return 0;
     }
 };
@@ -324,6 +370,10 @@ int main(int argc, char const* argv[])
         ;
     opts.add_options("query")
         ("address", "Query balance of the address", cxxopts::value<std::string>())
+        ("rpc-url", "The RPC url to establish connection", cxxopts::value<std::string>())
+        ("rpc-port", "The port number of the RPC service", cxxopts::value<uint16_t>())
+        ("cert", "Path to the certificate file", cxxopts::value<std::string>())
+        ("key", "Path to the key file", cxxopts::value<std::string>())
         ;
     opts.parse_positional("command");
     cxxopts::ParseResult result = opts.parse(argc, argv);
