@@ -26,12 +26,12 @@ struct SHA256::Impl {
     {
         m_buff = utils::ConnectBuffers(m_buff, buff);
     }
-    
+
     void Finish(uint8_t* pout)
     {
         CC_SHA256(m_buff.data(), static_cast<CC_LONG>(m_buff.size()), pout);
     }
-    
+
 private:
     Bytes m_buff;
 };
@@ -51,19 +51,19 @@ struct SHA256::Impl {
     {
         _C(EVP_DigestInit(ctx_, EVP_sha256()));
     }
-    
+
     void Add(Bytes const& buff)
     {
         _C(EVP_DigestUpdate(ctx_, bytes.data(), bytes.size()));
     }
-    
+
     void Finish(uint8_t* pout)
     {
         uint32_t size{256/8};
         EVP_DigestFinal_ex(ctx_, pout, &size);
     }
 private:
-    EVP_MD_CTX* m_ctx;
+    EVP_MD_CTX* ctx_;
 };
 
 #endif
