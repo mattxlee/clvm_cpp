@@ -1,7 +1,7 @@
 #ifndef CHIA_CRYPT_UTILS_H
 #define CHIA_CRYPT_UTILS_H
 
-#include <openssl/evp.h>
+#include <memory>
 
 #include "types.h"
 
@@ -12,6 +12,8 @@ namespace crypto_utils
 
 class SHA256
 {
+    struct Impl;
+    
 public:
     SHA256();
 
@@ -22,7 +24,7 @@ public:
     Bytes32 Finish();
 
 private:
-    EVP_MD_CTX* ctx_ { nullptr };
+    std::unique_ptr<Impl> m_pimpl;
 };
 
 inline void WriteBytes(SHA256&) { }
