@@ -37,7 +37,7 @@ private:
 };
 
 #else
-#include <openssl/crypto.h>
+#include <openssl/evp.h>
 
 void _C(int ret)
 {
@@ -48,13 +48,19 @@ void _C(int ret)
 
 struct SHA256::Impl {
     Impl()
+        : ctx_(EVP_MD_CTX_new())
     {
         _C(EVP_DigestInit(ctx_, EVP_sha256()));
     }
 
+    ~Impl()
+    {
+        EVP_MD_CTX_destroy(ctx_);
+    }
+
     void Add(Bytes const& buff)
     {
-        _C(EVP_DigestUpdate(ctx_, bytes.data(), bytes.size()));
+        _C(EVP_DigestUpdate(ctx_, buff.data(), buff.size()));
     }
 
     void Finish(uint8_t* pout)

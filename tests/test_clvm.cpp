@@ -92,8 +92,8 @@ TEST(CLVM_BigInt, Initial100FromBytes)
 
 TEST(CLVM_BigInt, Add)
 {
-    long a = 0x1234567812345678;
-    long b = 0x1234567812345678;
+    uint64_t a = 0x12345678;
+    uint64_t b = 0x12345678;
 
     chia::Int aa(chia::utils::IntToBEBytes(a));
     chia::Int bb(chia::utils::IntToBEBytes(b));
@@ -103,8 +103,8 @@ TEST(CLVM_BigInt, Add)
 
 TEST(CLVM_BigInt, Sub)
 {
-    long a = 0x1234567812345678;
-    long b = 0x1234567812345600;
+    uint64_t a = 0x12345678;
+    uint64_t b = 0x12345678;
 
     chia::Int aa(chia::utils::IntToBEBytes(a));
     chia::Int bb(chia::utils::IntToBEBytes(b));
