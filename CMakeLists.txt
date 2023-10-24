@@ -8,10 +8,8 @@ project(clvm_cpp)
 set(CMAKE_CXX_STANDARD 17)
 
 option(BUILD_TEST "Generate test binaries" OFF)
-option(BUILD_TOOL "Generate tool binary file" OFF)
 
 find_package(OpenSSL REQUIRED)
-find_package(unofficial-utf8proc CONFIG REQUIRED)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(gmp REQUIRED IMPORTED_TARGET gmp)
@@ -29,13 +27,7 @@ FetchContent_Declare(
     GIT_TAG 1.0.9
 )
 
-FetchContent_Declare(
-    bip39_cpp
-    GIT_REPOSITORY https://github.com/mattxlee/bip39_cpp
-    GIT_TAG main
-)
-
-FetchContent_MakeAvailable(bls bip39_cpp)
+FetchContent_MakeAvailable(bls)
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -48,7 +40,6 @@ file(GLOB clvm_cpp_src
     src/mnemonic.cpp
     src/program.cpp
     src/utils.cpp
-    src/wallet.cpp
     src/operator_lookup.cpp
     src/core_opts.cpp
     src/more_opts.cpp
@@ -61,13 +52,10 @@ file(GLOB clvm_cpp_src
 file(GLOB clvm_include_files include/*)
 add_library(clvm_cpp STATIC)
 target_sources(clvm_cpp PRIVATE ${clvm_cpp_src})
-target_include_directories(clvm_cpp PRIVATE ${bip39_cpp_SOURCE_DIR}/include)
 target_link_libraries(clvm_cpp PRIVATE
     bls
     OpenSSL::SSL
     OpenSSL::Crypto
-    utf8proc
-    bip39_cpp
 )
 install(FILES ${clvm_include_files} DESTINATION include/clvm_cpp)
 install(TARGETS clvm_cpp DESTINATION lib)
@@ -79,24 +67,11 @@ if (BUILD_TEST)
     enable_testing()
     set(test_clvm_src tests/test_clvm.cpp)
     add_executable(test_clvm)
-    target_sources(test_clvm PRIVATE ${test_clvm_src} ${clvm_cpp_src} ${bls_src})
-    target_include_directories(test_clvm PRIVATE ${bip39_cpp_SOURCE_DIR}/include)
+    target_sources(test_clvm PRIVATE ${test_clvm_src})
     target_link_libraries(test_clvm PRIVATE
-        bls
         clvm_cpp
         GTest::gtest
         GTest::gtest_main
     )
     add_test(NAME test_clvm COMMAND test_clvm)
-endif()
-
-# Tool binary
-if(BUILD_TOOL)
-    find_package(cxxopts CONFIG REQUIRED)
-    find_package(jsoncpp CONFIG REQUIRED)
-    find_package(CURL CONFIG REQUIRED)
-    file(GLOB chiatool_srcs ${CMAKE_CURRENT_SOURCE_DIR}/tool/*.cpp)
-    add_executable(chiatool ${chiatool_srcs})
-    target_include_directories(chiatool PRIVATE ${bip39_cpp_SOURCE_DIR}/include)
-    target_link_libraries(chiatool PRIVATE cxxopts::cxxopts clvm_cpp JsonCpp::JsonCpp CURL::libcurl)
 endif()

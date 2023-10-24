@@ -1,11 +1,7 @@
 {
     "dependencies": [
-        "utf8proc",
         "openssl",
         "gmp",
-        "gtest",
-        "cxxopts",
-        "jsoncpp",
-        "curl"
+        "gtest"
     ]
 }

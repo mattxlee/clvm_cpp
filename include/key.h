@@ -4,8 +4,6 @@
 #include <string>
 #include <string_view>
 
-#include <mnemonic.h>
-
 #include "int.h"
 #include "types.h"
 
@@ -50,8 +48,8 @@ public:
     /// Create a object by importing the private key
     explicit Key(PrivateKey priv_key);
 
-    /// Create a new key will be generated from the mnemonic
-    Key(bip39::Mnemonic const& mnemonic, std::string passphrase);
+    /// Create a new key will be generated from the seed
+    explicit Key(Bytes const& seed);
 
     /// Return `true` when the key is empty
     bool IsEmpty() const;

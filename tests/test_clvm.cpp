@@ -1,9 +1,6 @@
 #include <fstream>
 #include <string>
 
-#include <mnemonic.h>
-#include <toolbox.h>
-
 #include "gtest/gtest.h"
 
 #include "assemble.h"
@@ -13,7 +10,6 @@
 #include "program.h"
 #include "types.h"
 #include "utils.h"
-#include "wallet.h"
 #include "bech32.h"
 
 TEST(Utilities, ByteToBytes)
@@ -56,11 +52,11 @@ TEST(Utilities, Strip)
     EXPECT_EQ(chia::bech32::Strip(""), "");
 }
 
-std::string const s0 = "../clvm/calculate_synthetic_public_key.clvm.hex";
-std::string const s0_treehash = "../clvm/calculate_synthetic_public_key.clvm.hex.sha256tree";
+std::string const s0 = "clvm/calculate_synthetic_public_key.clvm.hex";
+std::string const s0_treehash = "clvm/calculate_synthetic_public_key.clvm.hex.sha256tree";
 
-std::string const s1 = "../clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex";
-std::string const s1_treehash = "../clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex.sha256tree";
+std::string const s1 = "clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex";
+std::string const s1_treehash = "clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex.sha256tree";
 
 TEST(CLVM_SHA256_treehash, LoadAndVerify_s0)
 {
@@ -389,43 +385,6 @@ TEST(CLVM_RunProgram, Env_ThroughInt_Complex6)
     std::tie(std::ignore, r) = prog.Run(chia::Assemble("((\"deeper\" \"example\") \"data\" \"for\" \"test\")"));
     chia::ArgsIter i(r);
     EXPECT_EQ(i.NextStr(), "example");
-}
-
-/**
- * Private key 2450593623
- * Private key:
- * 5829ad7349855dbec352bb5564833938092afe642dee4eb4aa194c8878c23b20
- * Public key:
- * adce14eef36f77e00bdf2ce7c54d7e3687fcc2e90b6e6a6ec3163fe7ae4cb449fc840b6f6d0a7bf49abb94415900a920
- * Farmer public key:
- * 89cb70ca22bbb4e7c84b66f4c415ec5e17b4ed39e4ecd3b254818c15e407f7164fc81c0466006f3249c7f9e6b2b1d289
- * Pool public key:
- * 944d51fc3e7da74f85666bd7700e4cca1e8b033774e2c7db01f4bc0e7d14aaaeab05d4c40f740039d01a20f96fa7a1e1
- * Seed:
- return village first merit biology slim leaf assume link physical silk identify
- material peanut keen settle logic absorb better famous exit glove tower inhale
-
- * Address 2: xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5
- */
-
-TEST(CLVM_Key, Verify)
-{
-    auto word_list = bip39::ParseWords("return village first merit biology slim leaf assume link physical silk identify material peanut keen settle logic absorb better famous exit glove tower inhale");
-    EXPECT_EQ(word_list.size(), 24);
-
-    bip39::Mnemonic mnemonic(word_list, "english");
-
-    chia::wallet::Wallet wallet(mnemonic, "");
-    chia::wallet::Key key = wallet.GetMainKey();
-
-    auto pk = chia::utils::bytes_cast<chia::wallet::Key::PRIV_KEY_LEN>(key.GetPrivateKey());
-    EXPECT_EQ(chia::utils::BytesFromHex("5829ad7349855dbec352bb5564833938092afe642dee4eb4aa194c8878c23b20"), pk);
-
-    auto pubk = chia::utils::bytes_cast<chia::wallet::Key::PUB_KEY_LEN>(key.GetPublicKey());
-    EXPECT_EQ(chia::utils::BytesFromHex("adce14eef36f77e00bdf2ce7c54d7e3687fcc2e90b6e6a6ec3163fe7ae4cb449fc840b6f6d0a7bf49abb94415900a920"), pubk);
-
-    auto pk_bytes = chia::utils::bytes_cast<chia::wallet::Key::PUB_KEY_LEN>(wallet.GetKey(2).GetPublicKey());
-    EXPECT_EQ(wallet.GetAddress(2), "xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5");
 }
 
 TEST(CLVM_Address, ConvertPuzzleHash)

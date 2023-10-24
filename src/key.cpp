@@ -8,9 +8,6 @@
 #include <filesystem>
 namespace fs = std::filesystem;
 
-#include <mnemonic.h>
-#include <toolbox.h>
-
 #include "bech32.h"
 #include "program.h"
 #include "utils.h"
@@ -65,9 +62,8 @@ Key::Key(PrivateKey priv_key)
 {
 }
 
-Key::Key(bip39::Mnemonic const& mnemonic, std::string passphrase)
+Key::Key(Bytes const& seed)
 {
-    auto seed = mnemonic.CreateSeed(passphrase);
     auto seed_bytes = utils::BytesToHex(seed);
     priv_key_ = utils::bytes_cast<PRIV_KEY_LEN>(bls::AugSchemeMPL().KeyGen(seed).Serialize());
 }
@@ -171,8 +167,9 @@ private:
     CLVMPrograms()
     {
         SetEntry(DEFAULT_HIDDEN_PUZZLE, utils::BytesFromHex("ff0980"));
-        SetEntry(MOD, "p2_delegated_puzzle_or_hidden_puzzle.clvm.hex");
-        SetEntry(SYNTHETIC_MOD, "calculate_synthetic_public_key.clvm.hex");
+        SetEntry(SYNTHETIC_MOD, utils::BytesFromHex("ff1dff02ffff1effff0bff02ff05808080"));
+        SetEntry(MOD, utils::BytesFromHex("ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080"));
+
     }
 
     void InsertOrAssign(std::string name, Entry entry)
