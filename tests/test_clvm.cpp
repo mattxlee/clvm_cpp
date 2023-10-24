@@ -52,23 +52,23 @@ TEST(Utilities, Strip)
     EXPECT_EQ(chia::bech32::Strip(""), "");
 }
 
-std::string const s0 = "clvm/calculate_synthetic_public_key.clvm.hex";
-std::string const s0_treehash = "clvm/calculate_synthetic_public_key.clvm.hex.sha256tree";
+std::string const s0 = "ff1dff02ffff1effff0bff02ff05808080";
+std::string const s0_treehash = "624c5d5704d0decadfc0503e71bbffb6cdfe45025bce7cf3e6864d1eafe8f65e";
 
-std::string const s1 = "clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex";
-std::string const s1_treehash = "clvm/p2_delegated_puzzle_or_hidden_puzzle.clvm.hex.sha256tree";
+std::string const s1 = "ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080";
+std::string const s1_treehash = "e9aaa49f45bad5c889b86ee3341550c155cfdd10c3a6757de618d20612fffd52";
 
 TEST(CLVM_SHA256_treehash, LoadAndVerify_s0)
 {
-    auto prog = chia::Program::ImportFromCompiledFile(s0);
-    auto treehash_bytes = chia::utils::BytesFromHex(chia::utils::LoadHexFromFile(s0_treehash));
+    auto prog = chia::Program::ImportFromHex(s0);
+    auto treehash_bytes = chia::utils::BytesFromHex(s0_treehash);
     EXPECT_EQ(chia::utils::bytes_cast<32>(prog.GetTreeHash()), treehash_bytes);
 }
 
 TEST(CLVM_SHA256_treehash, LoadAndVerify_s1)
 {
-    auto prog = chia::Program::ImportFromCompiledFile(s1);
-    auto treehash_bytes = chia::utils::BytesFromHex(chia::utils::LoadHexFromFile(s1_treehash));
+    auto prog = chia::Program::ImportFromHex(s1);
+    auto treehash_bytes = chia::utils::BytesFromHex(s1_treehash);
     EXPECT_EQ(chia::utils::bytes_cast<32>(prog.GetTreeHash()), treehash_bytes);
 }
 
