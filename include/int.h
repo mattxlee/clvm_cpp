@@ -33,7 +33,7 @@ public:
 
     int NumBytes() const;
 
-    long ToInt() const;
+    int ToInt() const;
 
     unsigned long ToUInt() const;
 

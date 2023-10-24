@@ -142,7 +142,7 @@ std::vector<ConditionWithArgs> parse_sexp_to_conditions(CLVMObjectPtr sexp)
 }
 
 std::tuple<std::vector<ConditionWithArgs>, uint64_t> conditions_for_solution(
-    Program& puzzle_reveal, Program& solution, int max_cost)
+    Program& puzzle_reveal, Program& solution, uint64_t max_cost)
 {
     Cost cost;
     CLVMObjectPtr r;
@@ -339,7 +339,7 @@ std::vector<Coin> CoinSpend::Additions() const
     return additions_for_solution(coin.GetName(), puzzle_reveal, solution, INFINITE_COST);
 }
 
-int CoinSpend::ReservedFee() { return fee_for_solution(puzzle_reveal, solution, INFINITE_COST); }
+Cost CoinSpend::ReservedFee() { return fee_for_solution(puzzle_reveal, solution, INFINITE_COST); }
 
 /*******************************************************************************
  *

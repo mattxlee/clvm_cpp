@@ -11,7 +11,7 @@ namespace chia
 
 bool is_valid_int_char(char ch) { return ch >= '0' && ch <= '9'; }
 
-bool is_valid_hex_char(char ch) { return ch >= 'a' && ch <= 'f' || ch >= 'A' && ch <= 'F'; }
+bool is_valid_hex_char(char ch) { return (ch >= 'a' && ch <= 'f') || (ch >= 'A' && ch <= 'F'); }
 
 bool check_valid_hex_string(std::string s)
 {
@@ -120,9 +120,9 @@ Bytes Int::ToBytes(bool* neg) const
     return utils::BytesFromHex(r);
 }
 
-int Int::NumBytes() const { return ToBytes().size(); }
+int Int::NumBytes() const { return static_cast<int>(ToBytes().size()); }
 
-long Int::ToInt() const { return impl_->mpz.get_si(); }
+int Int::ToInt() const { return static_cast<int>(impl_->mpz.get_si()); }
 
 unsigned long Int::ToUInt() const { return impl_->mpz.get_ui(); }
 

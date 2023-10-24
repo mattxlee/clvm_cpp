@@ -75,7 +75,6 @@ public:
                 ++offset_;
             }
             if (offset_ < str_.size()) {
-                int off { offset_ };
                 ++offset_;
                 return std::make_tuple(std::string(str_.substr(start, offset_ - start)), start);
             } else {
@@ -355,7 +354,6 @@ CLVMObjectPtr tokenize_cons(std::string token, int offset, stream::TokenStream& 
 
     std::tie(token, offset) = next_cons_token(stream);
     if (token == ".") {
-        int dot_offset = offset;
         // grab the last item
         std::tie(token, offset) = next_cons_token(stream);
         rest_sexp = tokenize_sexp(token, offset, stream);

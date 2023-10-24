@@ -134,7 +134,7 @@ Bytes SubBytes(Bytes const& bytes, int start, int count)
 {
     int n;
     if (count == 0) {
-        n = bytes.size() - start;
+        n = static_cast<int>(bytes.size()) - start;
     } else {
         n = count;
     }

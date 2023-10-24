@@ -39,7 +39,7 @@ public:
 
     std::vector<Coin> Additions() const;
 
-    int ReservedFee();
+    Cost ReservedFee();
 };
 
 class SpendBundle
