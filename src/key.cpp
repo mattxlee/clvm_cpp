@@ -105,9 +105,11 @@ Key Key::DerivePath(std::vector<uint32_t> const& paths) const
 namespace puzzle
 {
 
-std::string DEFAULT_HIDDEN_PUZZLE = "DEFAULT_HIDDEN_PUZZLE ";
-std::string MOD = "MOD";
-std::string SYNTHETIC_MOD = "SYNTHETIC_MOD";
+enum class PredefinedPrograms {
+    DEFAULT_HIDDEN_PUZZLE,
+    MOD,
+    SYNTHETIC_MOD,
+};
 
 class CLVMPrograms
 {
@@ -126,25 +128,25 @@ public:
 
     void SetPrefix(std::string new_prefix) { prefix_ = new_prefix; }
 
-    void SetEntry(std::string name, Bytes const& bytes)
+    void SetEntry(PredefinedPrograms name, Bytes const& bytes)
     {
         Entry entry;
         entry.type = EntryType::Bytes;
         entry.content = utils::BytesToHex(bytes);
-        InsertOrAssign(std::string(name), std::move(entry));
+        InsertOrAssign(name, std::move(entry));
     }
 
-    void SetEntry(std::string name, std::string file_path)
+    void SetEntry(PredefinedPrograms name, std::string file_path)
     {
         Entry entry;
         entry.type = EntryType::File;
         entry.content = file_path;
-        InsertOrAssign(std::string(name), std::move(entry));
+        InsertOrAssign(name, std::move(entry));
     }
 
-    Program GetProgram(std::string name) const
+    Program GetProgram(PredefinedPrograms name) const
     {
-        auto i = progs_.find(name.data());
+        auto i = progs_.find(name);
         if (i == std::end(progs_)) {
             throw std::runtime_error("the program doesn't exist");
         }
@@ -166,13 +168,13 @@ public:
 private:
     CLVMPrograms()
     {
-        SetEntry(DEFAULT_HIDDEN_PUZZLE, utils::BytesFromHex("ff0980"));
-        SetEntry(SYNTHETIC_MOD, utils::BytesFromHex("ff1dff02ffff1effff0bff02ff05808080"));
-        SetEntry(MOD, utils::BytesFromHex("ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080"));
+        SetEntry(PredefinedPrograms::DEFAULT_HIDDEN_PUZZLE, utils::BytesFromHex("ff0980"));
+        SetEntry(PredefinedPrograms::SYNTHETIC_MOD, utils::BytesFromHex("ff1dff02ffff1effff0bff02ff05808080"));
+        SetEntry(PredefinedPrograms::MOD, utils::BytesFromHex("ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080"));
 
     }
 
-    void InsertOrAssign(std::string name, Entry entry)
+    void InsertOrAssign(PredefinedPrograms name, Entry entry)
     {
         auto i = progs_.find(name);
         if (i != std::end(progs_)) {
@@ -184,7 +186,7 @@ private:
 
 private:
     std::string prefix_ { "../clvm" };
-    std::map<std::string, Entry> progs_;
+    std::map<PredefinedPrograms, Entry> progs_;
 };
 
 PublicKey calculate_synthetic_public_key(PublicKey const& public_key, Bytes32 const& hidden_puzzle_hash)
@@ -193,14 +195,14 @@ PublicKey calculate_synthetic_public_key(PublicKey const& public_key, Bytes32 co
     Cost cost;
     CLVMObjectPtr pk;
     std::tie(cost, pk) = CLVMPrograms::GetInstance()
-                             .GetProgram(SYNTHETIC_MOD)
+                             .GetProgram(PredefinedPrograms::SYNTHETIC_MOD)
                              .Run(ToSExpList(public_key, utils::bytes_cast<32>(hidden_puzzle_hash)));
     return utils::bytes_cast<Key::PUB_KEY_LEN>(Atom(pk));
 }
 
 Program puzzle_for_synthetic_public_key(PublicKey const& synthetic_public_key)
 {
-    return CLVMPrograms::GetInstance().GetProgram(MOD).Curry(ToSExp(synthetic_public_key));
+    return CLVMPrograms::GetInstance().GetProgram(PredefinedPrograms::MOD).Curry(ToSExp(synthetic_public_key));
 }
 
 Program puzzle_for_public_key_and_hidden_puzzle_hash(PublicKey const& public_key, Bytes32 const& hidden_puzzle_hash)
@@ -218,7 +220,7 @@ Program puzzle_for_public_key_and_hidden_puzzle(PublicKey const& public_key, Pro
 Program puzzle_for_pk(PublicKey const& public_key)
 {
     return puzzle_for_public_key_and_hidden_puzzle_hash(
-        public_key, CLVMPrograms::GetInstance().GetProgram(DEFAULT_HIDDEN_PUZZLE).GetTreeHash());
+        public_key, CLVMPrograms::GetInstance().GetProgram(PredefinedPrograms::DEFAULT_HIDDEN_PUZZLE).GetTreeHash());
 }
 
 } // namespace puzzle
