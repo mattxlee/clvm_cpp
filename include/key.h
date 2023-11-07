@@ -4,12 +4,9 @@
 #include <string>
 #include <string_view>
 
-#include "int.h"
 #include "types.h"
 
-namespace chia
-{
-namespace wallet
+namespace chia::wallet
 {
 
 class PubKey
@@ -76,10 +73,6 @@ private:
     PrivateKey priv_key_;
 };
 
-} // namespace wallet
-
-std::vector<Int> PublicKeyToPuzzleHash(Bytes const& pk);
-
-} // namespace chia
+} // namespace chia::wallet
 
 #endif

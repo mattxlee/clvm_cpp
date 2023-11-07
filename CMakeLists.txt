@@ -46,6 +46,7 @@ file(GLOB clvm_cpp_src
     src/int.cpp
     src/assemble.cpp
     src/coin.cpp
+    src/puzzle.cpp
 )
 
 # Library clvm_cpp

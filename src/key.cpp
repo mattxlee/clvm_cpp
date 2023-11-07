@@ -5,12 +5,10 @@
 
 #include <map>
 
-#include <filesystem>
-namespace fs = std::filesystem;
+#include "utils.h"
 
 #include "bech32.h"
-#include "program.h"
-#include "utils.h"
+#include "puzzle.h"
 
 namespace chia
 {
@@ -102,141 +100,12 @@ Key Key::DerivePath(std::vector<uint32_t> const& paths) const
     return Key(utils::bytes_cast<PRIV_KEY_LEN>(sk.Serialize()));
 }
 
-namespace puzzle
-{
-
-enum class PredefinedPrograms {
-    DEFAULT_HIDDEN_PUZZLE,
-    MOD,
-    SYNTHETIC_MOD,
-};
-
-class CLVMPrograms
-{
-    enum class EntryType { File, Bytes };
-    struct Entry {
-        EntryType type;
-        std::string content;
-    };
-
-public:
-    static CLVMPrograms& GetInstance()
-    {
-        static CLVMPrograms instance;
-        return instance;
-    }
-
-    void SetPrefix(std::string new_prefix) { prefix_ = new_prefix; }
-
-    void SetEntry(PredefinedPrograms name, Bytes const& bytes)
-    {
-        Entry entry;
-        entry.type = EntryType::Bytes;
-        entry.content = utils::BytesToHex(bytes);
-        InsertOrAssign(name, std::move(entry));
-    }
-
-    void SetEntry(PredefinedPrograms name, std::string file_path)
-    {
-        Entry entry;
-        entry.type = EntryType::File;
-        entry.content = file_path;
-        InsertOrAssign(name, std::move(entry));
-    }
-
-    Program GetProgram(PredefinedPrograms name) const
-    {
-        auto i = progs_.find(name);
-        if (i == std::end(progs_)) {
-            throw std::runtime_error("the program doesn't exist");
-        }
-        Entry const& entry = i->second;
-        if (entry.type == EntryType::Bytes) {
-            return Program::ImportFromBytes(utils::BytesFromHex(entry.content));
-        } else if (entry.type == EntryType::File) {
-            fs::path file_path;
-            if (!prefix_.empty()) {
-                file_path = fs::path(prefix_) / entry.content;
-            } else {
-                file_path = entry.content;
-            }
-            return Program::ImportFromCompiledFile(file_path.string());
-        }
-        throw std::runtime_error("invalid entry type");
-    }
-
-private:
-    CLVMPrograms()
-    {
-        SetEntry(PredefinedPrograms::DEFAULT_HIDDEN_PUZZLE, utils::BytesFromHex("ff0980"));
-        SetEntry(PredefinedPrograms::SYNTHETIC_MOD, utils::BytesFromHex("ff1dff02ffff1effff0bff02ff05808080"));
-        SetEntry(PredefinedPrograms::MOD, utils::BytesFromHex("ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080"));
-
-    }
-
-    void InsertOrAssign(PredefinedPrograms name, Entry entry)
-    {
-        auto i = progs_.find(name);
-        if (i != std::end(progs_)) {
-            i->second = std::move(entry);
-            return;
-        }
-        progs_.insert(std::make_pair(std::move(name), std::move(entry)));
-    }
-
-private:
-    std::string prefix_ { "../clvm" };
-    std::map<PredefinedPrograms, Entry> progs_;
-};
-
-PublicKey calculate_synthetic_public_key(PublicKey const& public_key, Bytes32 const& hidden_puzzle_hash)
-{
-    assert(!public_key.empty());
-    Cost cost;
-    CLVMObjectPtr pk;
-    std::tie(cost, pk) = CLVMPrograms::GetInstance()
-                             .GetProgram(PredefinedPrograms::SYNTHETIC_MOD)
-                             .Run(ToSExpList(public_key, utils::bytes_cast<32>(hidden_puzzle_hash)));
-    return utils::bytes_cast<Key::PUB_KEY_LEN>(Atom(pk));
-}
-
-Program puzzle_for_synthetic_public_key(PublicKey const& synthetic_public_key)
-{
-    return CLVMPrograms::GetInstance().GetProgram(PredefinedPrograms::MOD).Curry(ToSExp(synthetic_public_key));
-}
-
-Program puzzle_for_public_key_and_hidden_puzzle_hash(PublicKey const& public_key, Bytes32 const& hidden_puzzle_hash)
-{
-    auto synthetic_public_key = calculate_synthetic_public_key(public_key, hidden_puzzle_hash);
-
-    return puzzle_for_synthetic_public_key(synthetic_public_key);
-}
-
-Program puzzle_for_public_key_and_hidden_puzzle(PublicKey const& public_key, Program const& hidden_puzzle)
-{
-    return puzzle_for_public_key_and_hidden_puzzle_hash(public_key, hidden_puzzle.GetTreeHash());
-}
-
-Program puzzle_for_pk(PublicKey const& public_key)
-{
-    return puzzle_for_public_key_and_hidden_puzzle_hash(
-        public_key, CLVMPrograms::GetInstance().GetProgram(PredefinedPrograms::DEFAULT_HIDDEN_PUZZLE).GetTreeHash());
-}
-
-} // namespace puzzle
-
 Address Key::GetAddress(std::string_view prefix) const
 {
-    auto puzzle_hash = puzzle::puzzle_for_pk(GetPublicKey()).GetTreeHash();
-    return bech32::Encode(prefix.data(), bech32::ConvertBits(utils::BytesToInts(utils::bytes_cast<32>(puzzle_hash)), 8, 5));
+    auto puzzle_hash = puzzle::puzzle_for_public_key(GetPublicKey()).GetTreeHash();
+    return bech32::Encode(prefix.data(), bech32::ConvertBits(utils::BytesToInts(utils::HashToBytes(puzzle_hash)), 8, 5));
 }
 
 } // namespace wallet
-
-std::vector<Int> PublicKeyToPuzzleHash(Bytes const& pk)
-{
-    auto puzzle_hash = wallet::puzzle::puzzle_for_pk(utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(pk)).GetTreeHash();
-    return utils::BytesToInts(utils::bytes_cast<32>(puzzle_hash));
-}
 
 } // namespace chia
