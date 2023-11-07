@@ -1,6 +1,8 @@
 #ifndef CHIA_TYPES_H
 #define CHIA_TYPES_H
 
+#include <cstdint>
+
 #include <array>
 #include <string>
 #include <vector>
