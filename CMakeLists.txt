@@ -71,7 +71,7 @@ if (BUILD_TEST)
     target_sources(test_clvm PRIVATE ${test_clvm_src})
     target_link_libraries(test_clvm PRIVATE
         clvm_cpp
-        GTest::gtest
+        # GTest::gtest
         GTest::gtest_main
     )
     add_test(NAME test_clvm COMMAND test_clvm)
