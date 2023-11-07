@@ -10,9 +10,7 @@
 #include "int.h"
 #include "types.h"
 
-namespace chia
-{
-namespace utils
+namespace chia::utils
 {
 
 template <int LEN> Bytes bytes_cast(std::array<uint8_t, LEN> const& rhs)
@@ -39,6 +37,10 @@ template <typename Container> Container ConnectContainers(Container const& lhs, 
 }
 
 Bytes StrToBytes(std::string str);
+
+Bytes32 BytesToHash(Bytes const& bytes);
+
+Bytes HashToBytes(Bytes32 const& hash);
 
 /**
  * Convert 4-bit byte to hex character
@@ -198,7 +200,6 @@ std::string ToUpper(std::string str);
 
 std::string ToLower(std::string str);
 
-} // namespace utils
-} // namespace chia
+} // namespace chia::utils
 
 #endif

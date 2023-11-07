@@ -10,12 +10,24 @@ namespace chia
 namespace utils
 {
 
+const int HASH256_LEN = 32;
+
 Bytes StrToBytes(std::string str)
 {
     Bytes b;
     b.resize(str.size());
     memcpy(b.data(), str.data(), str.size());
     return b;
+}
+
+Bytes32 BytesToHash(Bytes const& bytes)
+{
+    return bytes_cast<HASH256_LEN>(bytes);
+}
+
+Bytes HashToBytes(Bytes32 const& hash)
+{
+    return bytes_cast<HASH256_LEN>(hash);
 }
 
 char const hex_chars[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };

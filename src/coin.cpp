@@ -174,7 +174,7 @@ std::vector<Coin> created_outputs_for_conditions_dict(
     auto i = conditions_dict.find(ConditionOpcode(ConditionOpcode::CREATE_COIN));
     if (i != std::end(conditions_dict)) {
         for (auto const& cvp : i->second) {
-            Bytes32 puzzle_hash = utils::bytes_cast<32>(cvp.vars[0]);
+            Bytes32 puzzle_hash = utils::BytesToHash(cvp.vars[0]);
             Bytes amount_bin = cvp.vars[1];
             uint64_t amount = utils::IntFromBEBytes<uint64_t>(amount_bin);
             output_coins.emplace_back(std::move(input_coin_name), std::move(puzzle_hash), amount);
@@ -242,7 +242,7 @@ std::vector<std::tuple<Bytes48, Bytes>> pkm_pairs_for_conditions_dict(
         assert(cwa.vars[0].size() == 48 && cwa.vars[1].size() <= 1024);
         assert(!cwa.vars[0].empty() && !cwa.vars[1].empty());
         ret.push_back(std::make_pair(utils::bytes_cast<48>(cwa.vars[0]),
-            utils::ConnectBuffers(cwa.vars[1], utils::bytes_cast<32>(coin_name), additional_data)));
+            utils::ConnectBuffers(cwa.vars[1], utils::HashToBytes(coin_name), additional_data)));
     }
 
     return ret;
@@ -306,7 +306,7 @@ Bytes32 Coin::HashCoinList(std::vector<Coin> coin_list)
 
     Bytes buffer;
     for (Coin const& coin : coin_list) {
-        buffer = utils::ConnectBuffers(buffer, utils::bytes_cast<32>(coin.GetName()));
+        buffer = utils::ConnectBuffers(buffer, utils::HashToBytes(coin.GetName()));
     }
     return crypto_utils::MakeSHA256(buffer);
 }
@@ -320,12 +320,12 @@ Coin::Coin(Bytes32 parent_coin_info, Bytes32 puzzle_hash, uint64_t amount)
 
 Bytes32 Coin::GetName() const { return GetHash(); }
 
-std::string Coin::GetNameStr() const { return utils::BytesToHex(utils::bytes_cast<32>(GetName())); }
+std::string Coin::GetNameStr() const { return utils::BytesToHex(utils::HashToBytes(GetName())); }
 
 Bytes32 Coin::GetHash() const
 {
     return crypto_utils::MakeSHA256(
-        utils::bytes_cast<32>(parent_coin_info_), utils::bytes_cast<32>(puzzle_hash_), utils::IntToBEBytes(amount_));
+        utils::HashToBytes(parent_coin_info_), utils::HashToBytes(puzzle_hash_), utils::IntToBEBytes(amount_));
 }
 
 /*******************************************************************************

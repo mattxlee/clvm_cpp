@@ -494,7 +494,7 @@ Bytes32 SHA256TreeHash(CLVMObjectPtr sexp, std::vector<Bytes> const& precalculat
         auto p1 = sexp_stack.Pop();
         Bytes prefix = utils::ByteToBytes('\2');
         sexp_stack.Push(
-            ToSExp(utils::bytes_cast<32>(crypto_utils::MakeSHA256(utils::ConnectBuffers(prefix, Atom(p0), Atom(p1))))));
+            ToSExp(utils::HashToBytes(crypto_utils::MakeSHA256(utils::ConnectBuffers(prefix, Atom(p0), Atom(p1))))));
     };
 
     Op roll = [](ValStack& sexp_stack, OpStack& op_stack) {
@@ -523,7 +523,7 @@ Bytes32 SHA256TreeHash(CLVMObjectPtr sexp, std::vector<Bytes> const& precalculat
                 r = atom;
             } else {
                 Bytes prefix = utils::ByteToBytes('\1');
-                r = utils::bytes_cast<32>(crypto_utils::MakeSHA256(utils::ConnectBuffers(prefix, atom)));
+                r = utils::HashToBytes(crypto_utils::MakeSHA256(utils::ConnectBuffers(prefix, atom)));
             }
             sexp_stack.Push(ToSExp(r));
         }
@@ -544,7 +544,7 @@ Bytes32 SHA256TreeHash(CLVMObjectPtr sexp, std::vector<Bytes> const& precalculat
     assert(sexp_stack.IsEmpty());
     assert(IsAtom(res));
 
-    return utils::bytes_cast<32>(Atom(res));
+    return utils::BytesToHash(Atom(res));
 }
 
 } // namespace tree_hash

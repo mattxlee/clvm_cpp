@@ -5,11 +5,12 @@
 
 #include "assemble.h"
 #include "int.h"
-#include "key.h"
 #include "operator_lookup.h"
 #include "program.h"
 #include "types.h"
 #include "utils.h"
+#include "key.h"
+
 #include "bech32.h"
 #include "puzzle.h"
 
@@ -63,14 +64,14 @@ TEST(CLVM_SHA256_treehash, LoadAndVerify_s0)
 {
     auto prog = chia::Program::ImportFromHex(s0);
     auto treehash_bytes = chia::utils::BytesFromHex(s0_treehash);
-    EXPECT_EQ(chia::utils::bytes_cast<32>(prog.GetTreeHash()), treehash_bytes);
+    EXPECT_EQ(chia::utils::HashToBytes(prog.GetTreeHash()), treehash_bytes);
 }
 
 TEST(CLVM_SHA256_treehash, LoadAndVerify_s1)
 {
     auto prog = chia::Program::ImportFromHex(s1);
     auto treehash_bytes = chia::utils::BytesFromHex(s1_treehash);
-    EXPECT_EQ(chia::utils::bytes_cast<32>(prog.GetTreeHash()), treehash_bytes);
+    EXPECT_EQ(chia::utils::HashToBytes(prog.GetTreeHash()), treehash_bytes);
 }
 
 TEST(CLVM_BigInt, Initial100)

@@ -34,7 +34,7 @@ OpResult op_sha256(CLVMObjectPtr args)
         cost += SHA256_COST_PER_ARG;
     }
     cost += arg_len * SHA256_COST_PER_ARG;
-    return MallocCost(cost, ToSExp(utils::bytes_cast<32>(sha256.Finish())));
+    return MallocCost(cost, ToSExp(utils::HashToBytes(sha256.Finish())));
 }
 
 OpResult op_add(CLVMObjectPtr args)
