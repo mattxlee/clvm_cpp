@@ -19,7 +19,14 @@ Program puzzle_for_public_key(PublicKey const& public_key);
 
 Bytes32 public_key_to_puzzle_hash(PublicKey const& public_key);
 
-} // namespace chia::puzzle
+Program solution_for_conditions(CLVMObjectPtr conditions);
 
+CLVMObjectPtr puzzle_for_conditions(CLVMObjectPtr conditions);
+
+Program solution_for_delegated_puzzle(CLVMObjectPtr delegated_puzzle, CLVMObjectPtr solution);
+
+CLVMObjectPtr make_create_coin_condition(Bytes32 const& puzzle_hash, uint64_t amount, Bytes const& memo);
+
+} // namespace chia::puzzle
 
 #endif
