@@ -5,7 +5,7 @@
 #include "costs.h"
 #include "crypto_utils.h"
 #include "key.h"
-#include "program.h"
+#include "sexp_prog.h"
 #include "utils.h"
 
 namespace chia

@@ -8,7 +8,7 @@
 #include <optional>
 
 #include "operator_lookup.h"
-#include "program.h"
+#include "sexp_prog.h"
 #include "utils.h"
 
 #define CONS chia::types::Type::GetInstance().ToType("CONS")

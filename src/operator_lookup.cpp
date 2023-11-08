@@ -6,7 +6,7 @@
 #include "core_opts.h"
 #include "costs.h"
 #include "more_opts.h"
-#include "program.h"
+#include "sexp_prog.h"
 #include "utils.h"
 
 namespace chia

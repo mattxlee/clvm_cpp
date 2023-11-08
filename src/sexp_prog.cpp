@@ -1,4 +1,4 @@
-#include "program.h"
+#include "sexp_prog.h"
 
 #include <iostream>
 #include <memory>

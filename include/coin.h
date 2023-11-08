@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "program.h"
+#include "sexp_prog.h"
 #include "types.h"
 
 namespace chia

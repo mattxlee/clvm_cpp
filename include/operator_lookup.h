@@ -6,7 +6,7 @@
 #include <string>
 #include <tuple>
 
-#include "program.h"
+#include "sexp_prog.h"
 
 namespace chia
 {

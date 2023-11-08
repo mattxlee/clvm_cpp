@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-#include "program.h"
+#include "sexp_prog.h"
 
 namespace chia::puzzle {
 

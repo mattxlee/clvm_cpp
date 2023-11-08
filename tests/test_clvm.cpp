@@ -6,7 +6,7 @@
 #include "assemble.h"
 #include "int.h"
 #include "operator_lookup.h"
-#include "program.h"
+#include "sexp_prog.h"
 #include "types.h"
 #include "utils.h"
 #include "key.h"

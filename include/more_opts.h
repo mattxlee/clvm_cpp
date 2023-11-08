@@ -2,7 +2,7 @@
 #define CHIA_MORE_OPTS_H
 
 #include "core_opts.h"
-#include "program.h"
+#include "sexp_prog.h"
 
 namespace chia
 {

@@ -38,7 +38,7 @@ file(GLOB clvm_cpp_src
     src/crypto_utils.cpp
     src/key.cpp
     src/mnemonic.cpp
-    src/program.cpp
+    src/sexp_prog.cpp
     src/utils.cpp
     src/operator_lookup.cpp
     src/core_opts.cpp

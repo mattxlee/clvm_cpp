@@ -1,7 +1,7 @@
 #include "core_opts.h"
 
 #include "costs.h"
-#include "program.h"
+#include "sexp_prog.h"
 
 namespace chia
 {
