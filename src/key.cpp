@@ -102,8 +102,8 @@ Key Key::DerivePath(std::vector<uint32_t> const& paths) const
 
 Address Key::GetAddress(std::string_view prefix) const
 {
-    auto puzzle_hash = puzzle::puzzle_for_public_key(GetPublicKey()).GetTreeHash();
-    return bech32::Encode(prefix.data(), bech32::ConvertBits(utils::BytesToInts(utils::HashToBytes(puzzle_hash)), 8, 5));
+    auto puzzle_hash = utils::BytesToInts(utils::HashToBytes(puzzle::puzzle_for_public_key(GetPublicKey()).GetTreeHash()));
+    return bech32::EncodePuzzleHash(puzzle_hash, prefix);
 }
 
 } // namespace wallet
