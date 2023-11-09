@@ -66,6 +66,21 @@ public:
     /// Derive key
     Key DerivePath(std::vector<uint32_t> const& paths) const;
 
+    /// Derive key for wallet
+    Key GetWalletKey(uint32_t index = 0) const;
+
+    /// Derive key for farmer
+    Key GetFarmerKey(uint32_t index = 0) const;
+
+    /// Derive key for pool
+    Key GetPoolKey(uint32_t index = 0) const;
+
+    /// Derive key for local
+    Key GetLocalKey(uint32_t index = 0) const;
+
+    /// Derive key for backup
+    Key GetBackupKey(uint32_t index = 0) const;
+
     /// Calculate the address from public key
     Address GetAddress(std::string_view prefix = "xch") const;
 

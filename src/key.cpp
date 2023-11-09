@@ -100,6 +100,31 @@ Key Key::DerivePath(std::vector<uint32_t> const& paths) const
     return Key(utils::bytes_cast<PRIV_KEY_LEN>(sk.Serialize()));
 }
 
+Key Key::GetWalletKey(uint32_t index) const
+{
+    return DerivePath({ 12381, 8444, 2, index });
+}
+
+Key Key::GetFarmerKey(uint32_t index) const
+{
+    return DerivePath({ 12381, 8444, 0, index });
+}
+
+Key Key::GetPoolKey(uint32_t index) const
+{
+    return DerivePath({ 12381, 8444, 1, index });
+}
+
+Key Key::GetLocalKey(uint32_t index) const
+{
+    return DerivePath({ 12381, 8444, 3, index });
+}
+
+Key Key::GetBackupKey(uint32_t index) const
+{
+    return DerivePath({ 12381, 8444, 4, index });
+}
+
 Address Key::GetAddress(std::string_view prefix) const
 {
     auto puzzle_hash = utils::BytesToInts(utils::HashToBytes(puzzle::puzzle_for_public_key(GetPublicKey()).GetTreeHash()));
