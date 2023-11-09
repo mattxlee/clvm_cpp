@@ -67,13 +67,18 @@ if (BUILD_TEST)
     enable_testing()
     find_package(GTest CONFIG REQUIRED)
     enable_testing()
-    set(test_clvm_src tests/test_clvm.cpp)
-    add_executable(test_clvm)
-    target_sources(test_clvm PRIVATE ${test_clvm_src})
-    target_link_libraries(test_clvm PRIVATE
-        clvm_cpp
-        # GTest::gtest
-        GTest::gtest_main
-    )
-    add_test(NAME test_clvm COMMAND test_clvm)
+
+    function(declare_test test_name)
+        set(test_clvm_src tests/${test_name}.cpp)
+        add_executable(${test_name})
+        target_sources(${test_name} PRIVATE ${test_clvm_src})
+        target_link_libraries(${test_name} PRIVATE
+            clvm_cpp
+            GTest::gtest_main
+        )
+        add_test(NAME ${test_name} COMMAND ${test_name})
+    endfunction()
+
+    declare_test("test_clvm")
+    declare_test("test_key")
 endif()

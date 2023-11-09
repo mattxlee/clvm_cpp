@@ -9,10 +9,8 @@
 #include "sexp_prog.h"
 #include "types.h"
 #include "utils.h"
-#include "key.h"
 
 #include "bech32.h"
-#include "puzzle.h"
 
 TEST(Utilities, ByteToBytes)
 {
@@ -387,17 +385,4 @@ TEST(CLVM_RunProgram, Env_ThroughInt_Complex6)
     std::tie(std::ignore, r) = prog.Run(chia::Assemble("((\"deeper\" \"example\") \"data\" \"for\" \"test\")"));
     chia::ArgsIter i(r);
     EXPECT_EQ(i.NextStr(), "example");
-}
-
-TEST(CLVM_Address, ConvertPuzzleHash)
-{
-    char const* SZ_PUBLIC_KEY = "aea444ca6508d64855735a89491679daec4303e104d62b83d0e4d4c5280edd2b2480740031f68b374e4cd5d4aa6544e7";
-    char const* SZ_ADDRESS = "xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5";
-    auto pk = chia::utils::bytes_cast<chia::wallet::Key::PUB_KEY_LEN>(chia::utils::BytesFromHex(SZ_PUBLIC_KEY));
-    auto puzzle_hash = chia::utils::BytesToInts(chia::utils::HashToBytes(chia::puzzle::public_key_to_puzzle_hash(pk)));
-    std::string address = chia::bech32::EncodePuzzleHash(puzzle_hash, "xch");
-    EXPECT_EQ(address, SZ_ADDRESS);
-    auto decoded_puzzle_hash = chia::bech32::DecodePuzzleHash(address);
-    EXPECT_EQ(decoded_puzzle_hash.size(), puzzle_hash.size());
-    EXPECT_EQ(chia::utils::IntsToBytes(decoded_puzzle_hash), chia::utils::IntsToBytes(puzzle_hash));
 }
