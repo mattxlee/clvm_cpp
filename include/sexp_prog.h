@@ -294,6 +294,14 @@ public:
 
     explicit Program(CLVMObjectPtr sexp);
 
+    Program(Program const& rhs) = default;
+
+    Program& operator=(Program const& rhs) = default;
+
+    Program(Program&& rhs) = default;
+
+    Program& operator=(Program&& rhs) = default;
+
     CLVMObjectPtr GetSExp() const { return sexp_; }
 
     Bytes32 GetTreeHash() const;
