@@ -202,7 +202,7 @@ Int ir_type(CLVMObjectPtr ir_sexp)
     if (ListP(the_type)) {
         the_type = First(the_type);
     }
-    return Int(Atom(the_type));
+    return Int(ToBytes(the_type));
 }
 
 Int ir_as_int(CLVMObjectPtr ir_sexp)
@@ -215,7 +215,7 @@ Int ir_offset(CLVMObjectPtr ir_sexp)
 {
     auto the_offset = First(ir_sexp);
     if (ListP(the_offset)) {
-        return Int(Atom(Rest(the_offset)));
+        return Int(ToBytes(Rest(the_offset)));
     } else {
         return Int(utils::ByteToBytes('\xff'));
     }
@@ -271,7 +271,7 @@ bool is_ir(CLVMObjectPtr sexp)
 
     CLVMObjectPtr type_sexp, val_sexp;
     std::tie(type_sexp, val_sexp) = Pair(sexp);
-    auto the_type = Int(Atom(type_sexp));
+    auto the_type = Int(ToBytes(type_sexp));
     if (!types::Type::GetInstance().Available(the_type)) {
         return false;
     }

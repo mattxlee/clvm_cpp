@@ -104,7 +104,7 @@ bool IsPair(CLVMObjectPtr obj);
 
 bool IsNull(CLVMObjectPtr obj);
 
-Bytes Atom(CLVMObjectPtr obj);
+Bytes ToBytes(CLVMObjectPtr obj);
 
 Int ToInt(CLVMObjectPtr obj);
 
@@ -204,7 +204,7 @@ public:
 
     std::string NextStr() { return ToString(NextCLVMObj()); }
 
-    Bytes Next() { return Atom(NextCLVMObj()); }
+    Bytes Next() { return ToBytes(NextCLVMObj()); }
 
     CLVMObjectPtr NextCLVMObj()
     {

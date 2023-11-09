@@ -154,7 +154,7 @@ bool IsPair(CLVMObjectPtr obj)
 
 bool IsNull(CLVMObjectPtr obj) { return obj->GetNodeType() == NodeType::None; }
 
-Bytes Atom(CLVMObjectPtr obj)
+Bytes ToBytes(CLVMObjectPtr obj)
 {
     if (!obj) {
         throw std::runtime_error("can't convert null to atom");
@@ -183,7 +183,7 @@ std::string ToString(CLVMObjectPtr obj)
     if (obj->GetNodeType() != NodeType::Atom_Str) {
         return "";
     }
-    auto b = Atom(obj);
+    auto b = ToBytes(obj);
     return std::string(std::begin(b), std::end(b));
 }
 
@@ -253,7 +253,7 @@ int ArgsLen(CLVMObjectPtr obj)
             throw std::runtime_error("requires in args");
         }
         // Next
-        len += static_cast<int>(Atom(a).size());
+        len += static_cast<int>(ToBytes(a).size());
         obj = r;
     }
     return len;
@@ -266,13 +266,13 @@ std::tuple<bool, Bytes, CLVMObjectPtr> ArgsNext(CLVMObjectPtr obj)
     }
     CLVMObjectPtr b, next;
     std::tie(b, next) = Pair(obj);
-    Bytes bytes = Atom(b);
+    Bytes bytes = ToBytes(b);
     return std::make_tuple(true, bytes, next);
 }
 
 std::tuple<Cost, CLVMObjectPtr> MallocCost(Cost cost, CLVMObjectPtr atom)
 {
-    return std::make_tuple(cost + Atom(atom).size() * MALLOC_COST_PER_BYTE, atom);
+    return std::make_tuple(cost + ToBytes(atom).size() * MALLOC_COST_PER_BYTE, atom);
 }
 
 std::vector<std::tuple<Int, int>> ListInts(CLVMObjectPtr args)
@@ -463,7 +463,7 @@ Bytes SExpToStream(CLVMObjectPtr sexp)
             todo_stack.Push(rest);
             todo_stack.Push(first);
         } else {
-            res = utils::ConnectBuffers(res, AtomToBytes(Atom(sexp)));
+            res = utils::ConnectBuffers(res, AtomToBytes(ToBytes(sexp)));
         }
     }
     return res;
@@ -494,7 +494,7 @@ Bytes32 SHA256TreeHash(CLVMObjectPtr sexp, std::vector<Bytes> const& precalculat
         auto p1 = sexp_stack.Pop();
         Bytes prefix = utils::ByteToBytes('\2');
         sexp_stack.Push(
-            ToSExp(utils::HashToBytes(crypto_utils::MakeSHA256(utils::ConnectBuffers(prefix, Atom(p0), Atom(p1))))));
+            ToSExp(utils::HashToBytes(crypto_utils::MakeSHA256(utils::ConnectBuffers(prefix, ToBytes(p0), ToBytes(p1))))));
     };
 
     Op roll = [](ValStack& sexp_stack, OpStack& op_stack) {
@@ -516,7 +516,7 @@ Bytes32 SHA256TreeHash(CLVMObjectPtr sexp, std::vector<Bytes> const& precalculat
             op_stack.Push(roll);
             op_stack.Push(handle_sexp);
         } else {
-            Bytes atom = Atom(sexp);
+            Bytes atom = ToBytes(sexp);
             auto i = std::find(std::begin(precalculated), std::end(precalculated), atom);
             Bytes r;
             if (i != std::end(precalculated)) {
@@ -544,7 +544,7 @@ Bytes32 SHA256TreeHash(CLVMObjectPtr sexp, std::vector<Bytes> const& precalculat
     assert(sexp_stack.IsEmpty());
     assert(IsAtom(res));
 
-    return utils::BytesToHash(Atom(res));
+    return utils::BytesToHash(ToBytes(res));
 }
 
 } // namespace tree_hash
@@ -626,7 +626,7 @@ std::tuple<Cost, CLVMObjectPtr> traverse_path(CLVMObjectPtr sexp, CLVMObjectPtr 
         return std::make_tuple(cost, MakeNull());
     }
 
-    Bytes b = Atom(sexp);
+    Bytes b = ToBytes(sexp);
 
     int end_byte_cursor { 0 };
     while (end_byte_cursor < b.size() && b[end_byte_cursor] == 0) {
@@ -709,7 +709,7 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program, CLVMObjectPtr
             return APPLY_COST;
         }
 
-        Bytes op = Atom(opt);
+        Bytes op = ToBytes(opt);
         auto operand_list = sexp_rest;
         if (op == operator_lookup.QUOTE_ATOM) {
             val_stack.Push(operand_list);
@@ -739,7 +739,7 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program, CLVMObjectPtr
             throw std::runtime_error("internal error");
         }
 
-        Bytes op = Atom(opt);
+        Bytes op = ToBytes(opt);
         if (op == operator_lookup.APPLY_ATOM) {
             if (ListLen(operand_list) != 2) {
                 throw std::runtime_error("apply requires exactly 2 parameters");

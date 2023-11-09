@@ -113,7 +113,7 @@ OpResult op_divmod(CLVMObjectPtr args)
     std::tie(q, r) = divmod(i0, i1);
     auto q1 = ToSExp(q);
     auto r1 = ToSExp(r);
-    cost += (Atom(q1).size() + Atom(r1).size()) * MALLOC_COST_PER_BYTE;
+    cost += (ToBytes(q1).size() + ToBytes(r1).size()) * MALLOC_COST_PER_BYTE;
     return std::make_tuple(cost, ToSExpPair(q1, r1));
 }
 
@@ -173,7 +173,7 @@ OpResult op_pubkey_for_exp(CLVMObjectPtr args)
     if (ListLen(args) != 1) {
         throw std::runtime_error("pubkey for exp takes exactly 1 parameter");
     }
-    auto i0 = Int(Atom(First(args)));
+    auto i0 = Int(ToBytes(First(args)));
     auto l0 = i0.NumBytes();
     auto mb = utils::BytesFromHex("73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001");
     auto m = Int(mb);
@@ -205,7 +205,7 @@ OpResult op_strlen(CLVMObjectPtr args)
     if (ListLen(args) != 1) {
         throw std::runtime_error("strlen takes exactly 1 argument");
     }
-    auto a0 = Atom(First(args));
+    auto a0 = ToBytes(First(args));
     Int size(static_cast<long>(a0.size()));
     Cost cost = a0.size() * STRLEN_COST_PER_BYTE + STRLEN_BASE_COST;
     return MallocCost(cost, ToSExp(size));
@@ -287,7 +287,7 @@ OpResult op_lsh(CLVMObjectPtr args)
     if (abs(i1) > 65535) {
         throw std::runtime_error("shift too large");
     }
-    int i0 = Int(Atom(First(args))).ToInt();
+    int i0 = Int(ToBytes(First(args))).ToInt();
     int r;
     if (i1 >= 0) {
         r = i0 << i1;

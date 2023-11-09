@@ -63,8 +63,8 @@ OpResult op_eq(CLVMObjectPtr args)
     if (IsPair(a0) || IsPair(a1)) {
         throw std::runtime_error("= on list");
     }
-    auto b0 = Atom(a0);
-    auto b1 = Atom(a1);
+    auto b0 = ToBytes(a0);
+    auto b1 = ToBytes(a1);
     Cost cost { EQ_BASE_COST };
     cost += (b0.size() + b1.size()) * EQ_COST_PER_BYTE;
     return std::make_tuple(cost, a0->EqualsTo(a1) ? ToTrue() : ToFalse());

@@ -48,7 +48,7 @@ PublicKey calculate_synthetic_public_key(PublicKey const& public_key, Bytes32 co
     Cost cost;
     CLVMObjectPtr pk;
     std::tie(cost, pk) = PredefinedPrograms::GetInstance()[PredefinedPrograms::Names::SYNTHETIC_MOD].Run(ToSExpList(public_key, utils::HashToBytes(hidden_puzzle_hash)));
-    return utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(Atom(pk));
+    return utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(ToBytes(pk));
 }
 
 Program puzzle_for_synthetic_public_key(PublicKey const& synthetic_public_key)
