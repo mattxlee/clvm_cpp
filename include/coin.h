@@ -22,11 +22,11 @@ public:
 
     std::string GetNameStr() const;
 
-    Bytes32 GetHash() const;
-
     Cost GetAmount() const { return amount_; }
 
 private:
+    Bytes32 GetHash() const;
+
     Bytes parent_coin_info_;
     Bytes puzzle_hash_;
     Cost amount_;
