@@ -2,6 +2,7 @@
 #define CHIA_COIN_H
 
 #include <vector>
+#include <set>
 
 #include "sexp_prog.h"
 #include "types.h"
@@ -30,6 +31,13 @@ private:
     Bytes parent_coin_info_;
     Bytes puzzle_hash_;
     Cost amount_;
+};
+
+struct Payment
+{
+    Bytes32 puzzle_hash;
+    Cost amount;
+    Bytes memo;
 };
 
 class CoinSpend
@@ -67,6 +75,11 @@ private:
     std::vector<CoinSpend> coin_spends_;
     Signature aggregated_signature_;
 };
+
+namespace puzzle {
+
+Program make_solution(std::vector<Payment> const& primaries, std::set<Bytes> const& coin_announcements = {}, std::set<Bytes32> const& coin_announcements_to_assert = {}, std::set<Bytes> const& puzzle_announcements = {}, std::set<Bytes32> const& puzzle_announcements_to_assert = {}, CLVMObjectPtr additions = nullptr, uint64_t fee = 0);
+} // namespace puzzle
 
 } // namespace chia
 

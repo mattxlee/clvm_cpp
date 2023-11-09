@@ -107,4 +107,29 @@ CLVMObjectPtr make_create_coin_condition(Bytes32 const& puzzle_hash, uint64_t am
     }
 }
 
+CLVMObjectPtr make_reserve_fee_condition(uint64_t fee)
+{
+    return ToSExpList(Bytes{ ConditionOpcode::ToBytes(ConditionOpcode::RESERVE_FEE)}, fee);
+}
+
+CLVMObjectPtr make_assert_coin_announcement(Bytes32 const& announcement_hash)
+{
+    return ToSExpList(Bytes { ConditionOpcode::ToBytes(ConditionOpcode::ASSERT_COIN_ANNOUNCEMENT)}, utils::HashToBytes(announcement_hash));
+}
+
+CLVMObjectPtr make_assert_puzzle_announcement(Bytes32 const& announcement_hash)
+{
+    return ToSExpList(Bytes { ConditionOpcode::ToBytes(ConditionOpcode::ASSERT_PUZZLE_ANNOUNCEMENT)}, utils::HashToBytes(announcement_hash));
+}
+
+CLVMObjectPtr make_create_coin_announcement(Bytes const& message)
+{
+    return ToSExpList(Bytes { ConditionOpcode::ToBytes(ConditionOpcode::CREATE_COIN_ANNOUNCEMENT)}, message);
+}
+
+CLVMObjectPtr make_create_puzzle_announcement(Bytes const& message)
+{
+    return ToSExpList(Bytes { ConditionOpcode::ToBytes(ConditionOpcode::CREATE_PUZZLE_ANNOUNCEMENT)}, message);
+}
+
 } // namespace chia::puzzle

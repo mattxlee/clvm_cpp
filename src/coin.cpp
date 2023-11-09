@@ -23,6 +23,10 @@
 namespace chia
 {
 
+/// utilities
+
+namespace puzzle {
+
 ConditionWithArgs parse_sexp_to_condition(CLVMObjectPtr sexp)
 {
     if (ListLen(sexp) < 1) {
@@ -151,6 +155,46 @@ std::vector<std::tuple<Bytes48, Bytes>> pkm_pairs_for_conditions_dict(
     return ret;
 }
 
+Program make_solution(std::vector<Payment> const& primaries, std::set<Bytes> const& coin_announcements, std::set<Bytes32> const& coin_announcements_to_assert, std::set<Bytes> const& puzzle_announcements, std::set<Bytes32> const& puzzle_announcements_to_assert, CLVMObjectPtr additions, uint64_t fee)
+{
+    ListBuilder result_builder;
+    if (additions) {
+        ArgsIter iter(additions);
+        while (!iter.IsEof()) {
+            result_builder.Add(iter.NextCLVMObj());
+        }
+    }
+    if (!primaries.empty()) {
+        for (auto const& primary : primaries) {
+            result_builder.Add(puzzle::make_create_coin_condition(primary.puzzle_hash, primary.amount, primary.memo));
+        }
+    }
+    if (fee > 0) {
+        result_builder.Add(puzzle::make_reserve_fee_condition(fee));
+    }
+    if (!coin_announcements.empty()) {
+        for (auto const& announcement : coin_announcements) {
+            result_builder.Add(puzzle::make_create_coin_announcement(announcement));
+        }
+    }
+    if (!coin_announcements_to_assert.empty()) {
+        for (auto const& announcement_hash : coin_announcements_to_assert) {
+            result_builder.Add(puzzle::make_assert_coin_announcement(announcement_hash));
+        }
+    }
+    if (!puzzle_announcements.empty()) {
+        for (auto const& puzzle_announcement : puzzle_announcements) {
+            result_builder.Add(puzzle::make_create_puzzle_announcement(puzzle_announcement));
+        }
+    }
+    if (!puzzle_announcements_to_assert.empty()) {
+        for (auto const& puzzle_announcement : puzzle_announcements_to_assert) {
+            result_builder.Add(puzzle::make_assert_puzzle_announcement(puzzle_announcement));
+        }
+    }
+    return Program(result_builder.GetRoot());
+}
+
 using SecretKeyForPublicKeyFunc = std::function<bls::G2Element(bls::G1Element const&)>;
 SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPublicKeyFunc secret_key_for_public_key_f,
     Bytes const& additional_data, Cost max_cost)
@@ -195,6 +239,8 @@ SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPub
     Signature aggsig2 = utils::bytes_cast<wallet::Key::SIG_LEN>(aggsig.Serialize());
     return SpendBundle(std::move(coin_spends), aggsig2);
 }
+
+} // namespace puzzle
 
 /*******************************************************************************
  *
@@ -247,10 +293,10 @@ Bytes32 Coin::GetHash() const
 
 std::vector<Coin> CoinSpend::Additions() const
 {
-    return additions_for_solution(coin.GetName(), puzzle_reveal, solution, INFINITE_COST);
+    return puzzle::additions_for_solution(coin.GetName(), puzzle_reveal, solution, INFINITE_COST);
 }
 
-Cost CoinSpend::ReservedFee() { return fee_for_solution(puzzle_reveal, solution, INFINITE_COST); }
+Cost CoinSpend::ReservedFee() { return puzzle::fee_for_solution(puzzle_reveal, solution, INFINITE_COST); }
 
 /*******************************************************************************
  *

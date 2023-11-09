@@ -27,6 +27,16 @@ Program solution_for_delegated_puzzle(CLVMObjectPtr delegated_puzzle, CLVMObject
 
 CLVMObjectPtr make_create_coin_condition(Bytes32 const& puzzle_hash, uint64_t amount, Bytes const& memo);
 
+CLVMObjectPtr make_reserve_fee_condition(uint64_t fee);
+
+CLVMObjectPtr make_assert_coin_announcement(Bytes32 const& announcement_hash);
+
+CLVMObjectPtr make_assert_puzzle_announcement(Bytes32 const& announcement_hash);
+
+CLVMObjectPtr make_create_coin_announcement(Bytes const& message);
+
+CLVMObjectPtr make_create_puzzle_announcement(Bytes const& message);
+
 } // namespace chia::puzzle
 
 #endif
