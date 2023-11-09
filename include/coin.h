@@ -7,6 +7,11 @@
 #include "sexp_prog.h"
 #include "types.h"
 
+namespace bls {
+    class G1Element;
+    class G2Element;
+} // namespace bls
+
 namespace chia
 {
 
@@ -77,6 +82,10 @@ private:
 };
 
 namespace puzzle {
+
+using SecretKeyForPublicKeyFunc = std::function<bls::G2Element(bls::G1Element const&)>;
+
+SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPublicKeyFunc secret_key_for_public_key_f, Bytes const& additional_data, Cost max_cost);
 
 Program make_solution(std::vector<Payment> const& primaries, std::set<Bytes> const& coin_announcements = {}, std::set<Bytes32> const& coin_announcements_to_assert = {}, std::set<Bytes> const& puzzle_announcements = {}, std::set<Bytes32> const& puzzle_announcements_to_assert = {}, CLVMObjectPtr additions = nullptr, uint64_t fee = 0);
 } // namespace puzzle

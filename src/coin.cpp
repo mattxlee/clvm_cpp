@@ -195,9 +195,7 @@ Program make_solution(std::vector<Payment> const& primaries, std::set<Bytes> con
     return Program(result_builder.GetRoot());
 }
 
-using SecretKeyForPublicKeyFunc = std::function<bls::G2Element(bls::G1Element const&)>;
-SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPublicKeyFunc secret_key_for_public_key_f,
-    Bytes const& additional_data, Cost max_cost)
+SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPublicKeyFunc secret_key_for_public_key_f, Bytes const& additional_data, Cost max_cost)
 {
     std::vector<bls::G2Element> signatures;
     std::vector<bls::G1Element> pk_list;
