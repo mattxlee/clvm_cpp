@@ -13,6 +13,8 @@
 namespace chia::utils
 {
 
+const int HASH256_LEN = 32;
+
 template <int LEN> Bytes bytes_cast(std::array<uint8_t, LEN> const& rhs)
 {
     Bytes bytes(LEN, '\0');
@@ -36,11 +38,15 @@ template <typename Container> Container ConnectContainers(Container const& lhs, 
     return res;
 }
 
-Bytes StrToBytes(std::string str);
+Bytes StrToBytes(std::string_view str);
 
 Bytes32 BytesToHash(Bytes const& bytes);
 
 Bytes HashToBytes(Bytes32 const& hash);
+
+Bytes32 HashFromHex(std::string_view hex);
+
+std::string HashToHex(Bytes32 const& bytes);
 
 /**
  * Convert 4-bit byte to hex character
@@ -77,7 +83,7 @@ std::string BytesToHex(Bytes const& bytes);
  *
  * @return The converted byte array
  */
-Bytes BytesFromHex(std::string hex);
+Bytes BytesFromHex(std::string_view hex);
 
 /**
  * Convert byte array list to the string represents the arguments to a chialisp

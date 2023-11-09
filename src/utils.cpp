@@ -10,9 +10,7 @@ namespace chia
 namespace utils
 {
 
-const int HASH256_LEN = 32;
-
-Bytes StrToBytes(std::string str)
+Bytes StrToBytes(std::string_view str)
 {
     Bytes b;
     b.resize(str.size());
@@ -28,6 +26,18 @@ Bytes32 BytesToHash(Bytes const& bytes)
 Bytes HashToBytes(Bytes32 const& hash)
 {
     return bytes_cast<HASH256_LEN>(hash);
+}
+
+Bytes32 HashFromHex(std::string_view hex)
+{
+    Bytes bytes = BytesFromHex(hex);
+    return bytes_cast<HASH256_LEN>(bytes);
+}
+
+std::string HashToHex(Bytes32 const& hash)
+{
+    Bytes bytes = bytes_cast<HASH256_LEN>(hash);
+    return BytesToHex(bytes);
 }
 
 char const hex_chars[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
@@ -55,7 +65,7 @@ std::string ByteToHex(uint8_t byte)
     return hex;
 }
 
-uint8_t ByteFromHex(std::string hex, int* consumed)
+uint8_t ByteFromHex(std::string_view hex, int* consumed)
 {
     if (hex.empty()) {
         if (consumed) {
@@ -85,7 +95,7 @@ std::string BytesToHex(Bytes const& bytes)
     return ss.str();
 }
 
-Bytes BytesFromHex(std::string hex)
+Bytes BytesFromHex(std::string_view hex)
 {
     Bytes res;
     int consumed;

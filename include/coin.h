@@ -14,7 +14,9 @@ class Coin
 public:
     static Bytes32 HashCoinList(std::vector<Coin> coin_list);
 
-    Coin(Bytes32 parent_coin_info, Bytes32 puzzle_hash, uint64_t amount);
+    Coin(Bytes parent_coin_info, Bytes puzzle_hash, uint64_t amount);
+
+    Coin(Bytes32 const& parent_coin_info, Bytes32 const& puzzle_hash, uint64_t amount);
 
     Bytes32 GetName() const;
 
@@ -25,8 +27,8 @@ public:
     Cost GetAmount() const { return amount_; }
 
 private:
-    Bytes32 parent_coin_info_;
-    Bytes32 puzzle_hash_;
+    Bytes parent_coin_info_;
+    Bytes puzzle_hash_;
     Cost amount_;
 };
 

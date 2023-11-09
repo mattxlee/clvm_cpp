@@ -81,4 +81,5 @@ if (BUILD_TEST)
 
     declare_test("test_clvm")
     declare_test("test_key")
+    declare_test("test_coin")
 endif()

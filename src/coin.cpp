@@ -15,6 +15,7 @@
 #include "crypto_utils.h"
 #include "utils.h"
 #include "key.h"
+#include "int.h"
 
 #include "condition_opcode.h"
 
@@ -212,11 +213,19 @@ Bytes32 Coin::HashCoinList(std::vector<Coin> coin_list)
     return crypto_utils::MakeSHA256(buffer);
 }
 
-Coin::Coin(Bytes32 parent_coin_info, Bytes32 puzzle_hash, uint64_t amount)
+Coin::Coin(Bytes parent_coin_info, Bytes puzzle_hash, uint64_t amount)
     : parent_coin_info_(std::move(parent_coin_info))
     , puzzle_hash_(std::move(puzzle_hash))
     , amount_(amount)
 {
+}
+
+Coin::Coin(Bytes32 const& parent_coin_info, Bytes32 const& puzzle_hash, uint64_t amount)
+    : parent_coin_info_(utils::bytes_cast<utils::HASH256_LEN>(parent_coin_info))
+    , puzzle_hash_(utils::bytes_cast<utils::HASH256_LEN>(puzzle_hash))
+    , amount_(amount)
+{
+
 }
 
 Bytes32 Coin::GetName() const { return GetHash(); }
@@ -225,8 +234,8 @@ std::string Coin::GetNameStr() const { return utils::BytesToHex(utils::HashToByt
 
 Bytes32 Coin::GetHash() const
 {
-    return crypto_utils::MakeSHA256(
-        utils::HashToBytes(parent_coin_info_), utils::HashToBytes(puzzle_hash_), utils::IntToBEBytes(amount_));
+    Int amountInt(amount_);
+    return crypto_utils::MakeSHA256(parent_coin_info_, puzzle_hash_, amountInt.ToBytes());
 }
 
 /*******************************************************************************
