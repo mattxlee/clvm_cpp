@@ -4,6 +4,7 @@
 
 #include <map>
 
+#include "crypto_utils.h"
 #include "types.h"
 #include "utils.h"
 
@@ -42,13 +43,49 @@ private:
     std::map<Names, Bytes> progs_;
 };
 
+wallet::Key KeyFromRawPrivateKey(Bytes const& bytes)
+{
+    if (bytes.size() < wallet::Key::PRIV_KEY_LEN) {
+        throw std::runtime_error("not enough number of bytes for a private-key");
+    }
+    auto private_key = utils::bytes_cast<wallet::Key::PRIV_KEY_LEN>(bytes);
+    return wallet::Key(private_key);
+}
+
+char const* SZ_GROUP_ORDER = "73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001";
+
+Int GROUP_ORDER()
+{
+    return Int(utils::BytesFromHex(SZ_GROUP_ORDER));
+}
+
+Int calculate_synthetic_offset(PublicKey const& public_key, Bytes32 const& hidden_puzzle_hash)
+{
+    Bytes32 hash = crypto_utils::MakeSHA256(utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(public_key), utils::HashToBytes(hidden_puzzle_hash));
+    Int offset(utils::bytes_cast<utils::HASH256_LEN>(hash));
+    offset %= GROUP_ORDER();
+    return offset;
+}
+
 PublicKey calculate_synthetic_public_key(PublicKey const& public_key, Bytes32 const& hidden_puzzle_hash)
 {
-    assert(!public_key.empty());
-    Cost cost;
-    CLVMObjectPtr pk;
-    std::tie(cost, pk) = PredefinedPrograms::GetInstance()[PredefinedPrograms::Names::SYNTHETIC_MOD].Run(ToSExpList(public_key, utils::HashToBytes(hidden_puzzle_hash)));
-    return utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(ToBytes(pk));
+    Int offset = calculate_synthetic_offset(public_key, hidden_puzzle_hash);
+    auto bytes = offset.ToBytes();
+    wallet::Key synthetic_offset = KeyFromRawPrivateKey(bytes);
+    wallet::PubKey pk1(public_key), pk2(synthetic_offset.GetPublicKey());
+    return (pk1 + pk2).GetPublicKey();
+}
+
+wallet::Key calculate_synthetic_secret_key(wallet::Key const& key, Bytes32 const& hidden_puzzle_hash)
+{
+    PrivateKey private_key = key.GetPrivateKey();
+    Int secret_exponent = Int(utils::bytes_cast<wallet::Key::PRIV_KEY_LEN>(private_key));
+    PublicKey public_key = key.GetPublicKey();
+    Int synthetic_offset = calculate_synthetic_offset(public_key, hidden_puzzle_hash);
+    Int synthetic_secret_exponent = (secret_exponent + synthetic_offset) % GROUP_ORDER();
+    auto bytes = synthetic_secret_exponent.ToBytes();
+    wallet::Key synthetic_secret_key = KeyFromRawPrivateKey(bytes);
+    return synthetic_secret_key;
 }
 
 Program puzzle_for_synthetic_public_key(PublicKey const& synthetic_public_key)
