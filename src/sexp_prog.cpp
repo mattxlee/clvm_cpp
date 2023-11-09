@@ -782,7 +782,7 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program, CLVMObjectPtr
 
 } // namespace run
 
-std::tuple<Cost, CLVMObjectPtr> Program::Run(CLVMObjectPtr args) { return run::run_program(sexp_, args); }
+std::tuple<Cost, CLVMObjectPtr> Program::Run(CLVMObjectPtr args) const { return run::run_program(sexp_, args); }
 
 std::string CURRY_OBJ_CODE = "(a (q #a 4 (c 2 (c 5 (c 7 0)))) (c (q (c (q "
                              ". 2) (c (c (q . 1) 5) (c (a 6 "

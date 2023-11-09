@@ -308,7 +308,7 @@ public:
 
     Bytes Serialize() const;
 
-    std::tuple<Cost, CLVMObjectPtr> Run(CLVMObjectPtr args = MakeNull());
+    std::tuple<Cost, CLVMObjectPtr> Run(CLVMObjectPtr args = MakeNull()) const;
 
     Program Curry(CLVMObjectPtr args);
 

@@ -36,8 +36,8 @@ class CoinSpend
 {
 public:
     Coin coin;
-    mutable Program puzzle_reveal;
-    mutable Program solution;
+    Program puzzle_reveal;
+    Program solution;
 
     std::vector<Coin> Additions() const;
 

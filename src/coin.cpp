@@ -18,6 +18,7 @@
 #include "int.h"
 
 #include "condition_opcode.h"
+#include "puzzle.h"
 
 namespace chia
 {
@@ -44,7 +45,7 @@ std::vector<ConditionWithArgs> parse_sexp_to_conditions(CLVMObjectPtr sexp)
 }
 
 std::tuple<std::vector<ConditionWithArgs>, uint64_t> conditions_for_solution(
-    Program& puzzle_reveal, Program& solution, uint64_t max_cost)
+    Program const& puzzle_reveal, Program const& solution, uint64_t max_cost)
 {
     Cost cost;
     CLVMObjectPtr r;
@@ -86,7 +87,7 @@ std::vector<Coin> created_outputs_for_conditions_dict(
 }
 
 std::tuple<std::map<ConditionOpcode, std::vector<ConditionWithArgs>>, Cost> conditions_dict_for_solution(
-    Program& puzzle_reveal, Program& solution, Cost max_cost)
+    Program const& puzzle_reveal, Program const& solution, Cost max_cost)
 {
     std::vector<ConditionWithArgs> results;
     Cost cost;
@@ -94,7 +95,7 @@ std::tuple<std::map<ConditionOpcode, std::vector<ConditionWithArgs>>, Cost> cond
     return std::make_tuple(conditions_by_opcode(results), cost);
 }
 
-std::vector<Coin> additions_for_solution(Bytes32 coin_name, Program& puzzle_reveal, Program& solution, Cost max_cost)
+std::vector<Coin> additions_for_solution(Bytes32 coin_name, Program const& puzzle_reveal, Program const& solution, Cost max_cost)
 {
     std::map<chia::ConditionOpcode, std::vector<chia::ConditionWithArgs>> dic;
     Cost cost;
@@ -102,7 +103,7 @@ std::vector<Coin> additions_for_solution(Bytes32 coin_name, Program& puzzle_reve
     return created_outputs_for_conditions_dict(dic, coin_name);
 }
 
-Cost fee_for_solution(Program& puzzle_reveal, Program& solution, Cost max_cost)
+Cost fee_for_solution(Program const& puzzle_reveal, Program const& solution, Cost max_cost)
 {
     std::map<chia::ConditionOpcode, std::vector<chia::ConditionWithArgs>> dic;
     Cost cost;
