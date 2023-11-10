@@ -72,8 +72,7 @@ PublicKey calculate_synthetic_public_key(PublicKey const& public_key, Bytes32 co
     Int offset = calculate_synthetic_offset(public_key, hidden_puzzle_hash);
     auto bytes = offset.ToBytes();
     wallet::Key synthetic_offset = KeyFromRawPrivateKey(bytes);
-    wallet::PubKey pk1(public_key), pk2(synthetic_offset.GetPublicKey());
-    return (pk1 + pk2).GetPublicKey();
+    return wallet::Key::AggregatePublicKeys({ public_key, synthetic_offset.GetPublicKey() });
 }
 
 wallet::Key calculate_synthetic_secret_key(wallet::Key const& key, Bytes32 const& hidden_puzzle_hash)

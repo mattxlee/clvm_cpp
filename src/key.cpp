@@ -20,28 +20,14 @@ bool Key::VerifySig(PublicKey const& pub_key, Bytes const& msg, Signature const&
     return bls::AugSchemeMPL().Verify(utils::bytes_cast<PUB_KEY_LEN>(pub_key), msg, utils::bytes_cast<SIG_LEN>(sig));
 }
 
-PubKey::PubKey() { pubkey_ = utils::bytes_cast<Key::PUB_KEY_LEN>(bls::G1Element().Serialize()); }
 
-PubKey::PubKey(PublicKey pubkey)
-    : pubkey_(std::move(pubkey))
+}
+
+}
+
 {
 }
 
-PubKey PubKey::operator+(PubKey const& rhs) const
-{
-    auto lhs_g1 = bls::G1Element::FromBytes(bls::Bytes(pubkey_.data(), pubkey_.size()));
-    auto rhs_g1 = bls::G1Element::FromBytes(bls::Bytes(rhs.pubkey_.data(), rhs.pubkey_.size()));
-    auto res = bls::AugSchemeMPL().Aggregate({ lhs_g1, rhs_g1 });
-    return PubKey(utils::bytes_cast<Key::PUB_KEY_LEN>(res.Serialize()));
-}
-
-PubKey& PubKey::operator+=(PubKey const& rhs)
-{
-    *this = *this + rhs;
-    return *this;
-}
-
-PublicKey const& PubKey::GetPublicKey() const { return pubkey_; }
 
 PublicKey Key::CreatePublicKey() { return utils::bytes_cast<PUB_KEY_LEN>(bls::G1Element().Serialize()); }
 

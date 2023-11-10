@@ -190,14 +190,14 @@ OpResult op_pubkey_for_exp(CLVMObjectPtr args)
 OpResult op_point_add(CLVMObjectPtr args)
 {
     Cost cost { POINT_ADD_BASE_COST };
-    wallet::PubKey p;
+    PublicKey public_key;
     ArgsIter iter(args);
     while (!iter.IsEof()) {
         Bytes b = iter.Next();
-        p += wallet::PubKey(utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(b));
+        public_key = wallet::Key::AggregatePublicKeys({ public_key, utils::bytes_cast<wallet::Key::PUB_KEY_LEN>(b) });
         cost += POINT_ADD_COST_PER_ARG;
     }
-    return MallocCost(cost, ToSExp(p.GetPublicKey()));
+    return MallocCost(cost, ToSExp(public_key));
 }
 
 OpResult op_strlen(CLVMObjectPtr args)

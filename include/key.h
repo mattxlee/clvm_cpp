@@ -9,23 +9,6 @@
 namespace chia::wallet
 {
 
-class PubKey
-{
-public:
-    PubKey();
-
-    explicit PubKey(PublicKey pubkey);
-
-    PubKey operator+(PubKey const& rhs) const;
-
-    PubKey& operator+=(PubKey const& rhs);
-
-    PublicKey const& GetPublicKey() const;
-
-private:
-    PublicKey pubkey_;
-};
-
 class Key
 {
 public:
