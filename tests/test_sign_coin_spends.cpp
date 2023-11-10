@@ -1,5 +1,10 @@
 #include <gtest/gtest.h>
 
+#include <functional>
+using std::placeholders::_1;
+
+#include <optional>
+
 #include "condition_opcode.h"
 #include "key.h"
 #include "utils.h"
@@ -35,11 +40,6 @@ protected:
     }
 
     void TearDown() override {
-
-    }
-
-    void Test_SignCoinSpends()
-    {
 
     }
 
@@ -106,20 +106,21 @@ public:
 
 };
 
+std::optional<chia::PrivateKey> empty_pk_to_sk(chia::PublicKey const& public_key) { return {}; }
+
+std::optional<chia::PrivateKey> empty_ph_to_sk(chia::Bytes32 const& puzzle_hash) { return {}; }
+
 TEST_F(SignCoinSpendsTest, TestCoinSpends)
 {
-    /*
-        with pytest.raises(ValueError, match="no secret key"):
-            await sign_coin_spends(
-                [spend_h],
-                pk_to_sk,
-                lambda _: None,
-                additional_data,
-                1000000000,
-                [derive_ph],
-            )
-    */
     EXPECT_THROW({
-        chia::puzzle::sign_coin_spends({spend_h}, std::bind(&SignCoinSpendsTest::pk_to_sk, this, std::placeholders::_1), additional_data, 1000000000);
+        chia::puzzle::sign_coin_spends({spend_h}, std::bind(&SignCoinSpendsTest::pk_to_sk, this, _1), empty_ph_to_sk, additional_data, 1000000000);
+    }, std::runtime_error);
+
+    EXPECT_THROW({
+        chia::puzzle::sign_coin_spends({spend_h}, empty_pk_to_sk, std::bind(&SignCoinSpendsTest::ph_to_sk, this, _1), additional_data, 1000000000);
+    }, std::runtime_error);
+
+    EXPECT_THROW({
+        chia::puzzle::sign_coin_spends({spend_h}, std::bind(&SignCoinSpendsTest::pk_to_sk, this, _1), std::bind(&SignCoinSpendsTest::ph_to_sk, this, _1), additional_data, 1000000000);
     }, std::runtime_error);
 }

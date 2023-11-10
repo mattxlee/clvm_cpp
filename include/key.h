@@ -15,6 +15,7 @@ public:
     static int const PRIV_KEY_LEN = 32;
     static int const PUB_KEY_LEN = 48;
     static int const SIG_LEN = 96;
+    static int const HASH_LEN = 32;
 
     static bool VerifySignature(PublicKey const& public_key, Bytes const& message, Signature const& signature);
 

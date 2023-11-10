@@ -3,9 +3,14 @@
 
 #include <vector>
 #include <set>
+#include <map>
 
 #include "sexp_prog.h"
 #include "types.h"
+#include "utils.h"
+
+#include "condition_opcode.h"
+#include "key.h"
 
 namespace bls {
     class G1Element;
@@ -93,8 +98,10 @@ private:
 namespace puzzle {
 
 using SecretKeyForPublicKeyFunc = std::function<std::optional<chia::PrivateKey>(chia::PublicKey const& public_key)>;
+using SecretKeyForPuzzleHashFunc = std::function<std::optional<chia::PrivateKey>(chia::Bytes32 const& puzzle_hash)>;
+using DeriveFunc = std::function<Bytes32(chia::PublicKey const& public_key)>;
 
-SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPublicKeyFunc secret_key_for_public_key_f, Bytes const& additional_data, Cost max_cost);
+SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPublicKeyFunc secret_key_for_public_key_f, SecretKeyForPuzzleHashFunc secret_key_for_puzzle_hash_f, Bytes const& additional_data = {}, Cost max_cost = 0, std::vector<DeriveFunc> const& derive_f_list = {});
 
 Program make_solution(std::vector<Payment> const& primaries, std::set<Bytes> const& coin_announcements = {}, std::set<Bytes32> const& coin_announcements_to_assert = {}, std::set<Bytes> const& puzzle_announcements = {}, std::set<Bytes32> const& puzzle_announcements_to_assert = {}, CLVMObjectPtr additions = nullptr, uint64_t fee = 0);
 } // namespace puzzle
