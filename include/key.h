@@ -16,11 +16,13 @@ public:
     static int const PUB_KEY_LEN = 48;
     static int const SIG_LEN = 96;
 
-    static bool VerifySig(PublicKey const& pub_key, Bytes const& msg, Signature const& sig);
+    static bool VerifySignature(PublicKey const& public_key, Bytes const& message, Signature const& signature);
 
-    static PublicKey CreatePublicKey();
+    static PublicKey AggregatePublicKeys(std::vector<PublicKey> const& public_keys);
 
-    static PublicKey AddTwoPubkey(PublicKey const& lhs, PublicKey const& rhs);
+    static Signature AggregateSignatures(std::vector<Signature> const& signatures);
+
+    static bool AggregateVerifySignature(std::vector<PublicKey> const& public_keys, std::vector<Bytes> const& messages, Signature const& signature);
 
     /// Create an empty key object without key creation
     Key();
@@ -38,7 +40,7 @@ public:
     void GenerateNew(Bytes const& seed);
 
     /// Get the private key value
-    PrivateKey GetPrivateKey() const;
+    PrivateKey const& GetPrivateKey() const;
 
     /// Get public key
     PublicKey GetPublicKey() const;
@@ -47,22 +49,22 @@ public:
     Signature Sign(Bytes const& msg);
 
     /// Derive key
-    Key DerivePath(std::vector<uint32_t> const& paths) const;
+    Key DerivePath(std::vector<uint32_t> const& paths, bool unhardened = false) const;
 
     /// Derive key for wallet
-    Key GetWalletKey(uint32_t index = 0) const;
+    Key GetWalletKey(uint32_t index = 0, bool unhardened = false) const;
 
     /// Derive key for farmer
-    Key GetFarmerKey(uint32_t index = 0) const;
+    Key GetFarmerKey(uint32_t index = 0, bool unhardened = false) const;
 
     /// Derive key for pool
-    Key GetPoolKey(uint32_t index = 0) const;
+    Key GetPoolKey(uint32_t index = 0, bool unhardened = false) const;
 
     /// Derive key for local
-    Key GetLocalKey(uint32_t index = 0) const;
+    Key GetLocalKey(uint32_t index = 0, bool unhardened = false) const;
 
     /// Derive key for backup
-    Key GetBackupKey(uint32_t index = 0) const;
+    Key GetBackupKey(uint32_t index = 0, bool unhardened = false) const;
 
     /// Calculate the address from public key
     Address GetAddress(std::string_view prefix = "xch") const;

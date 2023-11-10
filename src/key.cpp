@@ -15,28 +15,66 @@ namespace chia
 namespace wallet
 {
 
-bool Key::VerifySig(PublicKey const& pub_key, Bytes const& msg, Signature const& sig)
+/// adapters for converting data from bls data types
+
+namespace adapters {
+
+template <typename V, typename C, typename F>
+std::vector<V> convert_container(C const& c, F&& f) {
+    std::vector<V> result;
+    std::transform(std::cbegin(c), std::cend(c), std::back_inserter(result), f);
+    return result;
+}
+
+bls::G1Element public_key_to_g1(PublicKey const& public_key) {
+    return bls::G1Element::FromByteVector(utils::bytes_cast<Key::PUB_KEY_LEN>(public_key));
+}
+
+PublicKey public_key_from_g1(bls::G1Element const& g1) {
+    return utils::bytes_cast<Key::PUB_KEY_LEN>(g1.Serialize());
+}
+
+bls::G2Element signature_to_g2(Signature const& signature) {
+    return bls::G2Element::FromByteVector(utils::bytes_cast<Key::SIG_LEN>(signature));
+}
+
+Signature signature_from_g2(bls::G2Element const& g2) {
+    return utils::bytes_cast<Key::SIG_LEN>(g2.Serialize());
+}
+
+PrivateKey private_key_from_bls_private_key(bls::PrivateKey const& private_key) {
+    return utils::bytes_cast<Key::PRIV_KEY_LEN>(private_key.Serialize());
+}
+
+bls::PrivateKey private_key_to_bls_private_key(PrivateKey const& private_key) {
+    return bls::PrivateKey::FromByteVector(utils::bytes_cast<Key::PRIV_KEY_LEN>(private_key));
+}
+
+} // namespace adapters
+
+bool Key::VerifySignature(PublicKey const& public_key, Bytes const& message, Signature const& signature)
 {
-    return bls::AugSchemeMPL().Verify(utils::bytes_cast<PUB_KEY_LEN>(pub_key), msg, utils::bytes_cast<SIG_LEN>(sig));
+    return bls::AugSchemeMPL().Verify(adapters::public_key_to_g1(public_key), message, adapters::signature_to_g2(signature));
 }
 
-
-}
-
-}
-
+PublicKey Key::AggregatePublicKeys(std::vector<PublicKey> const& public_keys)
 {
+    std::vector<bls::G1Element> pks = adapters::convert_container<bls::G1Element>(public_keys, adapters::public_key_to_g1);
+    auto agg_pk = bls::AugSchemeMPL().Aggregate(pks);
+    return utils::bytes_cast<PUB_KEY_LEN>(agg_pk.Serialize());
 }
 
-
-PublicKey Key::CreatePublicKey() { return utils::bytes_cast<PUB_KEY_LEN>(bls::G1Element().Serialize()); }
-
-PublicKey Key::AddTwoPubkey(PublicKey const& lhs, PublicKey const& rhs)
+Signature Key::AggregateSignatures(std::vector<Signature> const& signatures)
 {
-    bls::G1Element g1lhs = bls::G1Element::FromBytes(bls::Bytes(lhs.data(), lhs.size()));
-    bls::G1Element g1rhs = bls::G1Element::FromBytes(bls::Bytes(rhs.data(), rhs.size()));
-    auto res = g1lhs + g1rhs;
-    return utils::bytes_cast<PUB_KEY_LEN>(res.Serialize());
+    std::vector<bls::G2Element> sigs = adapters::convert_container<bls::G2Element>(signatures, adapters::signature_to_g2);
+    auto agg_sig = bls::AugSchemeMPL().Aggregate(sigs);
+    return utils::bytes_cast<SIG_LEN>(agg_sig.Serialize());
+}
+
+bool Key::AggregateVerifySignature(std::vector<PublicKey> const& public_keys, std::vector<Bytes> const& messages, Signature const& signature)
+{
+    std::vector<bls::G1Element> pks = adapters::convert_container<bls::G1Element>(public_keys, adapters::public_key_to_g1);
+    return bls::AugSchemeMPL().AggregateVerify(pks, messages, adapters::signature_to_g2(signature));
 }
 
 Key::Key() { }
@@ -49,64 +87,65 @@ Key::Key(PrivateKey priv_key)
 Key::Key(Bytes const& seed)
 {
     auto seed_bytes = utils::BytesToHex(seed);
-    priv_key_ = utils::bytes_cast<PRIV_KEY_LEN>(bls::AugSchemeMPL().KeyGen(seed).Serialize());
+    priv_key_ = adapters::private_key_from_bls_private_key(bls::AugSchemeMPL().KeyGen(seed));
 }
 
 bool Key::IsEmpty() const { return priv_key_.empty(); }
 
 void Key::GenerateNew(Bytes const& seed)
 {
-    bls::PrivateKey bls_priv_key = bls::AugSchemeMPL().KeyGen(seed);
-    Bytes priv_key_bytes = bls_priv_key.Serialize();
-    priv_key_ = utils::bytes_cast<PRIV_KEY_LEN>(priv_key_bytes);
+    priv_key_ = adapters::private_key_from_bls_private_key(bls::AugSchemeMPL().KeyGen(seed));
 }
 
-PrivateKey Key::GetPrivateKey() const { return priv_key_; }
+PrivateKey const& Key::GetPrivateKey() const { return priv_key_; }
 
 PublicKey Key::GetPublicKey() const
 {
-    bls::PrivateKey bls_priv_key = bls::PrivateKey::FromBytes(bls::Bytes(utils::bytes_cast<PRIV_KEY_LEN>(priv_key_)));
-    return utils::bytes_cast<PUB_KEY_LEN>(bls_priv_key.GetG1Element().Serialize());
+    auto bls_priv_key = adapters::private_key_to_bls_private_key(priv_key_);
+    return adapters::public_key_from_g1(bls_priv_key.GetG1Element());
 }
 
-Signature Key::Sign(Bytes const& msg)
+Signature Key::Sign(Bytes const& message)
 {
-    bls::PrivateKey bls_priv_key = bls::PrivateKey::FromBytes(bls::Bytes(utils::bytes_cast<PRIV_KEY_LEN>(priv_key_)));
-    Bytes sig_bytes = bls::AugSchemeMPL().Sign(bls_priv_key, msg).Serialize();
-    return utils::bytes_cast<SIG_LEN>(sig_bytes);
+    auto bls_priv_key = adapters::private_key_to_bls_private_key(priv_key_);
+    return adapters::signature_from_g2(bls::AugSchemeMPL().Sign(bls_priv_key, message));
 }
 
-Key Key::DerivePath(std::vector<uint32_t> const& paths) const
+Key Key::DerivePath(std::vector<uint32_t> const& paths, bool unhardened) const
 {
-    bls::PrivateKey bls_priv_key = bls::PrivateKey::FromBytes(bls::Bytes(utils::bytes_cast<PRIV_KEY_LEN>(priv_key_)));
+    auto bls_priv_key = adapters::private_key_to_bls_private_key(priv_key_);
     auto sk { bls_priv_key };
     for (uint32_t path : paths) {
-        sk = bls::AugSchemeMPL().DeriveChildSk(sk, path);
+        if (unhardened) {
+            sk = bls::AugSchemeMPL().DeriveChildSkUnhardened(sk, path);
+        } else {
+            sk = bls::AugSchemeMPL().DeriveChildSk(sk, path);
+        }
     }
     return Key(utils::bytes_cast<PRIV_KEY_LEN>(sk.Serialize()));
 }
 
-Key Key::GetWalletKey(uint32_t index) const
+Key Key::GetWalletKey(uint32_t index, bool unhardened) const
 {
     return DerivePath({ 12381, 8444, 2, index });
 }
 
-Key Key::GetFarmerKey(uint32_t index) const
+Key Key::GetFarmerKey(uint32_t index, bool unhardened) const
 {
     return DerivePath({ 12381, 8444, 0, index });
 }
 
-Key Key::GetPoolKey(uint32_t index) const
+Key Key::GetPoolKey(uint32_t index, bool unhardened) const
 {
     return DerivePath({ 12381, 8444, 1, index });
 }
 
-Key Key::GetLocalKey(uint32_t index) const
+Key Key::GetLocalKey(uint32_t index, bool unhardened) const
 {
     return DerivePath({ 12381, 8444, 3, index });
 }
 
-Key Key::GetBackupKey(uint32_t index) const
+Key Key::GetBackupKey(uint32_t index, bool unhardened) const
 {
     return DerivePath({ 12381, 8444, 4, index });
 }

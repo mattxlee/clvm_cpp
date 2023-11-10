@@ -20,6 +20,8 @@ class Coin
 public:
     static Bytes32 HashCoinList(std::vector<Coin> coin_list);
 
+    Coin() = default;
+
     Coin(Bytes parent_coin_info, Bytes puzzle_hash, uint64_t amount);
 
     Coin(Bytes32 const& parent_coin_info, Bytes32 const& puzzle_hash, uint64_t amount);
@@ -49,8 +51,15 @@ class CoinSpend
 {
 public:
     Coin coin;
-    Program puzzle_reveal;
-    Program solution;
+    std::optional<Program> puzzle_reveal;
+    std::optional<Program> solution;
+
+    CoinSpend() = default;
+
+    CoinSpend(CoinSpend const& rhs) = default;
+    CoinSpend& operator=(CoinSpend const& rhs) = default;
+
+    CoinSpend(Coin in_coin, Program in_puzzle_reveal, Program in_solution);
 
     std::vector<Coin> Additions() const;
 
@@ -83,7 +92,7 @@ private:
 
 namespace puzzle {
 
-using SecretKeyForPublicKeyFunc = std::function<bls::G2Element(bls::G1Element const&)>;
+using SecretKeyForPublicKeyFunc = std::function<std::optional<chia::PrivateKey>(chia::PublicKey const& public_key)>;
 
 SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPublicKeyFunc secret_key_for_public_key_f, Bytes const& additional_data, Cost max_cost);
 

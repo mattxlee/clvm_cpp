@@ -14,34 +14,27 @@
 namespace chia::puzzle
 {
 
-class PredefinedPrograms {
-public:
-    enum class Names {
-        DEFAULT_HIDDEN_PUZZLE,
-        SYNTHETIC_MOD,
-        MOD,
-        P2_CONDITIONS,
-    };
+PredefinedPrograms& PredefinedPrograms::GetInstance()
+{
+    static PredefinedPrograms instance;
+    return instance;
+}
 
-    static PredefinedPrograms& GetInstance() {
-        static PredefinedPrograms instance;
-        return instance;
+Program PredefinedPrograms::operator[](Names name) const
+{
+    auto it = progs_.find(name);
+    if (it == std::cend(progs_)) {
+        throw std::runtime_error("the predefined program doesn't exist, please check the name");
     }
+    return Program::ImportFromBytes(it->second);
+}
 
-    Program operator[](Names name) {
-        return Program::ImportFromBytes(progs_[name]);
-    }
-
-private:
-    PredefinedPrograms() {
-        progs_[Names::DEFAULT_HIDDEN_PUZZLE] = utils::BytesFromHex("ff0980");
-        progs_[Names::SYNTHETIC_MOD] = utils::BytesFromHex("ff1dff02ffff1effff0bff02ff05808080");
-        progs_[Names::MOD] = utils::BytesFromHex("ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080");
-        progs_[Names::P2_CONDITIONS] = utils::BytesFromHex("ff04ffff0101ff0280");
-    }
-
-    std::map<Names, Bytes> progs_;
-};
+PredefinedPrograms::PredefinedPrograms() {
+    progs_[Names::DEFAULT_HIDDEN_PUZZLE] = utils::BytesFromHex("ff0980");
+    progs_[Names::SYNTHETIC_MOD] = utils::BytesFromHex("ff1dff02ffff1effff0bff02ff05808080");
+    progs_[Names::MOD] = utils::BytesFromHex("ff02ffff01ff02ffff03ff0bffff01ff02ffff03ffff09ff05ffff1dff0bffff1effff0bff0bffff02ff06ffff04ff02ffff04ff17ff8080808080808080ffff01ff02ff17ff2f80ffff01ff088080ff0180ffff01ff04ffff04ff04ffff04ff05ffff04ffff02ff06ffff04ff02ffff04ff17ff80808080ff80808080ffff02ff17ff2f808080ff0180ffff04ffff01ff32ff02ffff03ffff07ff0580ffff01ff0bffff0102ffff02ff06ffff04ff02ffff04ff09ff80808080ffff02ff06ffff04ff02ffff04ff0dff8080808080ffff01ff0bffff0101ff058080ff0180ff018080");
+    progs_[Names::P2_CONDITIONS] = utils::BytesFromHex("ff04ffff0101ff0280");
+}
 
 wallet::Key KeyFromRawPrivateKey(Bytes const& bytes)
 {
@@ -75,16 +68,16 @@ PublicKey calculate_synthetic_public_key(PublicKey const& public_key, Bytes32 co
     return wallet::Key::AggregatePublicKeys({ public_key, synthetic_offset.GetPublicKey() });
 }
 
-wallet::Key calculate_synthetic_secret_key(wallet::Key const& key, Bytes32 const& hidden_puzzle_hash)
+PrivateKey calculate_synthetic_secret_key(PrivateKey const& private_key, Bytes32 const& hidden_puzzle_hash)
 {
-    PrivateKey private_key = key.GetPrivateKey();
     Int secret_exponent = Int(utils::bytes_cast<wallet::Key::PRIV_KEY_LEN>(private_key));
+    wallet::Key key(private_key);
     PublicKey public_key = key.GetPublicKey();
     Int synthetic_offset = calculate_synthetic_offset(public_key, hidden_puzzle_hash);
     Int synthetic_secret_exponent = (secret_exponent + synthetic_offset) % GROUP_ORDER();
     auto bytes = synthetic_secret_exponent.ToBytes();
     wallet::Key synthetic_secret_key = KeyFromRawPrivateKey(bytes);
-    return synthetic_secret_key;
+    return synthetic_secret_key.GetPrivateKey();
 }
 
 Program puzzle_for_synthetic_public_key(PublicKey const& synthetic_public_key)

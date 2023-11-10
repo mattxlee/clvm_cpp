@@ -1,13 +1,36 @@
 #ifndef CHIA_PUZZLE_UTILS_H
 #define CHIA_PUZZLE_UTILS_H
 
+#include <map>
+
 #include "types.h"
 
 #include "sexp_prog.h"
 
 namespace chia::puzzle {
 
+class PredefinedPrograms {
+public:
+    enum class Names {
+        DEFAULT_HIDDEN_PUZZLE,
+        SYNTHETIC_MOD,
+        MOD,
+        P2_CONDITIONS,
+    };
+
+    static PredefinedPrograms& GetInstance();
+
+    Program operator[](Names name) const;
+
+private:
+    PredefinedPrograms();
+
+    std::map<Names, Bytes> progs_;
+};
+
 PublicKey calculate_synthetic_public_key(PublicKey const& public_key, Bytes32 const& hidden_puzzle_hash);
+
+PrivateKey calculate_synthetic_secret_key(PrivateKey const& private_key, Bytes32 const& hidden_puzzle_hash);
 
 Program puzzle_for_synthetic_public_key(PublicKey const& synthetic_public_key);
 

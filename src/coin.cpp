@@ -197,45 +197,42 @@ Program make_solution(std::vector<Payment> const& primaries, std::set<Bytes> con
 
 SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPublicKeyFunc secret_key_for_public_key_f, Bytes const& additional_data, Cost max_cost)
 {
-    std::vector<bls::G2Element> signatures;
-    std::vector<bls::G1Element> pk_list;
-    std::vector<Bytes> msg_list;
+    std::vector<chia::Signature> signatures;
+    std::vector<chia::PublicKey> public_keys;
+    std::vector<Bytes> messages;
     for (auto const& coin_spend : coin_spends) {
         // Get AGG_SIG conditions
         std::map<chia::ConditionOpcode, std::vector<chia::ConditionWithArgs>> conditions_dict;
         Cost cost;
         std::tie(conditions_dict, cost)
-            = conditions_dict_for_solution(coin_spend.puzzle_reveal, coin_spend.solution, max_cost);
+            = conditions_dict_for_solution(coin_spend.puzzle_reveal.value(), coin_spend.solution.value(), max_cost);
         if (conditions_dict.empty()) {
             throw std::runtime_error("Sign transaction failed");
         }
         // Create signature
         auto pkm_pairs = pkm_pairs_for_conditions_dict(conditions_dict, coin_spend.coin.GetName(), additional_data);
-        for (std::tuple<Bytes48, Bytes> const& p : pkm_pairs) {
-            Bytes48 pk_bytes;
-            Bytes msg;
-            std::tie(pk_bytes, msg) = p;
-            auto pk = bls::G1Element::FromBytes(bls::Bytes(pk_bytes.data(), pk_bytes.size()));
-            pk_list.push_back(pk);
-            auto secret_key = secret_key_for_public_key_f(pk);
-            if (!secret_key.IsValid()) {
+        for (auto const& p : pkm_pairs) {
+            PublicKey public_key;
+            Bytes message;
+            std::tie(public_key, message) = p;
+            public_keys.push_back(public_key);
+            messages.push_back(message);
+            auto secret_key_opt = secret_key_for_public_key_f(public_key);
+            if (!secret_key_opt.has_value()) {
                 throw std::runtime_error("no secret key for public-key");
             }
-            auto secret_key_serialized = secret_key.Serialize();
-            auto private_key
-                = bls::PrivateKey::FromBytes(bls::Bytes(secret_key_serialized.data(), secret_key_serialized.size()));
-            assert(bls::AugSchemeMPL().SkToG1(private_key) == pk);
-            auto signature = bls::AugSchemeMPL().Sign(private_key, msg);
-            assert(bls::AugSchemeMPL().Verify(pk, msg, signature));
+            auto private_key = secret_key_opt.value();
+            chia::wallet::Key key(private_key);
+            auto signature = key.Sign(message);
+            assert(chia::wallet::Key::VerifySignature(public_key, message, signature));
             signatures.push_back(std::move(signature));
         }
     }
 
     // Aggregate signatures
-    auto aggsig = bls::AugSchemeMPL().Aggregate(signatures);
-    assert(bls::AugSchemeMPL().AggregateVerify(pk_list, msg_list, aggsig));
-    Signature aggsig2 = utils::bytes_cast<wallet::Key::SIG_LEN>(aggsig.Serialize());
-    return SpendBundle(std::move(coin_spends), aggsig2);
+    auto aggregated_signature = chia::wallet::Key::AggregateSignatures(signatures);
+    chia::wallet::Key::AggregateVerifySignature(public_keys, messages, aggregated_signature);
+    return SpendBundle(std::move(coin_spends), aggregated_signature);
 }
 
 } // namespace puzzle
@@ -289,12 +286,19 @@ Bytes32 Coin::GetHash() const
  *
  ******************************************************************************/
 
-std::vector<Coin> CoinSpend::Additions() const
+CoinSpend::CoinSpend(Coin in_coin, Program in_puzzle_reveal, Program in_solution)
+    : coin(std::move(in_coin))
+    , puzzle_reveal(std::move(in_puzzle_reveal))
+    , solution(std::move(in_solution))
 {
-    return puzzle::additions_for_solution(coin.GetName(), puzzle_reveal, solution, INFINITE_COST);
 }
 
-Cost CoinSpend::ReservedFee() { return puzzle::fee_for_solution(puzzle_reveal, solution, INFINITE_COST); }
+std::vector<Coin> CoinSpend::Additions() const
+{
+    return puzzle::additions_for_solution(coin.GetName(), puzzle_reveal.value(), solution.value(), INFINITE_COST);
+}
+
+Cost CoinSpend::ReservedFee() { return puzzle::fee_for_solution(puzzle_reveal.value(), solution.value(), INFINITE_COST); }
 
 /*******************************************************************************
  *
