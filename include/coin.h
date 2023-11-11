@@ -7,10 +7,6 @@
 
 #include "sexp_prog.h"
 #include "types.h"
-#include "utils.h"
-
-#include "condition_opcode.h"
-#include "key.h"
 
 namespace bls {
     class G1Element;

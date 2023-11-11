@@ -18,6 +18,7 @@
 #include "int.h"
 
 #include "puzzle.h"
+#include "condition_opcode.h"
 
 namespace chia
 {
