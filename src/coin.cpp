@@ -28,12 +28,24 @@ namespace puzzle {
 
 ConditionWithArgs parse_sexp_to_condition(CLVMObjectPtr sexp)
 {
-    if (ListLen(sexp) < 1) {
-        throw std::runtime_error("invalid condition");
+    if (IsNull(sexp)) {
+        throw std::runtime_error("first is None");
     }
-    ArgsIter i(sexp);
-    ConditionOpcode opcode(i.Next());
-    return ConditionWithArgs(opcode, i);
+    CLVMObjectPtr first, second;
+    std::tie(first, second) = Pair(sexp);
+
+    Bytes op = ToBytes(first);
+    if (op.size() != 1) {
+        throw std::runtime_error("invalid op");
+    }
+
+    std::vector<Bytes> vars;
+    ArgsIter iter(second);
+    while (!iter.IsEof()) {
+        vars.push_back(iter.Next());
+    }
+    ConditionOpcode opcode(op);
+    return ConditionWithArgs{ opcode, vars };
 }
 
 std::vector<ConditionWithArgs> parse_sexp_to_conditions(CLVMObjectPtr sexp)
@@ -199,6 +211,9 @@ SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPub
     std::vector<chia::Signature> signatures;
     std::vector<chia::PublicKey> public_key_list;
     std::vector<Bytes> message_list;
+    if (coin_spends.empty()) {
+        throw std::runtime_error("no coin spends");
+    }
     for (auto const& coin_spend : coin_spends) {
         // Get AGG_SIG conditions
         std::map<chia::ConditionOpcode, std::vector<chia::ConditionWithArgs>> conditions_dict;
@@ -216,7 +231,7 @@ SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPub
             std::tie(public_key, message) = p;
             public_key_list.push_back(public_key);
             message_list.push_back(message);
-            PrivateKey private_key;
+            std::optional<PrivateKey> private_key;
             auto secret_key_opt = secret_key_for_public_key_f(public_key);
             if (!secret_key_opt.has_value() || wallet::Key(secret_key_opt.value()).GetPublicKey() != public_key) {
                 for (auto const& derive : derive_f_list) {
@@ -229,7 +244,10 @@ SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPub
             } else {
                 private_key = secret_key_opt.value();
             }
-            chia::wallet::Key key(private_key);
+            if (!private_key.has_value()) {
+                throw std::runtime_error("cannot get secret key");
+            }
+            chia::wallet::Key key(private_key.value());
             auto signature = key.Sign(message);
             assert(chia::wallet::Key::VerifySignature(public_key, message, signature));
             signatures.push_back(std::move(signature));
@@ -238,8 +256,10 @@ SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPub
 
     // Aggregate signatures
     auto aggregated_signature = chia::wallet::Key::AggregateSignatures(signatures);
-    chia::wallet::Key::AggregateVerifySignature(public_key_list, message_list, aggregated_signature);
-    return SpendBundle(std::move(coin_spends), aggregated_signature);
+    if (!chia::wallet::Key::AggregateVerifySignature(public_key_list, message_list, aggregated_signature)) {
+        throw std::runtime_error("failed to verify the signature just made, critical internal error!");
+    }
+    return SpendBundle(std::move(coin_spends), std::move(aggregated_signature));
 }
 
 } // namespace puzzle

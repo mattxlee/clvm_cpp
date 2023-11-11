@@ -71,15 +71,6 @@ struct ConditionOpcode {
 struct ConditionWithArgs {
     ConditionOpcode opcode;
     std::vector<Bytes> vars;
-
-    template <typename BytesIter>
-    explicit ConditionWithArgs(ConditionOpcode opcode, BytesIter& it)
-        : opcode(opcode)
-    {
-        while (!it.IsEof()) {
-            vars.push_back(it.Next());
-        }
-    }
 };
 
 } // namespace chia

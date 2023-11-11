@@ -32,8 +32,8 @@ protected:
 
         coin = chia::Coin(GenerateHash(), GenerateHash(), 0);
         puzzle = chia::Program(chia::ToSExp(1));
-        solution_h = chia::Program(chia::ToSExpPair(chia::ToSExpList(chia::ConditionOpcode::ToBytes(chia::ConditionOpcode::AGG_SIG_UNSAFE), pk1_h, msg1), chia::ToSExpList(chia::ConditionOpcode::ToBytes(chia::ConditionOpcode::AGG_SIG_ME), pk2_h, msg2)));
-        solution_u = chia::Program(chia::ToSExpPair(chia::ToSExpList(chia::ConditionOpcode::ToBytes(chia::ConditionOpcode::AGG_SIG_UNSAFE), pk1_u, msg1), chia::ToSExpList(chia::ConditionOpcode::ToBytes(chia::ConditionOpcode::AGG_SIG_ME), pk2_u, msg2)));
+        solution_h = chia::Program(chia::ToSExpList(chia::ToSExpList(chia::ConditionOpcode::ToBytes(chia::ConditionOpcode::AGG_SIG_UNSAFE), pk1_h, msg1), chia::ToSExpList(chia::ConditionOpcode::ToBytes(chia::ConditionOpcode::AGG_SIG_ME), pk2_h, msg2)));
+        solution_u = chia::Program(chia::ToSExpList(chia::ToSExpList(chia::ConditionOpcode::ToBytes(chia::ConditionOpcode::AGG_SIG_UNSAFE), pk1_u, msg1), chia::ToSExpList(chia::ConditionOpcode::ToBytes(chia::ConditionOpcode::AGG_SIG_ME), pk2_u, msg2)));
 
         spend_h = chia::CoinSpend(coin, puzzle.value(), solution_h.value());
         spend_u = chia::CoinSpend(coin, puzzle.value(), solution_u.value());
@@ -56,11 +56,6 @@ protected:
         chia::Bytes32 result;
         result.fill(fill_by_char);
         return result;
-    }
-
-    chia::Bytes32 derive_ph(chia::PublicKey const& pk)
-    {
-        return GenerateHash();
     }
 
     chia::wallet::Key sk1_h;
@@ -88,6 +83,11 @@ protected:
     chia::CoinSpend spend_u;
 
 public:
+    chia::Bytes32 derive_ph(chia::PublicKey const& pk)
+    {
+        return GenerateHash();
+    }
+
     std::optional<chia::PrivateKey> pk_to_sk(chia::PublicKey const& pk)
     {
         if (pk == pk1_h) {
@@ -123,4 +123,18 @@ TEST_F(SignCoinSpendsTest, TestCoinSpends)
     EXPECT_THROW({
         chia::puzzle::sign_coin_spends({spend_h}, std::bind(&SignCoinSpendsTest::pk_to_sk, this, _1), std::bind(&SignCoinSpendsTest::ph_to_sk, this, _1), additional_data, 1000000000);
     }, std::runtime_error);
+
+    auto spend_bundle = chia::puzzle::sign_coin_spends(
+        {spend_h}, std::bind(&SignCoinSpendsTest::pk_to_sk, this, _1), std::bind(&SignCoinSpendsTest::ph_to_sk, this, _1), additional_data, 1000000000,
+        {
+            [this](chia::PublicKey const& public_key) { return GenerateHash(1); },
+            std::bind(&SignCoinSpendsTest::derive_ph, this, _1),
+        });
+
+    auto signature = chia::wallet::Key::AggregateSignatures({
+        chia::wallet::Key(sk1_h).Sign(chia::utils::MakeBytes(msg1)),
+        chia::wallet::Key(sk2_h).Sign(chia::utils::ConnectBuffers(chia::utils::MakeBytes(msg2), chia::utils::HashToBytes(coin.GetName()), additional_data)),
+    });
+
+    EXPECT_EQ(spend_bundle.GetAggregatedSignature(), signature);
 }

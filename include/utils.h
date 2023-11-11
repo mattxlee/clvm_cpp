@@ -48,6 +48,8 @@ Bytes32 HashFromHex(std::string_view hex);
 
 std::string HashToHex(Bytes32 const& bytes);
 
+Bytes MakeBytes(char const* sz);
+
 /**
  * Convert 4-bit byte to hex character
  *

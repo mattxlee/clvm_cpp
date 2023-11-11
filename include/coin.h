@@ -90,6 +90,8 @@ public:
 
     std::vector<Coin> NotEphemeralAdditions() const;
 
+    Signature const& GetAggregatedSignature() const { return aggregated_signature_; }
+
 private:
     std::vector<CoinSpend> coin_spends_;
     Signature aggregated_signature_;

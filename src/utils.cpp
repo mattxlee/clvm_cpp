@@ -40,6 +40,14 @@ std::string HashToHex(Bytes32 const& hash)
     return BytesToHex(bytes);
 }
 
+Bytes MakeBytes(char const* sz)
+{
+    int len = strlen(sz);
+    Bytes result(len, '\0');
+    memcpy(result.data(), sz, len);
+    return result;
+}
+
 char const hex_chars[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
 char Byte4bToHexChar(uint8_t hex) { return hex_chars[hex]; }
