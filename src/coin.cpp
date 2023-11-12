@@ -207,6 +207,32 @@ Program make_solution(std::vector<Payment> const& primaries, std::set<Bytes> con
     return Program(result_builder.GetRoot());
 }
 
+std::vector<Payment> decode_solution(Program puzzle_reveal, Program const& solution, Cost max_cost, Cost* pout_cost)
+{
+    std::vector<Payment> result;
+
+    Cost cost;
+    std::vector<ConditionWithArgs> conditions;
+    std::tie(conditions, cost) = conditions_for_solution(puzzle_reveal, solution, max_cost);
+    if (pout_cost) {
+        *pout_cost = cost;
+    }
+    for (auto const& condition : conditions) {
+        Payment payment;
+        // extract payments only
+        if (condition.opcode.value[0] == ConditionOpcode::CREATE_COIN[0]) {
+            assert(condition.vars.size() >= 2);
+            payment.puzzle_hash = utils::BytesToHash(ToBytes(Program::ImportFromBytes(condition.vars[0]).GetSExp()));
+            payment.amount = ToInt(Program::ImportFromBytes(condition.vars[1]).GetSExp()).ToUInt();
+            if (condition.vars.size() >= 3) {
+                payment.memo = ToBytes(Program::ImportFromBytes(condition.vars[2]).GetSExp());
+            }
+            result.push_back(std::move(payment));
+        }
+    }
+    return result;
+}
+
 SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPublicKeyFunc secret_key_for_public_key_f, SecretKeyForPuzzleHashFunc secret_key_for_puzzle_hash_f, Bytes const& additional_data, Cost max_cost, std::vector<DeriveFunc> const& derive_f_list)
 {
     std::vector<chia::Signature> signatures;
