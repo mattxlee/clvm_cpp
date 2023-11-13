@@ -5,6 +5,8 @@
 #include <stdexcept>
 #include <algorithm>
 
+#include <sstream>
+
 #include "assemble.h"
 #include "costs.h"
 #include "crypto_utils.h"
@@ -644,7 +646,9 @@ std::tuple<Cost, CLVMObjectPtr> traverse_path(CLVMObjectPtr sexp, CLVMObjectPtr 
     int bitmask = 0x01;
     while (byte_cursor > end_byte_cursor || bitmask < end_bitmask) {
         if (!IsPair(env)) {
-            throw std::runtime_error("path into atom {env}");
+            std::stringstream ss;
+            ss << "path into atom, type: " << NodeTypeToString(env->GetNodeType());
+            throw std::runtime_error(ss.str());
         }
         CLVMObjectPtr first, rest;
         std::tie(first, rest) = Pair(env);
