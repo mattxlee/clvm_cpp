@@ -1,7 +1,7 @@
-#include "core_opts.h"
+#include "clvm/core_opts.h"
 
-#include "costs.h"
-#include "sexp_prog.h"
+#include "clvm/costs.h"
+#include "clvm/sexp_prog.h"
 
 namespace chia
 {

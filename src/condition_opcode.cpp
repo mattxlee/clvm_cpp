@@ -1,4 +1,4 @@
-#include "condition_opcode.h"
+#include "clvm/condition_opcode.h"
 
 namespace chia {
 

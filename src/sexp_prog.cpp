@@ -1,4 +1,4 @@
-#include "sexp_prog.h"
+#include "clvm/sexp_prog.h"
 
 #include <iostream>
 #include <memory>
@@ -7,12 +7,12 @@
 
 #include <sstream>
 
-#include "assemble.h"
-#include "costs.h"
-#include "crypto_utils.h"
-#include "key.h"
-#include "operator_lookup.h"
-#include "utils.h"
+#include "clvm/assemble.h"
+#include "clvm/costs.h"
+#include "clvm/crypto_utils.h"
+#include "clvm/key.h"
+#include "clvm/operator_lookup.h"
+#include "clvm/utils.h"
 
 namespace chia
 {
@@ -748,13 +748,10 @@ std::tuple<Cost, CLVMObjectPtr> run_program(CLVMObjectPtr program, CLVMObjectPtr
             if (ListLen(operand_list) != 2) {
                 throw std::runtime_error("apply requires exactly 2 parameters");
             }
-            CLVMObjectPtr new_program, r;
-            std::tie(new_program, r) = Pair(operand_list);
-            auto r_first = First(r);
-            if (!IsPair(r_first)) {
-                throw std::runtime_error("argument of eval_op is not a pair");
-            }
-            val_stack.Push(ToSExpPair(new_program, r_first));
+            CLVMObjectPtr new_program, rest;
+            std::tie(new_program, rest) = Pair(operand_list);
+            auto new_args = First(rest);
+            val_stack.Push(ToSExpPair(new_program, new_args));
             op_stack.Push(eval_op);
             return APPLY_COST;
         }

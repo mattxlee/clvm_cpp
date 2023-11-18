@@ -1,14 +1,14 @@
-#include "key.h"
+#include "clvm/key.h"
 
 #include <schemes.hpp>
 #include <elements.hpp>
 
 #include <map>
 
-#include "utils.h"
+#include "clvm/utils.h"
 
-#include "bech32.h"
-#include "puzzle.h"
+#include "clvm/bech32.h"
+#include "clvm/puzzle.h"
 
 namespace chia
 {

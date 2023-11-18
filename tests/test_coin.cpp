@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "coin.h"
-#include "utils.h"
+#include "clvm/coin.h"
+#include "clvm/utils.h"
 
 chia::Bytes BytesFromPtr(char const* p)
 {

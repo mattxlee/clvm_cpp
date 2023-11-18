@@ -1,15 +1,15 @@
-#include "puzzle.h"
+#include "clvm/puzzle.h"
 
 #include <cassert>
 
 #include <map>
 
-#include "crypto_utils.h"
-#include "types.h"
-#include "utils.h"
+#include "clvm/crypto_utils.h"
+#include "clvm/types.h"
+#include "clvm/utils.h"
 
-#include "key.h"
-#include "condition_opcode.h"
+#include "clvm/key.h"
+#include "clvm/condition_opcode.h"
 
 namespace chia::puzzle
 {
@@ -118,7 +118,7 @@ CLVMObjectPtr puzzle_for_conditions(CLVMObjectPtr conditions)
 
 Program solution_for_delegated_puzzle(CLVMObjectPtr delegated_puzzle, CLVMObjectPtr solution)
 {
-    return Program(ToSExpList(Bytes(), delegated_puzzle, solution));
+    return Program(ToSExpList(MakeNull(), delegated_puzzle, solution));
 }
 
 Program solution_for_conditions(CLVMObjectPtr conditions)
@@ -130,35 +130,35 @@ Program solution_for_conditions(CLVMObjectPtr conditions)
 CLVMObjectPtr make_create_coin_condition(Bytes32 const& puzzle_hash, uint64_t amount, Bytes const& memo)
 {
     if (memo.empty()) {
-        return ToSExpList(Bytes{ ConditionOpcode::ToBytes(ConditionOpcode::CREATE_COIN) }, utils::HashToBytes(puzzle_hash), amount);
+        return ToSExpList(ConditionOpcode::ToBytes(ConditionOpcode::CREATE_COIN), utils::HashToBytes(puzzle_hash), amount);
     } else {
-        return ToSExpList(Bytes{ ConditionOpcode::ToBytes(ConditionOpcode::CREATE_COIN) }, utils::HashToBytes(puzzle_hash), amount, memo);
+        return ToSExpList(ConditionOpcode::ToBytes(ConditionOpcode::CREATE_COIN), utils::HashToBytes(puzzle_hash), amount, memo);
     }
 }
 
 CLVMObjectPtr make_reserve_fee_condition(uint64_t fee)
 {
-    return ToSExpList(Bytes{ ConditionOpcode::ToBytes(ConditionOpcode::RESERVE_FEE)}, fee);
+    return ToSExpList(ConditionOpcode::ToBytes(ConditionOpcode::RESERVE_FEE), fee);
 }
 
 CLVMObjectPtr make_assert_coin_announcement(Bytes32 const& announcement_hash)
 {
-    return ToSExpList(Bytes { ConditionOpcode::ToBytes(ConditionOpcode::ASSERT_COIN_ANNOUNCEMENT)}, utils::HashToBytes(announcement_hash));
+    return ToSExpList(ConditionOpcode::ToBytes(ConditionOpcode::ASSERT_COIN_ANNOUNCEMENT), utils::HashToBytes(announcement_hash));
 }
 
 CLVMObjectPtr make_assert_puzzle_announcement(Bytes32 const& announcement_hash)
 {
-    return ToSExpList(Bytes { ConditionOpcode::ToBytes(ConditionOpcode::ASSERT_PUZZLE_ANNOUNCEMENT)}, utils::HashToBytes(announcement_hash));
+    return ToSExpList(ConditionOpcode::ToBytes(ConditionOpcode::ASSERT_PUZZLE_ANNOUNCEMENT), utils::HashToBytes(announcement_hash));
 }
 
 CLVMObjectPtr make_create_coin_announcement(Bytes const& message)
 {
-    return ToSExpList(Bytes { ConditionOpcode::ToBytes(ConditionOpcode::CREATE_COIN_ANNOUNCEMENT)}, message);
+    return ToSExpList(ConditionOpcode::ToBytes(ConditionOpcode::CREATE_COIN_ANNOUNCEMENT), message);
 }
 
 CLVMObjectPtr make_create_puzzle_announcement(Bytes const& message)
 {
-    return ToSExpList(Bytes { ConditionOpcode::ToBytes(ConditionOpcode::CREATE_PUZZLE_ANNOUNCEMENT)}, message);
+    return ToSExpList(ConditionOpcode::ToBytes(ConditionOpcode::CREATE_PUZZLE_ANNOUNCEMENT), message);
 }
 
 } // namespace chia::puzzle

@@ -1,6 +1,6 @@
-#include "crypto_utils.h"
+#include "clvm/crypto_utils.h"
 
-#include "utils.h"
+#include "clvm/utils.h"
 
 #include <stdexcept>
 

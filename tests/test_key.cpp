@@ -2,10 +2,10 @@
 
 #include <gtest/gtest.h>
 
-#include "utils.h"
-#include "bech32.h"
-#include "key.h"
-#include "puzzle.h"
+#include "clvm/bech32.h"
+#include "clvm/key.h"
+#include "clvm/puzzle.h"
+#include "clvm/utils.h"
 
 char const* SZ_PUBLIC_KEY = "aea444ca6508d64855735a89491679daec4303e104d62b83d0e4d4c5280edd2b2480740031f68b374e4cd5d4aa6544e7";
 char const* SZ_ADDRESS = "xch19m2x9cdfeydgl4ua5ur48tvsd32mw779etfcyxjn0qwqnem22nwshhqjw5";

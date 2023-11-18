@@ -103,7 +103,7 @@ SpendBundle sign_coin_spends(std::vector<CoinSpend> coin_spends, SecretKeyForPub
 
 Program make_solution(std::vector<Payment> const& primaries, std::set<Bytes> const& coin_announcements = {}, std::set<Bytes32> const& coin_announcements_to_assert = {}, std::set<Bytes> const& puzzle_announcements = {}, std::set<Bytes32> const& puzzle_announcements_to_assert = {}, CLVMObjectPtr additions = nullptr, uint64_t fee = 0);
 
-std::vector<Payment> decode_solution(Program puzzle_reveal, Program const& solution, Cost max_cost, Cost* pout_cost = nullptr);
+std::vector<Payment> decode_payments_from_solution(Program puzzle_reveal, Program const& solution, Cost max_cost = 0, Cost* pout_cost = nullptr);
 
 } // namespace puzzle
 

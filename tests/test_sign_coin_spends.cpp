@@ -5,12 +5,12 @@ using std::placeholders::_1;
 
 #include <optional>
 
-#include "condition_opcode.h"
-#include "key.h"
-#include "utils.h"
+#include "clvm/condition_opcode.h"
+#include "clvm/key.h"
+#include "clvm/utils.h"
 
-#include "coin.h"
-#include "puzzle.h"
+#include "clvm/coin.h"
+#include "clvm/puzzle.h"
 
 #define HIDDEN_PUZZLE_HASH (chia::puzzle::PredefinedPrograms::GetInstance()[chia::puzzle::PredefinedPrograms::Names::DEFAULT_HIDDEN_PUZZLE].GetTreeHash())
 #define AGG_SIG_ME_ADDITIONAL_DATA (chia::utils::BytesFromHex("ccd5bb71183532bff220ba46c268991a3ff07eb358e8255a65c30a2dce0e5fbb"))

@@ -51,7 +51,7 @@ file(GLOB clvm_cpp_src
 )
 
 # Library clvm_cpp
-file(GLOB clvm_include_files include/*)
+file(GLOB clvm_include_dir include)
 add_library(clvm_cpp STATIC)
 target_sources(clvm_cpp PRIVATE ${clvm_cpp_src})
 target_link_libraries(clvm_cpp PRIVATE
@@ -59,7 +59,7 @@ target_link_libraries(clvm_cpp PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto
 )
-install(FILES ${clvm_include_files} DESTINATION include/clvm_cpp)
+install(DIRECTORY ${clvm_include_dir} DESTINATION include/clvm_cpp)
 install(TARGETS clvm_cpp DESTINATION lib)
 
 # Test project

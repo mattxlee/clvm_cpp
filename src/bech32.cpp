@@ -1,8 +1,8 @@
-#include "bech32.h"
+#include "clvm/bech32.h"
 
 #include <sstream>
 
-#include "utils.h"
+#include "clvm/utils.h"
 
 namespace chia
 {

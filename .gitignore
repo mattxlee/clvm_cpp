@@ -1,6 +1,11 @@
-build/
+# IDE or lsp related files
+compile_flags.txt
 .cache/
 .vscode/
 .ccls-cache/
-compile_flags.txt
+
+# Build temporary files
+cmake-variants.json
+cmake-build-*/
+build/
 vcpkg_installed/

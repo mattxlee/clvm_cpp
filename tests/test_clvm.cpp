@@ -3,14 +3,14 @@
 
 #include "gtest/gtest.h"
 
-#include "assemble.h"
-#include "int.h"
-#include "operator_lookup.h"
-#include "sexp_prog.h"
-#include "types.h"
-#include "utils.h"
+#include "clvm/assemble.h"
+#include "clvm/int.h"
+#include "clvm/operator_lookup.h"
+#include "clvm/sexp_prog.h"
+#include "clvm/types.h"
+#include "clvm/utils.h"
 
-#include "bech32.h"
+#include "clvm/bech32.h"
 
 TEST(Utilities, ByteToBytes)
 {

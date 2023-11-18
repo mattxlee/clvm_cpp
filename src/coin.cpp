@@ -1,4 +1,4 @@
-#include "coin.h"
+#include "clvm/coin.h"
 
 #include <cassert>
 
@@ -11,14 +11,14 @@
 
 #include <schemes.hpp>
 
-#include "costs.h"
-#include "crypto_utils.h"
-#include "utils.h"
-#include "key.h"
-#include "int.h"
+#include "clvm/costs.h"
+#include "clvm/crypto_utils.h"
+#include "clvm/utils.h"
+#include "clvm/key.h"
+#include "clvm/int.h"
 
-#include "puzzle.h"
-#include "condition_opcode.h"
+#include "clvm/puzzle.h"
+#include "clvm/condition_opcode.h"
 
 namespace chia
 {
@@ -169,45 +169,45 @@ std::vector<std::tuple<Bytes48, Bytes>> pkm_pairs_for_conditions_dict(
 
 Program make_solution(std::vector<Payment> const& primaries, std::set<Bytes> const& coin_announcements, std::set<Bytes32> const& coin_announcements_to_assert, std::set<Bytes> const& puzzle_announcements, std::set<Bytes32> const& puzzle_announcements_to_assert, CLVMObjectPtr additions, uint64_t fee)
 {
-    ListBuilder result_builder;
+    ListBuilder condition_list;
     if (additions) {
         ArgsIter iter(additions);
         while (!iter.IsEof()) {
-            result_builder.Add(iter.NextCLVMObj());
+            condition_list.Add(iter.NextCLVMObj());
         }
     }
     if (!primaries.empty()) {
         for (auto const& primary : primaries) {
-            result_builder.Add(puzzle::make_create_coin_condition(primary.puzzle_hash, primary.amount, primary.memo));
+            condition_list.Add(make_create_coin_condition(primary.puzzle_hash, primary.amount, primary.memo));
         }
     }
     if (fee > 0) {
-        result_builder.Add(puzzle::make_reserve_fee_condition(fee));
+        condition_list.Add(make_reserve_fee_condition(fee));
     }
     if (!coin_announcements.empty()) {
         for (auto const& announcement : coin_announcements) {
-            result_builder.Add(puzzle::make_create_coin_announcement(announcement));
+            condition_list.Add(make_create_coin_announcement(announcement));
         }
     }
     if (!coin_announcements_to_assert.empty()) {
         for (auto const& announcement_hash : coin_announcements_to_assert) {
-            result_builder.Add(puzzle::make_assert_coin_announcement(announcement_hash));
+            condition_list.Add(make_assert_coin_announcement(announcement_hash));
         }
     }
     if (!puzzle_announcements.empty()) {
         for (auto const& puzzle_announcement : puzzle_announcements) {
-            result_builder.Add(puzzle::make_create_puzzle_announcement(puzzle_announcement));
+            condition_list.Add(make_create_puzzle_announcement(puzzle_announcement));
         }
     }
     if (!puzzle_announcements_to_assert.empty()) {
         for (auto const& puzzle_announcement : puzzle_announcements_to_assert) {
-            result_builder.Add(puzzle::make_assert_puzzle_announcement(puzzle_announcement));
+            condition_list.Add(make_assert_puzzle_announcement(puzzle_announcement));
         }
     }
-    return Program(result_builder.GetRoot());
+    return solution_for_conditions(condition_list.GetRoot());
 }
 
-std::vector<Payment> decode_solution(Program puzzle_reveal, Program const& solution, Cost max_cost, Cost* pout_cost)
+std::vector<Payment> decode_payments_from_solution(Program puzzle_reveal, Program const& solution, Cost max_cost, Cost* pout_cost)
 {
     std::vector<Payment> result;
 
